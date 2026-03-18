@@ -1,0 +1,7 @@
+project_id = "hpyvadzxmutbbzwgmecv"
+
+[functions.generate-lessons]
+verify_jwt = false
+
+[functions.curative-assistant]
+verify_jwt = false

@@ -1,0 +1,206 @@
+import {
+  LayoutDashboard,
+  Brain,
+  BookOpen,
+  BarChart3,
+  Users,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  GraduationCap,
+  AlertCircle,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments" },
+  { title: "Curative", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
+  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
+  { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
+  { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
+  { title: "Settings", icon: Settings, path: "/settings" },
+];
+
+// Bottom nav items for mobile (max 5) — built dynamically based on role
+const getMobileNavItems = (role?: string) => {
+  const isStudent = role === "student";
+  const items = [
+    { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
+    { title: isStudent ? "Assessments" : "Diagnostic", icon: Brain, path: "/diagnostic" },
+    ...(!isStudent ? [{ title: "Curative", icon: BookOpen, path: "/curative" }] : []),
+    ...(!isStudent ? [{ title: "Analytics", icon: BarChart3, path: "/analytics" }] : []),
+    ...(!isStudent ? [{ title: "Alerts", icon: AlertCircle, path: "/alerts" }] : []),
+    { title: "Settings", icon: Settings, path: "/settings" },
+  ];
+  return items.slice(0, 5);
+};
+
+interface AppSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
+  const { profile, signOut } = useAuth();
+  const location = useLocation();
+
+  const isStudent = profile?.role === "student";
+  const mobileNavItems = getMobileNavItems(profile?.role);
+
+  const visibleItems = navItems.filter(
+    (item) => !item.roles || (profile?.role && item.roles.includes(profile.role))
+  );
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
+  return (
+    <>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-foreground/30 backdrop-blur-sm md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+
+      {/* Desktop / tablet sidebar */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 hidden h-screen flex-col bg-sidebar transition-all duration-300 md:flex",
+          collapsed ? "w-[var(--sidebar-collapsed)]" : "w-[var(--sidebar-width)]"
+        )}
+      >
+        {/* Logo */}
+        <div className="flex h-[var(--header-height)] items-center gap-3 border-b border-sidebar-border px-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-button bg-sidebar-primary">
+            <GraduationCap className="h-5 w-5 text-sidebar-primary-foreground" />
+          </div>
+          {!collapsed && (
+            <span className="truncate text-base font-bold text-sidebar-primary-foreground">APAS</span>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {visibleItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {!collapsed && <span>{isStudent && item.studentTitle ? item.studentTitle : item.title}</span>}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* User info + Logout */}
+        <div className="border-t border-sidebar-border p-3 space-y-2">
+          {profile && (
+            <div className="flex items-center gap-3 px-2 py-1">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+                {(profile.full_name || "U").charAt(0).toUpperCase()}
+              </div>
+              {!collapsed && (
+                <div className="overflow-hidden">
+                  <p className="truncate text-sm font-medium text-sidebar-accent-foreground">
+                    {profile.full_name || "User"}
+                  </p>
+                  <p className="truncate text-[11px] capitalize text-sidebar-foreground">
+                    {profile.role}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-button px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Logout</span>}
+          </button>
+
+          <button
+            onClick={onToggle}
+            className="flex w-full items-center justify-center rounded-button p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-hover"
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile slide-out sidebar (for full nav) */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 flex h-screen w-[var(--sidebar-width)] flex-col bg-sidebar transition-transform duration-300 md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-[var(--header-height)] items-center gap-3 border-b border-sidebar-border px-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-button bg-sidebar-primary">
+            <GraduationCap className="h-5 w-5 text-sidebar-primary-foreground" />
+          </div>
+          <span className="truncate text-base font-bold text-sidebar-primary-foreground">APAS</span>
+        </div>
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {visibleItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onMobileClose}
+                className={cn(
+                  "flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span>{isStudent && item.studentTitle ? item.studentTitle : item.title}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Mobile bottom navigation bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
+        {mobileNavItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-colors",
+                isActive ? "text-accent" : "text-muted-foreground"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.title}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
+    </>
+  );
+}
