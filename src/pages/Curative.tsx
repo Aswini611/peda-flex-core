@@ -304,12 +304,26 @@ const Curative = () => {
     const chapterLabel = selectedChapter
       ? chapters.find((c) => c.value === selectedChapter)?.label
       : "";
-    const subjectText = subjectLabel ? ` for ${subjectLabel}` : "";
-    const chapterText = chapterLabel ? `, specifically targeting ${chapterLabel}` : "";
+    const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
+    const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
     sendMessage(
-      `Generate a comprehensive curative lesson plan for ${getClassLabel(
-        selectedClass,
-      )} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students. Analyze the class assessment report to identify weak areas and class-level performance patterns. Create targeted curative strategies based on class performance metrics and weak dimensions. Do NOT mention individual student names - focus on class-wide patterns, average performance levels, and recommendations that apply to the entire class. Format the lesson plan with clear sections including Learning Objectives, Class Assessment Analysis, Weak Dimensions, Instructional Strategies, and Expected Outcomes.`,
+      `Generate a comprehensive CLASS DIAGNOSTIC REPORT and CURATIVE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
+
+STEP 1 — CLASS DIAGNOSTIC REPORT:
+- Cohort overview (class, section, subject, chapter, total students, class average score)
+- VARK learning style distribution with counts and percentages
+- 4 Instructional Clusters (Group A: Visual, Group B: Read/Write, Group C: Auditory, Group D: Kinesthetic) with student counts, avg scores, and curative strategies
+- ZPD analysis with band distribution
+- Weak areas and common error patterns from assessment data
+
+STEP 2 — CURATIVE LESSON PLAN (derived from the diagnostic report):
+- 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
+- Differentiated activities for each of the 4 groups with 3-tier task cards (Support/Core/Extension)
+- Mismatch alerts for at-risk groups
+- Exit ticket design across Bloom's levels
+- Read the textbook content for this chapter/unit and align all activities to the curriculum
+
+Do NOT mention individual student names. Focus on class-wide patterns and actionable teaching strategies.`,
       "generate",
     );
   };
