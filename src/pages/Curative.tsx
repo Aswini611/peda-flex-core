@@ -473,38 +473,6 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-                Select Chapter / Unit
-              </label>
-              <Select
-                value={selectedChapter}
-                onValueChange={setSelectedChapter}
-                disabled={!selectedClass || !selectedSubject || chapters.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      !selectedSubject
-                        ? "Select a subject first..."
-                        : chapters.length === 0
-                          ? "No chapters found"
-                          : "Choose a chapter..."
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {chapters.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      <span className="flex items-center gap-2">
-                        <BookOpen className="h-3.5 w-3.5" />
-                        {c.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
               {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate Lesson Plan</>)}
