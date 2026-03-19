@@ -15,8 +15,8 @@ serve(async (req) => {
   try {
     const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
 
-    const OPENAI_API_KEY = Deno.env.get("OPEN_AI_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPEN_AI_KEY is not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -279,17 +279,19 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       openaiMessages.push({ role: "user", content: prompt });
     }
 
-    // 5. Call OpenAI API (streaming)
-    console.log("Calling OpenAI API with model: gpt-4o, messages count:", openaiMessages.length);
+    // 5. Call OpenRouter API (streaming)
+    console.log("Calling OpenRouter API with model: gpt-oss-120b, messages count:", openaiMessages.length);
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://peda-flex-core.lovable.app",
+        "X-Title": "APAS Curative Assistant",
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-oss-120b",
         messages: openaiMessages,
         temperature: 0.7,
         max_tokens: 8192,
@@ -299,7 +301,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
+      console.error("OpenRouter API error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
@@ -314,8 +316,8 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       });
     }
 
-    // OpenAI already streams in the format the frontend expects — pass through directly
-    console.log("OpenAI API response successful, streaming started");
+    // OpenRouter uses OpenAI-compatible streaming format — pass through directly
+    console.log("OpenRouter API response successful, streaming started");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
