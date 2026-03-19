@@ -279,23 +279,33 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       messages.push({ role: "user", content: prompt });
     }
 
-    // 5. Call Lovable AI Gateway (streaming)
-    console.log("Calling Lovable AI Gateway with model: google/gemini-2.5-flash, messages count:", messages.length);
+    // 5. Call Google Gemini API (streaming)
+    // Convert messages to Gemini format
+    const systemInstruction = messages.find((m: any) => m.role === "system")?.content || "";
+    const geminiContents = messages
+      .filter((m: any) => m.role !== "system")
+      .map((m: any) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 8192,
-      }),
-    });
+    console.log("Calling Google Gemini API with model: gemini-2.5-flash, contents count:", geminiContents.length);
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: geminiContents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
