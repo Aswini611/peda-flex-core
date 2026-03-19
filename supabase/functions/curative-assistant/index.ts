@@ -88,7 +88,7 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
       assessmentContext = `No assessment reports found for ${selectedClass} Section ${section || "any"}.`;
     }
 
-    // 2. Get textbook content
+    // 2. Get textbook list (no downloading to avoid memory limits)
     let textbookContext = "";
     const classFolder = (() => {
       const folderMap: Record<string, string> = { Nursery: "nursery", LKG: "lkg", UKG: "ukg" };
@@ -101,56 +101,28 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
 
     if (files && files.length > 0) {
       const pdfFiles = files.filter((f: any) => f.name.endsWith(".pdf"));
-
-      let matchingFile = null;
-      if (subject) {
-        matchingFile = pdfFiles.find((f: any) => f.name === subject);
-      }
-      if (!matchingFile) {
-        const promptLower = (prompt || "").toLowerCase();
-        const subjectKeywords = ["english", "maths", "math", "hindi", "urdu", "science", "social", "arts", "sanskrit", "economics", "computer"];
-        const detected = subjectKeywords.find((s) => promptLower.includes(s));
-        if (detected) {
-          const subjectMatch = detected === "math" ? "maths" : detected;
-          matchingFile = pdfFiles.find((f: any) => f.name.toLowerCase().includes(subjectMatch));
+      if (pdfFiles.length > 0) {
+        textbookContext = `Available textbooks for ${selectedClass}: ${pdfFiles.map((f: any) => f.name).join(", ")}`;
+        
+        // Identify the selected/detected subject textbook
+        let matchedName = null;
+        if (subject) {
+          const match = pdfFiles.find((f: any) => f.name === subject);
+          if (match) matchedName = match.name;
         }
-      }
-
-      if (matchingFile) {
-        const { data: fileData } = await supabase.storage.from("textbooks").download(`${classFolder}/${matchingFile.name}`);
-        if (fileData) {
-          try {
-            const arrayBuffer = await fileData.arrayBuffer();
-            const bytes = new Uint8Array(arrayBuffer);
-            let extractedText = "";
-            let currentString = "";
-            for (let i = 0; i < bytes.length; i++) {
-              const byte = bytes[i];
-              if (byte >= 32 && byte <= 126) {
-                currentString += String.fromCharCode(byte);
-              } else {
-                if (currentString.length > 4) extractedText += currentString + " ";
-                currentString = "";
-              }
-            }
-            const cleanedText = extractedText
-              .replace(/\b(endobj|endstream|stream|obj|xref|trailer|startxref)\b/g, "")
-              .replace(/\b\d+ \d+ R\b/g, "")
-              .replace(/<<[^>]*>>/g, "")
-              .replace(/\/\w+/g, "")
-              .replace(/\s{2,}/g, " ")
-              .trim();
-            if (cleanedText.length > 200) {
-              textbookContext = `TEXTBOOK CONTENT (${selectedClass} - ${matchingFile.name}):\n${cleanedText.substring(0, 15000)}`;
-            }
-          } catch (pdfErr) {
-            console.error("PDF text extraction failed:", pdfErr);
+        if (!matchedName) {
+          const promptLower = (prompt || "").toLowerCase();
+          const subjectKeywords = ["english", "maths", "math", "hindi", "urdu", "science", "social", "arts", "sanskrit", "economics", "computer"];
+          const detected = subjectKeywords.find((s) => promptLower.includes(s));
+          if (detected) {
+            const subjectMatch = detected === "math" ? "maths" : detected;
+            const match = pdfFiles.find((f: any) => f.name.toLowerCase().includes(subjectMatch));
+            if (match) matchedName = match.name;
           }
         }
-      }
-
-      if (pdfFiles.length > 0) {
-        textbookContext += `\nAvailable textbooks for ${selectedClass}: ${pdfFiles.map((f: any) => f.name).join(", ")}`;
+        if (matchedName) {
+          textbookContext += `\nSelected textbook: ${matchedName}. Use your knowledge of this textbook's typical curriculum content to inform lesson plans.`;
+        }
       }
     }
 
