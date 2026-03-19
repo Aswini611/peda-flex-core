@@ -88,12 +88,11 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
       assessmentContext = `No assessment reports found for ${selectedClass} Section ${section || "any"}.`;
     }
 
-    // 2. Get textbook content - use explicitly selected subject or detect from prompt
+    // 2. Get textbook content
     let textbookContext = "";
     const classFolder = (() => {
       const folderMap: Record<string, string> = { Nursery: "nursery", LKG: "lkg", UKG: "ukg" };
       for (let i = 1; i <= 10; i++) folderMap[`Class ${i}`] = `class${i}`;
-      // Also map raw values like "1", "2" etc.
       for (let i = 1; i <= 10; i++) folderMap[`${i}`] = `class${i}`;
       return folderMap[selectedClass] || selectedClass.toLowerCase().replace(/\s+/g, "");
     })();
@@ -103,7 +102,6 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
     if (files && files.length > 0) {
       const pdfFiles = files.filter((f: any) => f.name.endsWith(".pdf"));
 
-      // Determine which file to use: explicit subject selection or auto-detect from prompt
       let matchingFile = null;
       if (subject) {
         matchingFile = pdfFiles.find((f: any) => f.name === subject);
@@ -156,8 +154,8 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
       }
     }
 
-    // 3. Build system prompt
-    const systemPrompt = `You are an expert educational AI assistant for teachers. You help generate curative lesson plans and answer questions about class curricula.
+    // 3. Build system prompt with enhanced class report + lesson plan generation
+    const systemPrompt = `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive CLASS DIAGNOSTIC REPORTS and CURATIVE LESSON PLANS.
 
 You have access to the following context:
 
@@ -165,31 +163,100 @@ ${assessmentContext}
 
 ${textbookContext}
 
-INSTRUCTIONS:
-- When generating lesson plans, carefully analyze the class assessment data to identify weak areas and strengths.
-- Use the CLASS-LEVEL ANALYSIS to understand which dimensions need curative attention.
-- Base your lesson plans on the textbook content when available.
-- Curative strategies should specifically target the weak areas found in the class assessment reports.
-- Always structure lesson plans with: Learning Objectives, Teaching Activities, Curative Strategies (based on weak areas), Practice Questions, and Assessment Methods.
+═══════════════════════════════════════════════════════════════
+CORE INSTRUCTIONS — HOW TO GENERATE RESPONSES
+═══════════════════════════════════════════════════════════════
 
-WORKSHEET GENERATION GUIDELINES:
-- Create minimum 5-page practice worksheets with different parts and activities on each page.
-- PAGE 1: Foundation Skills (basic recognition, identification, letter matching, tracing)
-- PAGE 2: Word Building (fill-in-vowels, word scramble, word formation, CVC words)
-- PAGE 3: Comprehension & Grammar (sentence completion, structure recognition, reading comprehension)
-- PAGE 4: Application & Practice (context-based exercises, sentence formation, practical usage)
-- PAGE 5: Assessment & Extension (assessment questions, challenge activities, creative tasks)
-- Use diverse activity types across pages: fill-in-blank, matching, multiple choice, tracing, scramble, completion, labeling, sorting, true/false, short answer.
-- Each activity must have: clear title, step-by-step instructions, examples.
-- Include complete answer key at the end covering all pages.
-- Structure with clear page breaks and section dividers.
+When generating lesson plans or class reports, you MUST follow this structured approach:
 
-GENERAL GUIDANCE:
-- When answering questions, reference the specific student data and textbook content.
-- Be specific and practical in your recommendations, citing actual score data.
-- Format responses in clear markdown with headers and bullet points.
-- If assessment data is available, NEVER say "no assessment reports found". Always analyze and reference the data provided.
-- Never mention individual student names - use class-level analysis.`;
+## STEP 1: CLASS DIAGNOSTIC REPORT (Always generate this first)
+
+Analyze the assessment data and produce a clear diagnostic report with:
+
+### 1.1 Cohort Overview
+- Class name, section, total learners, subject, chapter/unit being covered
+- Class average score (calculate from assessment data)
+- Identify if class is in intervention zone (below 60%)
+
+### 1.2 VARK Learning Style Distribution
+- Analyze student responses to identify dominant learning styles
+- Group students by VARK type (Visual, Auditory, Read/Write, Kinesthetic)
+- Show counts and percentages for each style
+- Identify the dominant style in the class
+
+### 1.3 Instructional Clusters (4 Groups)
+Create EXACTLY 4 instructional groups based on learning styles and performance:
+
+**Group A — Visual Learners**: List count, average score, recommended strategy (diagram-first templates, colour-coded visuals, mind-maps)
+**Group B — Read/Write Processors**: List count, average score, recommended strategy (structured notes, written case studies, scaffolded explanations)  
+**Group C — Auditory Learners**: List count, average score, recommended strategy (discussion protocols, think-aloud, peer teaching)
+**Group D — Kinesthetic Learners**: List count, average score, recommended strategy (hands-on models, simulations, physical activities). Flag if this is a priority intervention group.
+
+### 1.4 ZPD (Zone of Proximal Development) Analysis
+- Classify students into ZPD bands: Advanced, On-level, Below-level
+- Show distribution across bands
+- Identify scaffolding requirements
+
+### 1.5 Weak Areas & Error Patterns
+- List the weakest dimensions from assessment data
+- Identify common error patterns across the class
+- Highlight which groups are most at risk
+
+═══════════════════════════════════════════════════════════════
+
+## STEP 2: CURATIVE LESSON PLAN (Generated from the Class Report)
+
+After the diagnostic report, generate a DETAILED curative lesson plan with these components:
+
+### 2.1 Lesson Plan Directives (6 parameters)
+1. **Lesson Opener**: How to begin (visual anchor, discussion prompt, hands-on activity)
+2. **Core Delivery**: Dual/multi-channel delivery addressing multiple VARK styles
+3. **Group Activity** (20-min window): Different activity per group — this is where differentiation happens
+4. **Scaffolding Level**: Based on ZPD analysis, 3-tier task cards (Support / Core / Extension)
+5. **Assessment Check**: Exit ticket design across Bloom's levels for immediate measurement
+6. **Teacher Tools**: Specific resources per group (question banks, project boards, manipulatives)
+
+### 2.2 Differentiated Group Activities (Detailed)
+For EACH of the 4 groups, provide:
+- **Activity name & description** (specific, actionable)
+- **Materials needed**
+- **3-tier task cards**: Support tier (removes barriers), Core tier (targets ZPD), Extension tier (prevents disengagement)
+- **Time allocation**
+- **Expected outcomes**
+
+### 2.3 Mismatch Alerts
+- Flag any groups at risk of delivery mismatch
+- Provide mandatory interventions (not optional enrichment)
+- Explain WHY the mismatch exists and HOW the plan addresses it
+
+### 2.4 Post-Lesson Assessment
+- 3-question exit ticket design (Remember → Understand → Apply levels)
+- How results feed back into analytics
+- Normalized gain calculation setup
+
+═══════════════════════════════════════════════════════════════
+
+## FORMATTING RULES
+- Use clear markdown with headers (##, ###), bullet points, and bold text
+- Use tables where appropriate for data presentation
+- Be SPECIFIC — cite actual scores, percentages, and student counts
+- Be PRACTICAL — every recommendation must be actionable by a single teacher
+- NEVER mention individual student names in class-level analysis
+- Always reference the textbook chapter/unit content when available
+- Make explanations clear, detailed, and easy to understand for teachers
+- Use professional educational terminology but explain complex concepts simply
+
+## WORKSHEET GENERATION GUIDELINES (when asked)
+- Create minimum 5-page practice worksheets with different parts and activities
+- PAGE 1: Foundation Skills (basic recognition, identification, matching, tracing)
+- PAGE 2: Word Building / Concept Building (fill-in, scramble, formation)
+- PAGE 3: Comprehension & Grammar / Analysis (completion, structure, reading)
+- PAGE 4: Application & Practice (context-based, formation, practical usage)
+- PAGE 5: Assessment & Extension (assessment questions, challenges, creative tasks)
+- Include diverse activity types and a COMPLETE ANSWER KEY at the end
+
+## GENERAL Q&A
+When answering questions, always reference the assessment data and textbook content. Be specific, cite scores, and provide actionable recommendations. Format responses in clear, well-structured markdown.`;
 
     // 4. Build messages
     const messages: any[] = [{ role: "system", content: systemPrompt }];
@@ -200,59 +267,67 @@ GENERAL GUIDANCE:
     if (mode === "generate") {
       messages.push({
         role: "user",
-        content: prompt || `Generate a comprehensive curative lesson plan for ${selectedClass} Section ${section}. Analyze the class assessment report to identify weak areas and create targeted activities. Include: 1. Learning Objectives 2. Teaching Activities 3. Curative Strategies 4. Practice Questions 5. Assessment Methods`,
+        content: prompt || `Generate a comprehensive CLASS DIAGNOSTIC REPORT and CURATIVE LESSON PLAN for ${selectedClass} Section ${section} with the following structure:
+
+1. First, create a detailed CLASS DIAGNOSTIC REPORT analyzing the assessment data — include cohort overview, VARK distribution, 4 instructional clusters (Visual, Read/Write, Auditory, Kinesthetic), ZPD analysis, and weak areas.
+
+2. Then, generate a CURATIVE LESSON PLAN derived from the diagnostic report — include lesson plan directives (opener, delivery, group activity, scaffolding, assessment, tools), differentiated group activities with 3-tier task cards, mismatch alerts, and post-lesson assessment design.
+
+Make the plan specific, actionable, and based on actual assessment data.`,
       });
     } else {
       messages.push({ role: "user", content: prompt });
     }
 
-    // 5. Call Grok AI (streaming)
-    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_API_KEY) {
-      console.error("GROK_API_KEY environment variable is not set");
-      return new Response(JSON.stringify({ error: "GROK_API_KEY is not configured in Supabase. Please set it in Project Settings → Edge Functions → Environment variables" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    // 5. Call Lovable AI Gateway (streaming)
+    console.log("Calling Lovable AI Gateway with model: google/gemini-2.5-flash, messages count:", messages.length);
 
-    console.log("Calling Grok API with model: grok-2, messages count:", messages.length);
-    
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { 
-        Authorization: `Bearer ${GROK_API_KEY}`, 
-        "Content-Type": "application/json" 
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ 
-        model: "grok-2", 
-        messages, 
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages,
         stream: true,
         temperature: 0.7,
-        max_tokens: 4096,
+        max_tokens: 8192,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Grok API error:", response.status, errorText);
-      
-      let userFriendlyError = "";
-      if (response.status === 401) {
-        userFriendlyError = "Authentication failed. Please check if GROK_API_KEY is correctly set in Supabase Edge Functions environment variables.";
-      } else if (response.status === 429) {
-        userFriendlyError = "Rate limit exceeded. Grok API has received too many requests. Please try again in a moment.";
-      } else if (response.status === 500 || response.status === 503) {
-        userFriendlyError = "Grok AI service is temporarily unavailable. Please try again shortly.";
-      } else {
-        userFriendlyError = `Grok API Error (${response.status}): ${errorText.substring(0, 200)}`;
+      console.error("AI Gateway error:", response.status, errorText);
+
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-      
-      return new Response(JSON.stringify({ error: userFriendlyError }), { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Usage limit reached. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ error: `AI service error (${response.status}): ${errorText.substring(0, 200)}` }), {
+        status: response.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    console.log("Grok API response successful, streaming started");
+    console.log("AI Gateway response successful, streaming started");
     return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : "Unknown error";
     console.error("curative-assistant error:", errorMsg, e);
-    return new Response(JSON.stringify({ error: `Error: ${errorMsg}. Please try again or contact support if the issue persists.` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: `Error: ${errorMsg}. Please try again.` }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
