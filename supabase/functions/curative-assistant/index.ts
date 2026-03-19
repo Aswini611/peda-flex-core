@@ -15,8 +15,8 @@ serve(async (req) => {
   try {
     const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GOOGLE_GEMINI_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -279,37 +279,41 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       messages.push({ role: "user", content: prompt });
     }
 
-    // 5. Call Lovable AI Gateway (streaming)
-    console.log("Calling Lovable AI Gateway with model: google/gemini-2.5-flash, messages count:", messages.length);
+    // 5. Call Google Gemini API (streaming)
+    // Convert messages to Gemini format
+    const systemInstruction = messages.find((m: any) => m.role === "system")?.content || "";
+    const geminiContents = messages
+      .filter((m: any) => m.role !== "system")
+      .map((m: any) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 8192,
-      }),
-    });
+    console.log("Calling Google Gemini API with model: gemini-2.5-flash, contents count:", geminiContents.length);
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: geminiContents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI Gateway error:", response.status, errorText);
+      console.error("Gemini API error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Usage limit reached. Please add credits to continue." }), {
-          status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -320,8 +324,50 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       });
     }
 
-    console.log("AI Gateway response successful, streaming started");
-    return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
+    // Transform Gemini SSE stream to OpenAI-compatible format for the frontend
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+
+    const transformedStream = new ReadableStream({
+      async start(controller) {
+        let buffer = "";
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let newlineIdx: number;
+            while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+              const line = buffer.slice(0, newlineIdx).trim();
+              buffer = buffer.slice(newlineIdx + 1);
+
+              if (!line.startsWith("data: ")) continue;
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr || jsonStr === "[DONE]") continue;
+
+              try {
+                const geminiData = JSON.parse(jsonStr);
+                const text = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                  // Re-emit as OpenAI-compatible SSE
+                  const openAIChunk = { choices: [{ delta: { content: text } }] };
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+                }
+              } catch { /* skip partial JSON */ }
+            }
+          }
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
+
+    console.log("Gemini API response successful, streaming started");
+    return new Response(transformedStream, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : "Unknown error";
     console.error("curative-assistant error:", errorMsg, e);
