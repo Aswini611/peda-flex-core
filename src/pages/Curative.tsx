@@ -65,7 +65,7 @@ async function streamChat({
   });
 
   if (!resp.ok) {
-    let errMsg = "Failed to get AI response from Grok";
+    let errMsg = "Failed to get AI response";
     try { 
       const errData = await resp.json();
       errMsg = errData.error || errMsg;
