@@ -488,11 +488,6 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
                   <BookOpen className="h-3 w-3" /> {selectedSubject}
                 </Badge>
               )}
-              {selectedChapter && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <BookOpen className="h-3 w-3" /> {chapters.find((c) => c.value === selectedChapter)?.label}
-                </Badge>
-              )}
               <span className="text-xs text-muted-foreground ml-2">
                 {studentCount} student{studentCount !== 1 ? "s" : ""} found • AI will use assessment reports & textbook
                 content
