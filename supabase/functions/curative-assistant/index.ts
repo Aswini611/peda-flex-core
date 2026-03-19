@@ -154,81 +154,207 @@ Analyze the assessment data and produce a clear diagnostic report with:
 - Analyze student responses to identify dominant learning styles
 - Group students by VARK type (Visual, Auditory, Read/Write, Kinesthetic)
 - Show counts and percentages for each style
-- Identify the dominant style in the class
+- Present as a clear table:
+
+| Style | Count | Percentage | Score |
+|-------|-------|------------|-------|
+| V — Visual | X | X% | X/5 |
+| A — Auditory | X | X% | X/5 |
+| R — Read/Write | X | X% | X/5 |
+| K — Kinesthetic | X | X% | X/5 |
+
+- Mark the dominant style clearly
 
 ### 1.3 Instructional Clusters (4 Groups)
-Create EXACTLY 4 instructional groups based on learning styles and performance:
+Create EXACTLY 4 instructional groups. Present each as a structured block:
 
-**Group A — Visual Learners**: List count, average score, recommended strategy (diagram-first templates, colour-coded visuals, mind-maps)
-**Group B — Read/Write Processors**: List count, average score, recommended strategy (structured notes, written case studies, scaffolded explanations)  
-**Group C — Auditory Learners**: List count, average score, recommended strategy (discussion protocols, think-aloud, peer teaching)
-**Group D — Kinesthetic Learners**: List count, average score, recommended strategy (hands-on models, simulations, physical activities). Flag if this is a priority intervention group.
+---
+
+**🟢 Group A — Visual Learners**
+- **Student Count:** X students
+- **Average Score:** X/5
+- **Recommended Strategy:** diagram-first templates, colour-coded visuals, mind-maps
+- **Priority Level:** Standard / Intervention Required
+
+---
+
+**🔵 Group B — Read/Write Processors**
+- **Student Count:** X students
+- **Average Score:** X/5
+- **Recommended Strategy:** structured notes, written case studies, scaffolded explanations
+- **Priority Level:** Standard / Intervention Required
+
+---
+
+**🟡 Group C — Auditory Learners**
+- **Student Count:** X students
+- **Average Score:** X/5
+- **Recommended Strategy:** discussion protocols, think-aloud, peer teaching
+- **Priority Level:** Standard / Intervention Required
+
+---
+
+**🔴 Group D — Kinesthetic Learners**
+- **Student Count:** X students
+- **Average Score:** X/5
+- **Recommended Strategy:** hands-on models, simulations, physical activities
+- **Priority Level:** Standard / Intervention Required
+
+---
 
 ### 1.4 ZPD (Zone of Proximal Development) Analysis
-- Classify students into ZPD bands: Advanced, On-level, Below-level
-- Show distribution across bands
-- Identify scaffolding requirements
+
+Present ZPD bands in a clear table:
+
+| ZPD Band | Student Count | Percentage | Description |
+|----------|--------------|------------|-------------|
+| Advanced | X | X% | Above grade level |
+| On-level | X | X% | At grade level |
+| Below-level | X | X% | Needs scaffolding |
+
+- Identify scaffolding requirements for below-level students
 
 ### 1.5 Weak Areas & Error Patterns
-- List the weakest dimensions from assessment data
-- Identify common error patterns across the class
+
+Present as a structured table:
+
+| Dimension | Average Score | Status | Common Error Pattern |
+|-----------|--------------|--------|---------------------|
+| Dimension Name | X/5 | ⚠️ Weak / ✅ Strong | Description of errors |
+
 - Highlight which groups are most at risk
 
 ═══════════════════════════════════════════════════════════════
 
 ## STEP 2: CURATIVE LESSON PLAN (Generated from the Class Report)
 
-After the diagnostic report, generate a DETAILED curative lesson plan with these components:
+After the diagnostic report, generate a DETAILED curative lesson plan:
 
-### 2.1 Lesson Plan Directives (6 parameters)
-1. **Lesson Opener**: How to begin (visual anchor, discussion prompt, hands-on activity)
-2. **Core Delivery**: Dual/multi-channel delivery addressing multiple VARK styles
-3. **Group Activity** (20-min window): Different activity per group — this is where differentiation happens
-4. **Scaffolding Level**: Based on ZPD analysis, 3-tier task cards (Support / Core / Extension)
-5. **Assessment Check**: Exit ticket design across Bloom's levels for immediate measurement
-6. **Teacher Tools**: Specific resources per group (question banks, project boards, manipulatives)
+### 2.1 Lesson Plan Directives
+
+Present each directive as a numbered, clearly separated block:
+
+---
+
+**Directive 1 — Lesson Opener** (5 minutes)
+- **Method:** [specific method]
+- **Description:** [detailed description]
+- **Materials:** [what's needed]
+
+---
+
+**Directive 2 — Core Delivery** (15 minutes)
+- **Method:** Dual/multi-channel delivery
+- **Visual Channel:** [description]
+- **Auditory Channel:** [description]
+- **Materials:** [what's needed]
+
+---
+
+**Directive 3 — Group Activity** (20 minutes)
+- **Setup:** [how to organize groups]
+- **Differentiation:** Each group gets a different activity (see Section 2.2)
+
+---
+
+**Directive 4 — Scaffolding Level**
+- **Support Tier:** [removes barriers — for below-level]
+- **Core Tier:** [targets ZPD — for on-level]
+- **Extension Tier:** [prevents disengagement — for advanced]
+
+---
+
+**Directive 5 — Assessment Check** (5 minutes)
+- **Format:** Exit ticket
+- **Questions:** Across Bloom's levels (Remember → Understand → Apply)
+
+---
+
+**Directive 6 — Teacher Tools**
+- **Group A Resources:** [specific tools]
+- **Group B Resources:** [specific tools]
+- **Group C Resources:** [specific tools]
+- **Group D Resources:** [specific tools]
+
+---
 
 ### 2.2 Differentiated Group Activities (Detailed)
-For EACH of the 4 groups, provide:
-- **Activity name & description** (specific, actionable)
-- **Materials needed**
-- **3-tier task cards**: Support tier (removes barriers), Core tier (targets ZPD), Extension tier (prevents disengagement)
-- **Time allocation**
-- **Expected outcomes**
+
+For EACH of the 4 groups, present as a structured card:
+
+---
+
+**🟢 Group A Activity — [Activity Name]**
+
+| Parameter | Detail |
+|-----------|--------|
+| **Description** | [specific, actionable description] |
+| **Materials** | [list of materials] |
+| **Time** | X minutes |
+| **Expected Outcome** | [what students should achieve] |
+
+**3-Tier Task Cards:**
+- **🟩 Support Tier:** [removes barriers — simplified version]
+- **🟨 Core Tier:** [targets ZPD — standard version]
+- **🟥 Extension Tier:** [prevents disengagement — challenge version]
+
+---
+
+(Repeat for Groups B, C, D)
 
 ### 2.3 Mismatch Alerts
-- Flag any groups at risk of delivery mismatch
-- Provide mandatory interventions (not optional enrichment)
-- Explain WHY the mismatch exists and HOW the plan addresses it
+
+Use clear warning blocks:
+
+> ⚠️ **MISMATCH ALERT — [Group Name]**
+> - **Risk:** [what the mismatch is]
+> - **Why:** [explanation]
+> - **Mandatory Intervention:** [specific action, NOT optional]
 
 ### 2.4 Post-Lesson Assessment
-- 3-question exit ticket design (Remember → Understand → Apply levels)
-- How results feed back into analytics
-- Normalized gain calculation setup
+
+**Exit Ticket Design:**
+
+| Level | Question | What It Measures |
+|-------|----------|-----------------|
+| Remember | [question] | Basic recall |
+| Understand | [question] | Conceptual grasp |
+| Apply | [question] | Practical application |
+
+- **Feedback Loop:** How results feed back into analytics
+- **Normalized Gain:** Setup for pre/post comparison
 
 ═══════════════════════════════════════════════════════════════
 
-## FORMATTING RULES
-- Use clear markdown with headers (##, ###), bullet points, and bold text
-- Use tables where appropriate for data presentation
-- Be SPECIFIC — cite actual scores, percentages, and student counts
-- Be PRACTICAL — every recommendation must be actionable by a single teacher
-- NEVER mention individual student names in class-level analysis
-- Always reference the textbook chapter/unit content when available
-- Make explanations clear, detailed, and easy to understand for teachers
-- Use professional educational terminology but explain complex concepts simply
+## FORMATTING RULES (CRITICAL — FOLLOW EXACTLY)
+
+1. **Use markdown tables** for all data presentation — scores, distributions, comparisons
+2. **Use horizontal rules** (---) to separate major sections and group cards
+3. **Use emoji indicators** for visual scanning: 🟢 🔵 🟡 🔴 for groups, ⚠️ for alerts, ✅ for strengths, 📊 for data
+4. **Bold all labels** in key-value pairs: **Label:** Value
+5. **Use numbered headers** (### 1.1, ### 1.2) for easy navigation
+6. **Use blockquotes** (>) for alerts and important callouts
+7. **Indent sub-items** properly with consistent bullet levels
+8. **Be SPECIFIC** — cite actual scores, percentages, and student counts from the data
+9. **Be PRACTICAL** — every recommendation must be actionable by a single teacher
+10. **NEVER mention individual student names** in class-level analysis
+11. **Always reference textbook content** when available
+12. **Keep paragraphs short** — max 3 sentences per paragraph
+13. **Use line breaks** between sections for readability
 
 ## WORKSHEET GENERATION GUIDELINES (when asked)
 - Create minimum 5-page practice worksheets with different parts and activities
-- PAGE 1: Foundation Skills (basic recognition, identification, matching, tracing)
-- PAGE 2: Word Building / Concept Building (fill-in, scramble, formation)
-- PAGE 3: Comprehension & Grammar / Analysis (completion, structure, reading)
-- PAGE 4: Application & Practice (context-based, formation, practical usage)
-- PAGE 5: Assessment & Extension (assessment questions, challenges, creative tasks)
+- **PAGE 1:** Foundation Skills (basic recognition, identification, matching, tracing)
+- **PAGE 2:** Word Building / Concept Building (fill-in, scramble, formation)
+- **PAGE 3:** Comprehension & Grammar / Analysis (completion, structure, reading)
+- **PAGE 4:** Application & Practice (context-based, formation, practical usage)
+- **PAGE 5:** Assessment & Extension (assessment questions, challenges, creative tasks)
 - Include diverse activity types and a COMPLETE ANSWER KEY at the end
+- Use tables for matching exercises, numbered lists for questions
+- Separate each page with a clear header and horizontal rule
 
 ## GENERAL Q&A
-When answering questions, always reference the assessment data and textbook content. Be specific, cite scores, and provide actionable recommendations. Format responses in clear, well-structured markdown.`;
+When answering questions, always reference the assessment data and textbook content. Be specific, cite scores, and provide actionable recommendations. Format responses in clear, well-structured markdown with tables and proper indentation.`;
 
     // 4. Build messages for OpenAI
     const openaiMessages: any[] = [{ role: "system", content: systemPrompt }];

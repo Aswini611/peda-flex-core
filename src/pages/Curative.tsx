@@ -330,77 +330,156 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
   const handleDownloadPDF = (messageContent: string, messageIndex: number) => {
     const timestamp = new Date().toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit', 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false 
+      year: 'numeric', month: '2-digit', day: '2-digit', 
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
     }).replace(/[/:]/g, '-');
     
-    const filename = `Content-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
+    const filename = `APAS-Curative-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
     
-    // Create a temporary div with professional styling
+    // Convert markdown to structured HTML
+    let html = messageContent;
+    
+    // Tables
+    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)*)/gm, (match, header, sep, body) => {
+      const headerCells = header.split('|').filter((c: string) => c.trim()).map((c: string) => `<th>${c.trim()}</th>`).join('');
+      const rows = body.trim().split('\n').map((row: string) => {
+        const cells = row.split('|').filter((c: string) => c.trim()).map((c: string) => `<td>${c.trim()}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
+    });
+    
+    // Headings
+    html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+    
+    // Bold and italic
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Blockquotes
+    html = html.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
+    
+    // Horizontal rules
+    html = html.replace(/^---$/gm, '<hr>');
+    
+    // Lists
+    html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
+    html = html.replace(/^(\d+)\. (.*?)$/gm, '<li>$1. $2</li>');
+    
+    // Wrap consecutive <li> in <ul>
+    html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+    
+    // Paragraphs
+    html = html.split('\n\n').map(para => {
+      const trimmed = para.trim();
+      if (!trimmed || trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || trimmed.startsWith('<table') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) return trimmed;
+      return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
+    }).join('\n');
+    
     const tempDiv = document.createElement('div');
-    
-    // Convert markdown content to properly formatted HTML
-    let formattedContent = messageContent;
-    formattedContent = formattedContent
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
-      .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
-      .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
-      .replace(/^- (.*?)$/gm, '<li>$1</li>')
-      .replace(/^(\d+)\. (.*?)$/gm, '<li>$1. $2</li>')
-      .split('\n\n')
-      .map(para => {
-        if (para.includes('<h') || para.includes('<li')) {
-          return para;
-        }
-        return para ? '<p>' + para.replace(/\n/g, '<br>') + '</p>' : '';
-      })
-      .join('');
-    
     tempDiv.innerHTML = `
-      <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 35px; line-height: 1.7; color: #2c3e50; max-width: 100%;">
-        <div style="border-bottom: 3px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px;">
-          <h1 style="margin: 0 0 8px 0; color: #1e40af; font-size: 26px; font-weight: 700;">Class: ${getClassLabel(selectedClass)} | Section: ${selectedSection}</h1>
-          <p style="margin: 0; color: #7f8c8d; font-size: 12px;">Generated: ${new Date().toLocaleString()}</p>
+      <div class="report">
+        <div class="header">
+          <div class="header-left">
+            <div class="brand">APAS <span>Curative</span></div>
+            <div class="report-label">Class Diagnostic Report & Curative Lesson Plan</div>
+          </div>
+          <div class="header-right">
+            <div class="report-date">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div class="status-badge">AI Generated</div>
+          </div>
         </div>
-        
-        <div style="font-size: 13px;">
-          ${formattedContent}
+
+        <div class="learner-card">
+          <div class="lc-field">
+            <label>Class</label>
+            <value>${getClassLabel(selectedClass)}</value>
+            <small>Section ${selectedSection}</small>
+          </div>
+          <div class="lc-field">
+            <label>Subject</label>
+            <value>${selectedSubject || 'General'}</value>
+            <small>${studentCount} students</small>
+          </div>
+          <div class="lc-field">
+            <label>Report Type</label>
+            <value>Curative Plan</value>
+            <small>Diagnostic + Lesson Plan</small>
+          </div>
         </div>
-        
-        <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #bdc3c7; font-size: 11px; color: #95a5a6;">
-          <p style="margin: 0;">APAS - Adaptive Pedagogy & Analytics System</p>
+
+        <div class="content">
+          ${html}
+        </div>
+
+        <div class="footer">
+          <div class="footer-note">This report is auto-generated by the APAS AI engine. For academic use only.</div>
+          <div class="footer-apas">APAS · ${new Date().getFullYear()}</div>
         </div>
       </div>
     `;
     
-    // Add styles for lists
     const style = document.createElement('style');
     style.textContent = `
-      h1 { margin: 15px 0 10px 0; color: #1e40af; font-size: 20px; font-weight: 700; }
-      h2 { margin: 15px 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600; border-left: 4px solid #1e40af; padding-left: 12px; }
-      h3 { margin: 12px 0 6px 0; color: #34495e; font-size: 14px; font-weight: 600; }
-      li { margin: 6px 0 6px 25px; }
-      p { margin: 8px 0; text-align: justify; }
-      strong { color: #1e40af; font-weight: 600; }
+      @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
+      
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; }
+      .brand { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; color: #1a1a2e; letter-spacing: -0.5px; }
+      .brand span { color: #0e9a7b; font-style: italic; }
+      .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; }
+      .header-right { text-align: right; }
+      .report-date { font-size: 12px; font-weight: 500; color: #3a3a5c; }
+      .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; }
+      
+      .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+      .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; }
+      .lc-field value { font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; color: white; display: block; }
+      .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); }
+      
+      .content { }
+      .content h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; }
+      .content h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; }
+      .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; }
+      .content h4 { font-size: 12px; font-weight: 600; color: #6b6b8a; margin: 12px 0 4px 0; }
+      .content p { margin: 6px 0; text-align: justify; color: #3a3a5c; }
+      .content strong { color: #1a1a2e; font-weight: 600; }
+      .content em { font-style: italic; color: #6b6b8a; }
+      
+      .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
+      .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
+      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      
+      .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
+      .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
+      .content table td { padding: 7px 10px; border-bottom: 1px solid #e2e0d8; color: #3a3a5c; vertical-align: top; }
+      .content table tr:last-child td { border-bottom: none; }
+      
+      .content blockquote { background: linear-gradient(135deg, #fff1ee 0%, #fffbeb 100%); border-left: 4px solid #e55a3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 12px; color: #3a3a5c; }
+      
+      .content hr { border: none; border-top: 1px solid #e2e0d8; margin: 16px 0; }
+      
+      .footer { border-top: 1px solid #e2e0d8; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+      .footer-note { font-size: 10px; color: #6b6b8a; }
+      .footer-apas { font-family: 'DM Serif Display', Georgia, serif; font-size: 13px; color: #3a3a5c; font-style: italic; }
     `;
     tempDiv.appendChild(style);
     
     const opt = {
-      margin: [12, 12, 12, 12] as [number, number, number, number],
+      margin: [10, 10, 10, 10] as [number, number, number, number],
       filename: filename,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#f7f5f0' },
       jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' as const, compress: true },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
     
     html2pdf().set(opt).from(tempDiv).save();
-    toast.success('Content downloaded successfully!');
+    toast.success('PDF downloaded successfully!');
   };
 
   const handleSendChat = () => { if (!inputValue.trim()) return; sendMessage(inputValue.trim(), "chat"); };
