@@ -15,8 +15,8 @@ serve(async (req) => {
   try {
     const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
 
-    const OPENAI_API_KEY = Deno.env.get("OPEN_AI_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPEN_AI_KEY is not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
