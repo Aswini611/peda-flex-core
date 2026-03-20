@@ -93,12 +93,10 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     if (!cfg) return;
     setConfig(cfg);
     setAnswers({});
-    setCurrentQ(0);
-    // Prepare VARK config
     const vCfg = getVarkAgeGroupConfig(ageGroup);
     setVarkConfig(vCfg || null);
     setVarkAnswers({});
-    setVarkCurrentQ(0);
+    setCurrentQ(0);
     setPhase("quiz");
   };
 
@@ -134,13 +132,11 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     }
   };
 
-  const answeredCount = Object.keys(answers).length;
-  const totalQuestions = config?.questions.length || 30;
-  const progress = Math.round((answeredCount / totalQuestions) * 100);
-
-  const varkTotal = varkConfig?.questions.length || 20;
-  const varkAnsweredCount = Object.keys(varkAnswers).length;
-  const varkProgress = Math.round((varkAnsweredCount / varkTotal) * 100);
+  const assessmentCount = config?.questions.length || 30;
+  const varkCount = varkConfig?.questions.length || 20;
+  const totalQuestions = assessmentCount + varkCount;
+  const totalAnswered = Object.keys(answers).length + Object.keys(varkAnswers).length;
+  const progress = Math.round((totalAnswered / totalQuestions) * 100);
 
   // ─── Form Phase ───
   if (phase === "form") {
