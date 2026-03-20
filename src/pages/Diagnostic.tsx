@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search } from "lucide-react";
 import { getAgeGroupConfig, type AgeGroupConfig } from "@/data/assessmentQuestions";
 import { getTeacherAgeGroupConfig, type TeacherAgeGroupConfig } from "@/data/teacherAssessmentQuestions";
+import { getVarkAgeGroupConfig, type VarkAgeGroupConfig } from "@/data/varkQuestions";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
