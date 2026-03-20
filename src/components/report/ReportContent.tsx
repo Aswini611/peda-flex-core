@@ -57,6 +57,9 @@ export const ReportContent = ({
           <h1 className="text-2xl font-bold tracking-tight text-[#1a1a2e]" style={{ fontFamily: "'DM Serif Display', serif" }}>
             APAS <span className="text-[#0e9a7b] italic">Diagnostic</span> Report
           </h1>
+          <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#8282a8] mt-1">
+            Phase 1 · Diagnostic Assessment
+          </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-[#6b6b8a] font-light">{reportId}</p>
