@@ -55,11 +55,8 @@ export const ReportContent = ({
       <div className="flex justify-between items-start pb-5 border-b-2 border-[#1a1a2e]">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#1a1a2e]" style={{ fontFamily: "'DM Serif Display', serif" }}>
-            APAS <span className="text-[#0e9a7b] italic">Diagnostic</span>
+            APAS <span className="text-[#0e9a7b] italic">Diagnostic</span> Report
           </h1>
-          <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#6b6b8a] mt-1">
-            Personalized Learner Report · Phase 1
-          </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-[#6b6b8a] font-light">{reportId}</p>
@@ -73,7 +70,7 @@ export const ReportContent = ({
       {/* LEARNER CARD - Name, Class, Teacher */}
       <div className="bg-[#1a1a2e] text-white rounded-2xl px-7 py-5 grid grid-cols-3 gap-5">
         <LearnerField label="Learner" value={studentName} sub={`Age ${studentAge}`} />
-        <LearnerField label="Class" value={studentClass || "N/A"} sub={`Section`} />
+        <LearnerField label="Class" value={studentClass || "N/A"} />
         <LearnerField label="Class Teacher" value={teacherName || "N/A"} />
       </div>
 
