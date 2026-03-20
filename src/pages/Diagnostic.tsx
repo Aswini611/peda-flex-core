@@ -49,7 +49,7 @@ interface Teacher {
 }
 
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
-  const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
+  const [phase, setPhase] = useState<"form" | "quiz" | "vark" | "done">("form");
   const name = studentName;
   const [age, setAge] = useState("");
   const [studentClass, setStudentClass] = useState("");
@@ -62,6 +62,11 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // VARK state
+  const [varkConfig, setVarkConfig] = useState<VarkAgeGroupConfig | null>(null);
+  const [varkCurrentQ, setVarkCurrentQ] = useState(0);
+  const [varkAnswers, setVarkAnswers] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -92,11 +97,20 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     setConfig(cfg);
     setAnswers({});
     setCurrentQ(0);
+    // Prepare VARK config
+    const vCfg = getVarkAgeGroupConfig(ageGroup);
+    setVarkConfig(vCfg || null);
+    setVarkAnswers({});
+    setVarkCurrentQ(0);
     setPhase("quiz");
   };
 
   const handleAnswer = (questionId: number, value: number) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const handleVarkAnswer = (questionId: number, modality: string) => {
+    setVarkAnswers((prev) => ({ ...prev, [questionId]: modality }));
   };
 
   const handleSubmitWithAnswers = async (finalAnswers: Record<number, number>) => {
@@ -108,7 +122,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         student_age: parseInt(age),
         age_group: config.ageGroup,
         teacher_id: teacherId,
-        responses: finalAnswers,
+        responses: { ...finalAnswers, vark: varkAnswers },
         submitted_by: userId,
         student_class: studentClass,
         section: section.trim(),
@@ -126,6 +140,10 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const answeredCount = Object.keys(answers).length;
   const totalQuestions = config?.questions.length || 30;
   const progress = Math.round((answeredCount / totalQuestions) * 100);
+
+  const varkTotal = varkConfig?.questions.length || 20;
+  const varkAnsweredCount = Object.keys(varkAnswers).length;
+  const varkProgress = Math.round((varkAnsweredCount / varkTotal) * 100);
 
   // ─── Form Phase ───
   if (phase === "form") {
