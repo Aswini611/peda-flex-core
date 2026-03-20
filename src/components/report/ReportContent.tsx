@@ -1,4 +1,5 @@
 import type { AgeGroupReport, DimensionScore } from "@/data/reportTheories";
+import type { VarkScores } from "@/data/varkMapping";
 
 interface ReportContentProps {
   studentName: string;
@@ -7,6 +8,9 @@ interface ReportContentProps {
   submittedAt: string;
   reportConfig: AgeGroupReport;
   scores: DimensionScore[];
+  varkScores: VarkScores;
+  studentClass?: string;
+  teacherName?: string;
 }
 
 export const ReportContent = ({
@@ -16,6 +20,9 @@ export const ReportContent = ({
   submittedAt,
   reportConfig,
   scores,
+  varkScores,
+  studentClass,
+  teacherName,
 }: ReportContentProps) => {
   const highCount = scores.filter((s) => s.level === "High").length;
   const moderateCount = scores.filter((s) => s.level === "Moderate").length;
@@ -28,6 +35,19 @@ export const ReportContent = ({
   });
 
   const reportId = `APD-${new Date(submittedAt).getFullYear()}-${String(new Date(submittedAt).getMonth() + 1).padStart(2, "0")}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
+
+  const varkEntries = [
+    { letter: "V", name: "Visual", score: varkScores.visual },
+    { letter: "A", name: "Auditory", score: varkScores.auditory },
+    { letter: "R", name: "Read / Write", score: varkScores.readWrite },
+    { letter: "K", name: "Kinesthetic", score: varkScores.kinesthetic },
+  ];
+
+  const varkDescription = (() => {
+    const dominant = varkEntries.reduce((a, b) => (a.score >= b.score ? a : b));
+    const weakest = varkEntries.reduce((a, b) => (a.score <= b.score ? a : b));
+    return `${studentName} shows a strong preference for ${dominant.name.toLowerCase()} processing. ${dominant.name}-oriented activities will yield the highest retention. ${weakest.name} formats may need additional scaffolding.`;
+  })();
 
   return (
     <div className="space-y-6 font-sans">
@@ -50,11 +70,11 @@ export const ReportContent = ({
         </div>
       </div>
 
-      {/* LEARNER CARD */}
+      {/* LEARNER CARD - Name, Class, Teacher */}
       <div className="bg-[#1a1a2e] text-white rounded-2xl px-7 py-5 grid grid-cols-3 gap-5">
         <LearnerField label="Learner" value={studentName} sub={`Age ${studentAge}`} />
-        <LearnerField label="Age Group" value={`${ageGroup}+ years`} sub={reportConfig.title} />
-        <LearnerField label="Theories Applied" value={reportConfig.theories[0]} sub={reportConfig.theories.slice(1).join(" · ")} />
+        <LearnerField label="Class" value={studentClass || "N/A"} sub={`Section`} />
+        <LearnerField label="Class Teacher" value={teacherName || "N/A"} />
       </div>
 
       {/* SUMMARY CARDS */}
@@ -62,6 +82,38 @@ export const ReportContent = ({
         <SummaryCard count={highCount} label="Strong Areas" bgClass="bg-[#dff0d8]" textClass="text-[#2d6a2d]" borderClass="border-[#2d6a2d]/20" />
         <SummaryCard count={moderateCount} label="Moderate Areas" bgClass="bg-[#fef3c7]" textClass="text-[#92400e]" borderClass="border-[#92400e]/20" />
         <SummaryCard count={developingCount} label="Needs Attention" bgClass="bg-[#fee2e2]" textClass="text-[#991b1b]" borderClass="border-[#991b1b]/20" />
+      </div>
+
+      {/* VARK LEARNING STYLE PROFILE */}
+      <div>
+        <SectionTitle>VARK Learning Style Profile</SectionTitle>
+        <div className="grid grid-cols-4 gap-3 mb-3">
+          {varkEntries.map((v) => {
+            const isDominant = v.score === Math.max(...varkEntries.map(e => e.score));
+            return (
+              <div
+                key={v.letter}
+                className={`relative bg-white border rounded-xl p-4 text-center overflow-hidden ${isDominant ? "border-[#0e9a7b] bg-[#e1f5ee]" : "border-[#e2e0d8]"}`}
+              >
+                {isDominant && (
+                  <span className="absolute top-1.5 right-1.5 text-[8px] font-bold tracking-[1px] text-[#0e9a7b]">DOMINANT</span>
+                )}
+                <div className={`text-4xl mb-1 ${isDominant ? "text-[#0e9a7b]" : "text-[#1a1a2e]"}`} style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  {v.letter}
+                </div>
+                <div className="text-[11px] font-medium text-[#6b6b8a] mb-2.5">{v.name}</div>
+                <div className="h-2 bg-[#e2e0d8] rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${isDominant ? "bg-[#0e9a7b]" : "bg-[#6b6b8a]"}`}
+                    style={{ width: `${v.score}%` }}
+                  />
+                </div>
+                <div className="text-sm font-semibold text-[#3a3a5c] mt-1.5">{v.score}%</div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-xs text-[#6b6b8a] mt-4 leading-relaxed">{varkDescription}</p>
       </div>
 
       {/* DIMENSION SCORES */}
@@ -126,12 +178,12 @@ export const ReportContent = ({
             ))
           ) : (
             <AiRecItem>
-              All dimensions are performing at a <strong>high level</strong>. Continue with enrichment activities and advanced challenges to maintain momentum.
+              All dimensions are performing at a <strong>high level</strong>. Continue with enrichment activities and advanced challenges.
             </AiRecItem>
           )}
           {scores.filter(s => s.level === "High").length > 0 && (
             <AiRecItem>
-              Leverage strengths in <strong>{scores.filter(s => s.level === "High").map(s => s.dimension).join(", ")}</strong> to scaffold weaker areas through cross-domain activities.
+              Leverage strengths in <strong>{scores.filter(s => s.level === "High").map(s => s.dimension).join(", ")}</strong> to scaffold weaker areas.
             </AiRecItem>
           )}
         </ul>

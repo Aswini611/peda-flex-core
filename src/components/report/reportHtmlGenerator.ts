@@ -1,4 +1,5 @@
 import type { AgeGroupReport, DimensionScore } from "@/data/reportTheories";
+import type { VarkScores } from "@/data/varkMapping";
 
 interface ReportData {
   studentName: string;
@@ -7,10 +8,13 @@ interface ReportData {
   submittedAt: string;
   reportConfig: AgeGroupReport;
   scores: DimensionScore[];
+  varkScores: VarkScores;
+  studentClass?: string;
+  teacherName?: string;
 }
 
 export function generateReportHtml(data: ReportData): string {
-  const { studentName, studentAge, ageGroup, submittedAt, reportConfig, scores } = data;
+  const { studentName, studentAge, ageGroup, submittedAt, reportConfig, scores, varkScores, studentClass, teacherName } = data;
 
   const highCount = scores.filter((s) => s.level === "High").length;
   const moderateCount = scores.filter((s) => s.level === "Moderate").length;
@@ -29,6 +33,30 @@ export function generateReportHtml(data: ReportData): string {
   };
 
   const barColor = (s: DimensionScore) => s.level === "High" ? "#0e9a7b" : s.level === "Moderate" ? "#d97706" : "#e55a3c";
+
+  // VARK cards
+  const varkEntries = [
+    { letter: "V", name: "Visual", score: varkScores.visual },
+    { letter: "A", name: "Auditory", score: varkScores.auditory },
+    { letter: "R", name: "Read / Write", score: varkScores.readWrite },
+    { letter: "K", name: "Kinesthetic", score: varkScores.kinesthetic },
+  ];
+  const maxVark = Math.max(...varkEntries.map(e => e.score));
+
+  const dominant = varkEntries.reduce((a, b) => (a.score >= b.score ? a : b));
+  const weakest = varkEntries.reduce((a, b) => (a.score <= b.score ? a : b));
+  const varkDescription = `${studentName} shows a strong preference for ${dominant.name.toLowerCase()} processing. ${dominant.name}-oriented activities will yield the highest retention. ${weakest.name} formats may need additional scaffolding.`;
+
+  const varkCards = varkEntries.map(v => {
+    const isDominant = v.score === maxVark;
+    return `<div style="background:${isDominant ? '#e1f5ee' : '#fff'};border:1.5px solid ${isDominant ? '#0e9a7b' : '#e2e0d8'};border-radius:12px;padding:16px 12px;text-align:center;position:relative;overflow:hidden;">
+      ${isDominant ? `<span style="position:absolute;top:6px;right:6px;font-size:8px;font-weight:700;letter-spacing:1px;color:#0e9a7b;">DOMINANT</span>` : ''}
+      <div style="font-family:'DM Serif Display',serif;font-size:36px;color:${isDominant ? '#0e9a7b' : '#1a1a2e'};margin-bottom:4px;">${v.letter}</div>
+      <div style="font-size:11px;font-weight:500;color:#6b6b8a;margin-bottom:10px;">${v.name}</div>
+      <div style="background:#e2e0d8;border-radius:4px;height:8px;width:100%;"><div style="height:8px;border-radius:4px;background:${isDominant ? '#0e9a7b' : '#6b6b8a'};width:${v.score}%;"></div></div>
+      <div style="font-size:13px;font-weight:600;color:#3a3a5c;margin-top:6px;">${v.score}%</div>
+    </div>`;
+  }).join("");
 
   const dimensionRows = scores.map((s) => {
     const isTop = s.level === "High";
@@ -63,18 +91,18 @@ export function generateReportHtml(data: ReportData): string {
 
   let recItems = "";
   if (devScores.length > 0) {
-    recItems += devScores.map(s => `<li style="display:flex;gap:12px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5;"><span style="color:#0e9a7b;font-weight:600;flex-shrink:0;">→</span><span><strong>${s.dimension}</strong> needs focused attention. ${s.interpretation}</span></li>`).join("");
+    recItems += devScores.map(s => `<li><strong>${s.dimension}</strong> needs focused attention. ${s.interpretation}</li>`).join("");
   } else if (modScores.length > 0) {
-    recItems += modScores.slice(0, 3).map(s => `<li style="display:flex;gap:12px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5;"><span style="color:#0e9a7b;font-weight:600;flex-shrink:0;">→</span><span><strong>${s.dimension}</strong> is at a moderate level. ${s.interpretation}</span></li>`).join("");
+    recItems += modScores.slice(0, 3).map(s => `<li><strong>${s.dimension}</strong> is at a moderate level. ${s.interpretation}</li>`).join("");
   } else {
-    recItems += `<li style="display:flex;gap:12px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5;"><span style="color:#0e9a7b;font-weight:600;flex-shrink:0;">→</span><span>All dimensions are performing at a <strong>high level</strong>. Continue with enrichment activities and advanced challenges.</span></li>`;
+    recItems += `<li>All dimensions are performing at a <strong>high level</strong>. Continue with enrichment activities and advanced challenges.</li>`;
   }
   if (highScores.length > 0) {
-    recItems += `<li style="display:flex;gap:12px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5;"><span style="color:#0e9a7b;font-weight:600;flex-shrink:0;">→</span><span>Leverage strengths in <strong>${highScores.map(s => s.dimension).join(", ")}</strong> to scaffold weaker areas through cross-domain activities.</span></li>`;
+    recItems += `<li>Leverage strengths in <strong>${highScores.map(s => s.dimension).join(", ")}</strong> to scaffold weaker areas through cross-domain activities.</li>`;
   }
 
   const theoryTags = reportConfig.theories.map(t =>
-    `<span style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.65);font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);">${t}</span>`
+    `<span class="ai-tag">${t}</span>`
   ).join(" ");
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -82,9 +110,26 @@ export function generateReportHtml(data: ReportData): string {
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#f7f5f0;font-family:'DM Sans',sans-serif;color:#1a1a2e;padding:0;}
+  body{background:#f7f5f0;font-family:'DM Sans',sans-serif;color:#1a1a2e;padding:0;
+    -webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
   .report{max-width:780px;margin:0 auto;padding:32px 24px;}
-  @media print{body{padding:0;background:#fff;}.report{padding:16px;}}
+  .section{margin-bottom:28px;}
+  .section-title{font-family:'DM Serif Display',serif;font-size:20px;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+  .section-title::before{content:'';display:block;width:4px;height:22px;border-radius:2px;background:#0e9a7b;}
+  .vark-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
+  .ai-box{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:16px;padding:24px 28px;color:white;}
+  .ai-box-title{font-family:'DM Serif Display',serif;font-size:18px;color:white;margin-bottom:4px;}
+  .ai-box-sub{font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:20px;letter-spacing:1px;text-transform:uppercase;}
+  .ai-rec-list{list-style:none;display:flex;flex-direction:column;gap:10px;padding:0;}
+  .ai-rec-list li{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.5;}
+  .ai-rec-list li::before{content:'→';color:#0e9a7b;font-weight:600;flex-shrink:0;margin-top:1px;}
+  .ai-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .ai-tag{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.65);font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);}
+  @media print{
+    body{padding:0;background:#fff !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+    .report{padding:16px;}
+    .ai-box{background:#1a1a2e !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  }
 </style>
 </head><body><div class="report">
 
@@ -102,53 +147,55 @@ export function generateReportHtml(data: ReportData): string {
   </div>
 
   <!-- LEARNER CARD -->
-  <div style="background:#1a1a2e;color:white;border-radius:16px;padding:24px 28px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+  <div style="background:#1a1a2e;color:white;border-radius:16px;padding:24px 28px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
     <div>
       <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Learner</div>
       <div style="font-family:'DM Serif Display',serif;font-size:18px;">${studentName}</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.55);">Age ${studentAge}</div>
     </div>
     <div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Age Group</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:18px;">${ageGroup}+ years</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.55);">${reportConfig.title}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Class</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:18px;">${studentClass || 'N/A'}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);">Section</div>
     </div>
     <div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Theories Applied</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:18px;">${reportConfig.theories[0]}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.55);">${reportConfig.theories.slice(1).join(" · ")}</div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Class Teacher</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:18px;">${teacherName || 'N/A'}</div>
     </div>
   </div>
 
   <!-- SUMMARY -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
-    <div style="background:#dff0d8;border:1px solid rgba(45,106,45,0.2);border-radius:12px;padding:16px;text-align:center;">
+    <div style="background:#dff0d8;border:1px solid rgba(45,106,45,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <div style="font-size:28px;font-weight:700;color:#2d6a2d;">${highCount}</div>
       <div style="font-size:12px;font-weight:500;color:#2d6a2d;">Strong Areas</div>
     </div>
-    <div style="background:#fef3c7;border:1px solid rgba(146,64,14,0.2);border-radius:12px;padding:16px;text-align:center;">
+    <div style="background:#fef3c7;border:1px solid rgba(146,64,14,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <div style="font-size:28px;font-weight:700;color:#92400e;">${moderateCount}</div>
       <div style="font-size:12px;font-weight:500;color:#92400e;">Moderate Areas</div>
     </div>
-    <div style="background:#fee2e2;border:1px solid rgba(153,27,27,0.2);border-radius:12px;padding:16px;text-align:center;">
+    <div style="background:#fee2e2;border:1px solid rgba(153,27,27,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <div style="font-size:28px;font-weight:700;color:#991b1b;">${developingCount}</div>
       <div style="font-size:12px;font-weight:500;color:#991b1b;">Needs Attention</div>
     </div>
   </div>
 
+  <!-- VARK LEARNING STYLE PROFILE -->
+  <div class="section">
+    <div class="section-title">VARK Learning Style Profile</div>
+    <div class="vark-grid">${varkCards}</div>
+    <p style="font-size:12px;color:#6b6b8a;margin-top:18px;line-height:1.6;">${varkDescription}</p>
+  </div>
+
   <!-- DIMENSION ANALYSIS -->
-  <div style="margin-bottom:28px;">
-    <h2 style="font-family:'DM Serif Display',serif;font-size:20px;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-      <span style="display:block;width:4px;height:22px;border-radius:2px;background:#0e9a7b;"></span>Dimension Analysis
-    </h2>
+  <div class="section">
+    <div class="section-title">Dimension Analysis</div>
     ${dimensionRows}
   </div>
 
   <!-- SCORE TABLE -->
-  <div style="margin-bottom:28px;">
-    <h2 style="font-family:'DM Serif Display',serif;font-size:20px;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-      <span style="display:block;width:4px;height:22px;border-radius:2px;background:#0e9a7b;"></span>Assessment Score Breakdown
-    </h2>
+  <div class="section">
+    <div class="section-title">Assessment Score Breakdown</div>
     <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e2e0d8;border-radius:12px;overflow:hidden;">
       <thead>
         <tr style="border-bottom:2px solid #e2e0d8;">
@@ -163,13 +210,15 @@ export function generateReportHtml(data: ReportData): string {
   </div>
 
   <!-- AI RECOMMENDATIONS -->
-  <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:16px;padding:24px 28px;color:white;margin-bottom:28px;">
-    <div style="font-family:'DM Serif Display',serif;font-size:18px;color:white;margin-bottom:4px;">AI Instructional Recommendations</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:20px;letter-spacing:1px;text-transform:uppercase;">Generated by APAS Engine · Curative Phase Inputs</div>
-    <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;padding:0;">${recItems}</ul>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
-      ${theoryTags}
-      <span style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.65);font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);">Age Group: ${ageGroup}+</span>
+  <div class="section">
+    <div class="ai-box">
+      <div class="ai-box-title">AI Instructional Recommendations</div>
+      <div class="ai-box-sub">Generated by APAS Engine · Curative Phase Inputs</div>
+      <ul class="ai-rec-list">${recItems}</ul>
+      <div class="ai-tags">
+        ${theoryTags}
+        <span class="ai-tag">Age Group: ${ageGroup}+</span>
+      </div>
     </div>
   </div>
 

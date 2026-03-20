@@ -36,7 +36,7 @@ interface StudentAssessment {
 }
 
 const TeacherPanel = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedAssessment, setSelectedAssessment] = useState<StudentAssessment | null>(null);
   const [filterClass, setFilterClass] = useState<string>("all");
   const [filterSection, setFilterSection] = useState<string>("all");
