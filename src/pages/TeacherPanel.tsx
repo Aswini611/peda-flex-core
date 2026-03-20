@@ -36,7 +36,7 @@ interface StudentAssessment {
 }
 
 const TeacherPanel = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedAssessment, setSelectedAssessment] = useState<StudentAssessment | null>(null);
   const [filterClass, setFilterClass] = useState<string>("all");
   const [filterSection, setFilterSection] = useState<string>("all");
@@ -318,6 +318,8 @@ const TeacherPanel = () => {
           ageGroup={selectedAssessment.age_group}
           responses={selectedAssessment.responses}
           submittedAt={selectedAssessment.created_at}
+          studentClass={selectedAssessment.student_class || undefined}
+          teacherName={profile?.full_name || undefined}
         />
       )}
     </AppLayout>
