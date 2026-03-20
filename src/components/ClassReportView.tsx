@@ -143,7 +143,7 @@ export const ClassReportView = ({
     .sort((a, b) => a.avg - b.avg)[0];
 
   return (
-    <div className="space-y-7" style={{ fontFamily: "'Sora', 'DM Sans', sans-serif" }}>
+    <div className="space-y-7 bg-[#f6f5f2] p-5 rounded-xl" style={{ fontFamily: "'Sora', 'DM Sans', sans-serif" }}>
       {/* HEADER */}
       <div className="flex justify-between items-start pb-5 border-b-2 border-[#1c1c2e]">
         <div>
