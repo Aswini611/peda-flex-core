@@ -649,8 +649,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);padding:0;-we
 </div>
 
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"><\/script>
 <script>
+document.querySelector('script[src*="Chart.js"]').onload = function() { renderCharts(); };
+if (typeof Chart !== 'undefined') renderCharts();
+function renderCharts() {
 const learners=${JSON.stringify(allScores.map(s => ({ n: s.name, s: s.avg, v: s.vark.charAt(0) })))};
 const varkColor=${JSON.stringify(varkColor)};
 const varkMap={"V":"Visual","A":"Auditory","R":"Read/Write","K":"Kinesthetic"};
