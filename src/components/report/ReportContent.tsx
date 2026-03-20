@@ -70,7 +70,7 @@ export const ReportContent = ({
       {/* LEARNER CARD - Name, Class, Teacher */}
       <div className="bg-[#1a1a2e] text-white rounded-2xl px-7 py-5 grid grid-cols-3 gap-5">
         <LearnerField label="Learner" value={studentName} sub={`Age ${studentAge}`} />
-        <LearnerField label="Class" value={studentClass || "N/A"} sub={`Section`} />
+        <LearnerField label="Class" value={studentClass || "N/A"} />
         <LearnerField label="Class Teacher" value={teacherName || "N/A"} />
       </div>
 

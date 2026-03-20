@@ -155,7 +155,6 @@ export function generateReportHtml(data: ReportData): string {
     <div>
       <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Class</div>
       <div style="font-family:'DM Serif Display',serif;font-size:18px;">${studentClass || 'N/A'}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.55);">Section</div>
     </div>
     <div>
       <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px;">Class Teacher</div>
