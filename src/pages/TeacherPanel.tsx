@@ -6,9 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, FileText, Filter, BarChart3, Download } from "lucide-react";
@@ -17,8 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { StudentReport } from "@/components/StudentReport";
-import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
+import { analyzeResponses } from "@/data/reportTheories";
 import { deriveVarkScores } from "@/data/varkMapping";
+import { ClassReportView } from "@/components/ClassReportView";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
