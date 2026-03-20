@@ -17,6 +17,7 @@ import { StudentReport } from "@/components/StudentReport";
 import { analyzeResponses } from "@/data/reportTheories";
 import { deriveVarkScores } from "@/data/varkMapping";
 import { ClassReportView } from "@/components/ClassReportView";
+import { CurativeLessonPlanView } from "@/components/CurativeLessonPlanView";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
