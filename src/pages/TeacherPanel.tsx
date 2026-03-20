@@ -372,6 +372,20 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
     setTimeout(waitForCharts, 500);
   };
 
+  const handleDownloadLessonPlan = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    const html = generateLessonPlanHtml({
+      assessments,
+      classLabel,
+      filterSection,
+      teacherName: teacherName || "N/A",
+    });
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 600);
+  };
+
   return (
     <>
       {/* Inline summary card */}
