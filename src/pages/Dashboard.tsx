@@ -150,6 +150,19 @@ const StudentDashboard = () => {
     enabled: !!user?.id,
   });
 
+  const { data: teacherProfile } = useQuery({
+    queryKey: ["teacher-profile", myAssessment?.teacher_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", myAssessment!.teacher_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!myAssessment?.teacher_id,
+  });
+
   const reportConfig = myAssessment ? getReportConfig(myAssessment.age_group) : null;
   const scores = myAssessment ? analyzeResponses(myAssessment.age_group, myAssessment.responses as Record<string, number>) : null;
 
