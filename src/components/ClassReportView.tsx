@@ -150,9 +150,6 @@ export const ClassReportView = ({
           <h1 className="text-[26px] font-bold tracking-tight text-[#1c1c2e]" style={{ fontFamily: "'Playfair Display', 'DM Serif Display', serif" }}>
             APAS <em className="text-[#0e9a7b] italic">Class Diagnostic</em>
           </h1>
-          <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#8282a8] mt-1">
-            Cohort Report · Phase 1 → Curative Handoff
-          </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-[#8282a8]">Report ID: {reportId}</p>
