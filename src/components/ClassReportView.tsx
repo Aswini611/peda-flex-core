@@ -267,7 +267,17 @@ export const ClassReportView = ({
         <div className="grid grid-cols-2 gap-3.5">
           {GROUP_META.map(g => {
             const names = data.varkGroups[g.key] || [];
-            if (names.length === 0) return null;
+            if (names.length === 0) {
+              return (
+                <div key={g.key} className="rounded-xl p-4 opacity-60" style={{ background: g.bg, border: `1.5px dashed ${g.border}` }}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[13px] font-semibold" style={{ color: g.labelColor }}>{g.label}</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: g.countBg, color: g.labelColor }}>0 learners</span>
+                  </div>
+                  <p className="text-[12px] text-[#8282a8] italic">No {g.key.toLowerCase()} learners identified in this class.</p>
+                </div>
+              );
+            }
             const groupAvg = Math.round(
               data.allScores.filter(s => names.includes(s.studentName)).reduce((a, b) => a + b.avgScore, 0) / names.length
             );
