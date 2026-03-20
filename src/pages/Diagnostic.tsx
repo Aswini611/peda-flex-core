@@ -240,64 +240,108 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     );
   }
 
-  // ─── Quiz Phase (30 Assessment Questions) ───
+  // ─── Unified Quiz Phase (30 Assessment + 20 VARK = 50 Questions) ───
   if (phase === "quiz") {
     if (!config) return null;
-    const question = config.questions[currentQ];
+    const isVarkQuestion = currentQ >= assessmentCount;
+    const varkIndex = currentQ - assessmentCount;
     const isLastQuestion = currentQ === totalQuestions - 1;
-    const allAnswered = answeredCount === totalQuestions;
+    const allAnswered = totalAnswered === totalQuestions;
+
+    // Current question display number (1-based)
+    const displayNum = currentQ + 1;
 
     return (
       <AppLayout>
         <PageHeader
           title="Student Assessment"
-          subtitle={`Part 1: ${config.label} — ${config.model}`}
+          subtitle={`${config.label} — ${config.model}`}
         />
 
         {/* Progress */}
         <div className="mb-6">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Question {currentQ + 1} of {totalQuestions}</span>
-            <span>{answeredCount} answered</span>
+            <span>Question {displayNum} of {totalQuestions}</span>
+            <span>{totalAnswered} answered</span>
           </div>
           <Progress value={progress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">Part 1 of 2 · Assessment Questions</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isVarkQuestion ? "VARK Learning Style Questions" : "Assessment Questions"}
+          </p>
         </div>
 
         {/* Question Card */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="animate-fade-in" key={currentQ}>
-              <p className="text-lg font-medium text-foreground mb-6">
-                <span className="text-primary font-bold mr-2">{question.id}.</span>
-                {question.text}
-              </p>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {config.options.map((opt) => {
-                  const selected = answers[question.id] === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => {
-                        handleAnswer(question.id, opt.value);
-                        if (!isLastQuestion) {
-                          setTimeout(() => setCurrentQ((q) => q + 1), 350);
-                        }
-                      }}
-                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
-                        selected
-                          ? "border-primary bg-primary/10 text-primary shadow-sm"
-                          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
-                      }`}
-                    >
-                      <span className="text-2xl">{opt.emoji}</span>
-                      <span>{opt.label}</span>
-                    </button>
-                  );
-                })}
+            {!isVarkQuestion ? (
+              // Assessment question (Likert scale)
+              <div className="animate-fade-in" key={currentQ}>
+                <p className="text-lg font-medium text-foreground mb-6">
+                  <span className="text-primary font-bold mr-2">{displayNum}.</span>
+                  {config.questions[currentQ].text}
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {config.options.map((opt) => {
+                    const qId = config.questions[currentQ].id;
+                    const selected = answers[qId] === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          handleAnswer(qId, opt.value);
+                          if (!isLastQuestion) {
+                            setTimeout(() => setCurrentQ((q) => q + 1), 350);
+                          }
+                        }}
+                        className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
+                          selected
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
+                        }`}
+                      >
+                        <span className="text-2xl">{opt.emoji}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ) : (
+              // VARK question (MCQ)
+              varkConfig && (
+                <div className="animate-fade-in" key={`vark-${varkIndex}`}>
+                  <p className="text-lg font-medium text-foreground mb-6">
+                    <span className="text-primary font-bold mr-2">{displayNum}.</span>
+                    {varkConfig.questions[varkIndex].text}
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {varkConfig.questions[varkIndex].options.map((opt) => {
+                      const vqId = varkConfig.questions[varkIndex].id;
+                      const selected = varkAnswers[vqId] === opt.modality;
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() => {
+                            handleVarkAnswer(vqId, opt.modality);
+                            if (!isLastQuestion) {
+                              setTimeout(() => setCurrentQ((q) => q + 1), 350);
+                            }
+                          }}
+                          className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
+                            selected
+                              ? "border-primary bg-primary/10 text-primary shadow-sm"
+                              : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
+                          }`}
+                        >
+                          <span className="text-lg font-bold text-primary/70 w-6">{opt.label}.</span>
+                          <span>{opt.text}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
+            )}
           </CardContent>
         </Card>
 
@@ -312,180 +356,64 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
           </Button>
 
           <div className="flex gap-2">
-            {!isLastQuestion && answers[question.id] !== undefined && (
-              <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                Next <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            )}
-            {isLastQuestion && answers[question.id] !== undefined && (
-              <div className="flex flex-col items-end gap-1">
-                <Button
-                  onClick={() => {
-                    if (varkConfig) {
-                      setPhase("vark");
-                    } else {
-                      handleSubmitWithAnswers(answers);
-                    }
-                  }}
-                  disabled={!allAnswered}
-                >
-                  {varkConfig ? "Next: Learning Style Quiz" : (submitting ? "Submitting..." : "Submit Assessment")}
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-                {!allAnswered && (
-                  <span className="text-xs text-destructive">
-                    {totalQuestions - answeredCount} question{totalQuestions - answeredCount > 1 ? "s" : ""} unanswered
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+            {(() => {
+              const currentAnswered = isVarkQuestion
+                ? varkConfig && varkAnswers[varkConfig.questions[varkIndex].id] !== undefined
+                : answers[config.questions[currentQ].id] !== undefined;
 
-        {/* Question dots navigation */}
-        <div className="mt-6 flex flex-wrap gap-1.5 justify-center">
-          {config.questions.map((q, i) => (
-            <button
-              key={q.id}
-              onClick={() => setCurrentQ(i)}
-              className={`h-7 w-7 rounded-full text-xs font-medium transition-all ${
-                i === currentQ
-                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
-                  : answers[q.id] !== undefined
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {q.id}
-            </button>
-          ))}
-        </div>
-      </AppLayout>
-    );
-  }
-
-  // ─── VARK Quiz Phase ───
-  if (phase === "vark") {
-    if (!varkConfig) return null;
-    const vq = varkConfig.questions[varkCurrentQ];
-    const isLastVark = varkCurrentQ === varkTotal - 1;
-    const allVarkAnswered = varkAnsweredCount === varkTotal;
-
-    return (
-      <AppLayout>
-        <PageHeader
-          title="Learning Style Assessment"
-          subtitle={`Part 2: VARK Learning Style — ${varkConfig.label}`}
-        />
-
-        {/* Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Question {varkCurrentQ + 1} of {varkTotal}</span>
-            <span>{varkAnsweredCount} answered</span>
-          </div>
-          <Progress value={varkProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">Part 2 of 2 · VARK Learning Style Questions</p>
-        </div>
-
-        {/* VARK Question Card */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="animate-fade-in" key={`vark-${varkCurrentQ}`}>
-              <p className="text-lg font-medium text-foreground mb-6">
-                <span className="text-primary font-bold mr-2">{vq.id}.</span>
-                {vq.text}
-              </p>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {vq.options.map((opt) => {
-                  const selected = varkAnswers[vq.id] === opt.modality;
-                  return (
-                    <button
-                      key={opt.label}
-                      onClick={() => {
-                        handleVarkAnswer(vq.id, opt.modality);
-                        if (!isLastVark) {
-                          setTimeout(() => setVarkCurrentQ((q) => q + 1), 350);
-                        }
-                      }}
-                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
-                        selected
-                          ? "border-primary bg-primary/10 text-primary shadow-sm"
-                          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
-                      }`}
-                    >
-                      <span className="text-lg font-bold text-primary/70 w-6">{opt.label}.</span>
-                      <span>{opt.text}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (varkCurrentQ === 0) {
-                setPhase("quiz");
-                setCurrentQ(totalQuestions - 1);
-              } else {
-                setVarkCurrentQ((q) => q - 1);
+              if (!isLastQuestion && currentAnswered) {
+                return (
+                  <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                    Next <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                );
               }
-            }}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Previous
-          </Button>
-
-          <div className="flex gap-2">
-            {!isLastVark && varkAnswers[vq.id] !== undefined && (
-              <Button onClick={() => setVarkCurrentQ((q) => q + 1)}>
-                Next <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            )}
-            {isLastVark && varkAnswers[vq.id] !== undefined && (
-              <div className="flex flex-col items-end gap-1">
-                <Button onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting || !allVarkAnswered}>
-                  {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
-                </Button>
-                {!allVarkAnswered && (
-                  <span className="text-xs text-destructive">
-                    {varkTotal - varkAnsweredCount} question{varkTotal - varkAnsweredCount > 1 ? "s" : ""} unanswered
-                  </span>
-                )}
-              </div>
-            )}
+              if (isLastQuestion && currentAnswered) {
+                return (
+                  <div className="flex flex-col items-end gap-1">
+                    <Button onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting || !allAnswered}>
+                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
+                    </Button>
+                    {!allAnswered && (
+                      <span className="text-xs text-destructive">
+                        {totalQuestions - totalAnswered} question{totalQuestions - totalAnswered > 1 ? "s" : ""} unanswered
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         </div>
 
         {/* Question dots navigation */}
         <div className="mt-6 flex flex-wrap gap-1.5 justify-center">
-          {varkConfig.questions.map((q, i) => (
-            <button
-              key={q.id}
-              onClick={() => setVarkCurrentQ(i)}
-              className={`h-7 w-7 rounded-full text-xs font-medium transition-all ${
-                i === varkCurrentQ
-                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
-                  : varkAnswers[q.id] !== undefined
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {q.id}
-            </button>
-          ))}
+          {Array.from({ length: totalQuestions }, (_, i) => {
+            const isVark = i >= assessmentCount;
+            const answered = isVark
+              ? varkConfig && varkAnswers[varkConfig.questions[i - assessmentCount].id] !== undefined
+              : answers[config.questions[i].id] !== undefined;
+            return (
+              <button
+                key={i}
+                onClick={() => setCurrentQ(i)}
+                className={`h-7 w-7 rounded-full text-xs font-medium transition-all ${
+                  i === currentQ
+                    ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
+                    : answered
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i + 1}
+              </button>
+            );
+          })}
         </div>
       </AppLayout>
     );
   }
-
-  return null;
-};
 
 // ─── Teacher/Admin Diagnostic ───────────────────
 
