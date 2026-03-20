@@ -724,4 +724,175 @@ loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
 </script></body></html>`;
 }
 
+// ─── Lesson Plan HTML Generator (for PDF download) ───────────────────────
+function generateLessonPlanHtml(params: {
+  assessments: StudentAssessment[];
+  classLabel: string;
+  filterSection: string;
+  teacherName: string;
+}): string {
+  const { assessments, classLabel, filterSection, teacherName } = params;
+
+  const varkCounts: Record<string, number> = { Visual: 0, Auditory: 0, "Read/Write": 0, Kinesthetic: 0 };
+  const varkGroups: Record<string, string[]> = { Visual: [], Auditory: [], "Read/Write": [], Kinesthetic: [] };
+  const allScores: { name: string; avg: number; vark: string }[] = [];
+
+  assessments.forEach(a => {
+    const scores = analyzeResponses(a.age_group, a.responses as Record<string, number>);
+    const varkR = (a.responses as any)?.vark as Record<string, string> | undefined;
+    const vark = deriveVarkScores(a.age_group, a.responses as Record<string, number>, varkR);
+    if (!scores) return;
+    const avg = Math.round(scores.reduce((s, d) => s + d.percentage, 0) / scores.length);
+    allScores.push({ name: a.student_name, avg, vark: vark.dominant });
+    varkCounts[vark.dominant]++;
+    varkGroups[vark.dominant]?.push(a.student_name);
+  });
+
+  const classAvg = allScores.length > 0 ? Math.round(allScores.reduce((s, a) => s + a.avg, 0) / allScores.length) : 0;
+  const dominantVark = Object.entries(varkCounts).reduce((a, b) => a[1] >= b[1] ? a : b);
+  const sectionLabel = filterSection !== "all" ? `-${filterSection}` : "";
+  const planId = `APC-CLS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
+  const planDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  const groupAvgs: Record<string, number> = {};
+  ["Visual", "Read/Write", "Auditory", "Kinesthetic"].forEach(k => {
+    const names = varkGroups[k] || [];
+    if (names.length > 0) {
+      groupAvgs[k] = Math.round(allScores.filter(s => names.includes(s.name)).reduce((a, b) => a + b.avg, 0) / names.length);
+    }
+  });
+
+  const activeGroups = ["Visual", "Read/Write", "Auditory", "Kinesthetic"].filter(k => (varkGroups[k]?.length || 0) > 0);
+  const weakest = activeGroups.map(k => ({ key: k, avg: groupAvgs[k] || 0 })).sort((a, b) => a.avg - b.avg)[0];
+
+  const groupConfigs: Record<string, any> = {
+    Visual: { group: "Group A", label: "Visual learners", bg: "#eff6ff", border: "#93c5fd", colorD: "#1e40af", badgeBg: "#bfdbfe", badges: ["Structured Mastery", "Diagram-first", "Bloom L2–L3"], objective: "Identify and describe key concepts using labelled diagrams", objectiveDetail: "Learners can correctly label a blank diagram and write a one-line description for each component.", actTitle: "Annotated diagram labelling exercise", actDesc: "Learners receive a printed half-labelled diagram. Complete missing labels using colour-coding with 5-word function notes.", resources: ["Diagram set", "Colour pencils", "Visual reference card", "Mind-map template"], sT: "Guided labelling", sD: "Key terms in word bank. Match to diagram.", cT: "Label + describe", cD: "Blank diagram, no word bank. Full-sentence descriptions.", eT: "Compare + connect", eD: "Comparison diagram with real-world analogies.", note: "Self-directed group. Circulate at minute 20 to check accuracy." },
+    "Read/Write": { group: "Group B", label: "Read/Write learners", bg: "#f5f3ff", border: "#c4b5fd", colorD: "#4c1d95", badgeBg: "#ddd6fe", badges: ["Written scaffolding", "Case study", "Bloom L2–L3"], objective: "Explain key concepts in structured written form", objectiveDetail: "Produce a structured written explanation connecting at least 3 related concepts.", actTitle: "Mini case study — structured written explanation", actDesc: "Read a 200-word scenario, annotate the text, then write a PEEL paragraph.", resources: ["Case study card", "PEEL scaffold", "Terminology bank"], sT: "Sentence starters", sD: "PEEL paragraph with sentence starters provided.", cT: "Full PEEL paragraph", cD: "Independent writing. Terminology bank as reference.", eT: "Extended analysis", eD: "Second paragraph comparing two related concepts.", note: "Check that explanations distinguish structure from function." },
+    Auditory: { group: "Group C", label: "Auditory learners", bg: "#fffbeb", border: "#fcd34d", colorD: "#92400e", badgeBg: "#fde68a", badges: ["Inquiry-Based", "Discussion", "Bloom L1–L2"], objective: "Verbally articulate key concepts through peer discussion", objectiveDetail: "Explain concepts in own spoken words and respond with follow-up questions.", actTitle: "Jigsaw discussion — 'Expert' protocol", actDesc: "Each learner assigned one concept. 5 min fact card. Pair rotations. Final debrief.", resources: ["Fact cards", "Discussion prompts", "Inquiry stems"], sT: "Scripted explanation", sD: "Sentence frame provided. Read aloud then adapt.", cT: "Free explanation", cD: "Own words with one analogy required.", eT: "Challenge question", eD: "Answer: 'What would happen if this didn't exist?'", note: "Join debrief at minute 32 to correct verbal misconceptions." },
+    Kinesthetic: { group: "Group D", label: "Kinesthetic learners", bg: "#fff1ee", border: "#fca5a5", colorD: "#9a3412", badgeBg: "#fecaca", badges: ["Hands-on", "Model construction", "Bloom L1–L2"], objective: "Physically construct a model and name key components", objectiveDetail: "Identify and name components and explain one function by pointing to model.", actTitle: "Model construction / physical build activity", actDesc: "Colour-coded materials with placement guide. Build, state name and function aloud.", resources: ["Materials", "Placement guide", "Label flags", "Digital builder"], sT: "Guided build", sD: "Step-by-step instruction card.", cT: "Build from guide", cD: "Placement guide only, no names. Independent build.", eT: "Extended adaptation", eD: "Modify model to create a variation. Explain differences.", note: "Begin with lowest-scoring learners on guided tier. Photograph models." },
+  };
+
+  const groupPanels = ["Visual", "Read/Write", "Auditory", "Kinesthetic"].map(k => {
+    const cfg = groupConfigs[k];
+    const names = varkGroups[k] || [];
+    const count = names.length;
+    const gAvg = groupAvgs[k] || 0;
+    if (count === 0) return "";
+    const isWeakest = k === weakest?.key && weakest.avg < 50;
+    const alert = isWeakest ? `<div class="alert-row"><span style="font-size:16px;flex-shrink:0">⚠</span><span><strong>Priority intervention group.</strong> ${count} learners scored below ${gAvg}%. Delivery mismatch risk is high. Hands-on activity mandatory. Teacher should begin circulation here.</span></div>` : "";
+    return `<div style="margin-bottom:24px;">${alert}
+      <div style="background:${cfg.bg};border:1.5px solid ${cfg.border};border-radius:12px 12px 0 0;padding:18px 22px;">
+        <div style="font-family:var(--display);font-size:18px;color:${cfg.colorD}">${cfg.group} — ${cfg.label}</div>
+        <div style="font-size:11px;color:${cfg.colorD};opacity:.7;margin-top:3px;">${count} learners · Avg pre-test ${gAvg}%</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${cfg.badges.map((b: string) => `<span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:12px;background:${cfg.badgeBg};color:${cfg.colorD}">${b}</span>`).join("")}<span style="font-size:10px;font-weight:600;padding:3px 9px;border-radius:12px;background:${cfg.badgeBg};color:${cfg.colorD}">ZPD: ${gAvg >= 60 ? "On-level + Advanced" : "Below + On-level"}</span></div>
+      </div>
+      <div style="border:1.5px solid ${cfg.border};border-top:none;border-radius:0 0 12px 12px;background:var(--white);">
+        <div class="phase-row"><div class="phase-label">Learning objective</div><div class="phase-content"><div class="pt">${cfg.objective}</div><div class="ps">${cfg.objectiveDetail}</div></div></div>
+        <div class="phase-row"><div class="phase-label">Core activity</div><div class="phase-content"><div class="pt">${cfg.actTitle}</div><div class="ps">${cfg.actDesc}</div><div class="resources">${cfg.resources.map((r: string) => `<span class="res-chip">${r}</span>`).join("")}</div></div></div>
+        <div class="phase-row"><div class="phase-label">Scaffolding</div><div class="phase-content"><div class="pt">3-tier task cards</div></div></div>
+        <div class="task-cards">
+          <div class="task-card tc-support"><div class="tc-lbl">Support tier</div><div class="tc-title">${cfg.sT}</div><div class="tc-desc">${cfg.sD}</div></div>
+          <div class="task-card tc-core"><div class="tc-lbl">Core tier</div><div class="tc-title">${cfg.cT}</div><div class="tc-desc">${cfg.cD}</div></div>
+          <div class="task-card tc-ext"><div class="tc-lbl">Extension tier</div><div class="tc-title">${cfg.eT}</div><div class="tc-desc">${cfg.eD}</div></div>
+        </div>
+        <div class="phase-row" style="border-bottom:none;"><div class="phase-label">Teacher note</div><div class="phase-content"><div class="ps">${cfg.note}</div></div></div>
+      </div></div>`;
+  }).join("");
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>APAS Curative Lesson Plan - ${classLabel}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--ink:#1c1c2e;--ink2:#3d3d5c;--ink3:#8282a8;--bg:#f6f5f2;--white:#fff;--border:#e4e2dc;--teal:#0e9a7b;--teal-l:#e1f5ee;--teal-d:#085041;--blue-d:#1e40af;--amber-d:#92400e;--coral-d:#9a3412;--purple-d:#4c1d95;--green-d:#14532d;--font:'Sora',sans-serif;--display:'Playfair Display',serif;}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px;}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:2px solid var(--ink);margin-bottom:22px;}
+.hdr-brand{font-family:var(--display);font-size:26px;letter-spacing:-.5px;}.hdr-brand em{color:var(--teal);font-style:italic;}
+.hdr-sub{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-top:3px;}
+.hdr-right{text-align:right;font-size:12px;color:var(--ink3);}.hdr-right strong{display:block;font-size:13px;color:var(--ink2);font-weight:500;}
+.badge{display:inline-block;background:var(--teal);color:#fff;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-top:5px;}
+.badge-amber{background:#d97706;}
+.meta-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:22px;}
+.mc{background:var(--white);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px;}
+.mc .lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
+.mc .val{font-family:var(--display);font-size:16px;color:var(--ink);}
+.mc .sub{font-size:10px;color:var(--ink3);margin-top:1px;}
+.sec-title{font-family:var(--display);font-size:18px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-title::before{content:'';display:block;width:3px;height:20px;border-radius:2px;background:var(--teal);}
+.sec{margin-bottom:28px;}
+.whole-class{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.wc-hdr{background:var(--ink);padding:14px 18px;}
+.wc-hdr-title{font-family:var(--display);font-size:15px;color:#fff;}
+.wc-hdr-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;}
+.wc-body{padding:16px 18px;}
+.wc-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--border);}
+.wc-row:last-child{border-bottom:none;}
+.wc-num{width:22px;height:22px;border-radius:50%;background:var(--teal-l);color:var(--teal-d);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.wc-text{font-size:12px;color:var(--ink2);line-height:1.6;}.wc-text strong{font-weight:500;color:var(--ink);}
+.alert-row{background:rgba(229,90,60,.08);border:0.5px solid rgba(229,90,60,.35);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--coral-d);display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;line-height:1.6;}
+.phase-row{display:grid;grid-template-columns:120px 1fr;border-bottom:0.5px solid var(--border);}
+.phase-label{padding:14px 16px;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3);border-right:0.5px solid var(--border);}
+.phase-content{padding:14px 18px;}
+.phase-content .pt{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:4px;}
+.phase-content .ps{font-size:12px;color:var(--ink2);line-height:1.6;}
+.phase-content .resources{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.res-chip{font-size:10px;font-weight:500;padding:3px 9px;border-radius:10px;background:var(--bg);border:0.5px solid var(--border);color:var(--ink2);}
+.task-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px;}
+.task-card{border-radius:8px;padding:12px;border:0.5px solid var(--border);}
+.task-card .tc-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.task-card .tc-title{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;}
+.task-card .tc-desc{font-size:11px;color:var(--ink3);line-height:1.5;}
+.tc-support{background:#f0fdf4;}.tc-support .tc-lbl{color:var(--green-d);}
+.tc-core{background:#eff6ff;}.tc-core .tc-lbl{color:var(--blue-d);}
+.tc-ext{background:#f5f3ff;}.tc-ext .tc-lbl{color:var(--purple-d);}
+.exit-box{background:var(--ink);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:28px;}
+.exit-title{font-family:var(--display);font-size:16px;color:#fff;margin-bottom:12px;}
+.exit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.exit-q{background:rgba(255,255,255,.07);border-radius:8px;padding:12px 14px;border:0.5px solid rgba(255,255,255,.12);}
+.exit-q .eq-num{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px;}
+.exit-q .eq-q{font-size:12px;color:rgba(255,255,255,.9);line-height:1.5;}
+.exit-q .eq-type{font-size:10px;color:rgba(255,255,255,.4);margin-top:5px;}
+.footer{border-top:0.5px solid var(--border);padding-top:14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;}
+.footer-note{font-size:11px;color:var(--ink3);}.footer-brand{font-family:var(--display);font-size:13px;color:var(--ink2);font-style:italic;}
+@media print{body{background:#fff!important;}.exit-box,.wc-hdr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}}
+</style></head><body>
+<div class="wrap">
+<div class="hdr">
+  <div><div class="hdr-brand">APAS <em>Curative Plan</em></div><div class="hdr-sub">Phase 2 · Differentiated Lesson Plan · ${classLabel}${sectionLabel}</div></div>
+  <div class="hdr-right"><div>Plan ID: ${planId}</div><strong>${planDate}</strong><div class="badge">AI Generated</div><div class="badge badge-amber" style="margin-left:4px;">${activeGroups.length} Groups · 45 min</div></div>
+</div>
+<div class="meta-strip">
+  <div class="mc"><div class="lbl">Subject</div><div class="val">General</div><div class="sub">Curative Focus</div></div>
+  <div class="mc"><div class="lbl">Topic</div><div class="val">Review</div><div class="sub">Curative</div></div>
+  <div class="mc"><div class="lbl">Class</div><div class="val">${classLabel}${sectionLabel}</div><div class="sub">${allScores.length} learners</div></div>
+  <div class="mc"><div class="lbl">Curriculum</div><div class="val">CBSE</div><div class="sub">Aligned</div></div>
+  <div class="mc"><div class="lbl">Duration</div><div class="val">45 min</div><div class="sub">+ 10 min exit</div></div>
+  <div class="mc"><div class="lbl">Bloom's Level</div><div class="val">L2–L3</div><div class="sub">Understand → Apply</div></div>
+</div>
+<div class="sec"><div class="sec-title">Whole-class lesson arc — 45 minutes</div>
+  <div class="whole-class"><div class="wc-hdr"><div class="wc-hdr-title">Shared instructional sequence</div><div class="wc-hdr-sub">All groups move through this arc together — differentiation happens within each phase</div></div>
+    <div class="wc-body">
+      <div class="wc-row"><div class="wc-num">1</div><div class="wc-text"><strong>0–5 min · Hook:</strong> Teacher displays an unlabelled visual. Learners write 3 observations.</div></div>
+      <div class="wc-row"><div class="wc-num">2</div><div class="wc-text"><strong>5–15 min · Direct instruction:</strong> Dual-channel: narration + visual build. Serves ${dominantVark[0]} (${Math.round((dominantVark[1] as number / allScores.length) * 100)}%).</div></div>
+      <div class="wc-row"><div class="wc-num">3</div><div class="wc-text"><strong>15–35 min · Group activity:</strong> Groups split to VARK-aligned tasks. Teacher circulates to priority group first.</div></div>
+      <div class="wc-row"><div class="wc-num">4</div><div class="wc-text"><strong>35–40 min · Share-back:</strong> One rep from each group shares output. Cross-pollination of learning styles.</div></div>
+      <div class="wc-row"><div class="wc-num">5</div><div class="wc-text"><strong>40–45 min · Consolidation + exit:</strong> Teacher summarises 3 key points. 3-question exit ticket. Auto-scored.</div></div>
+    </div>
+  </div>
+</div>
+<div class="sec"><div class="sec-title">Differentiated group lesson templates</div>${groupPanels}</div>
+<div class="sec"><div class="sec-title">Exit ticket — 3-question formative assessment</div>
+  <div class="exit-box"><div class="exit-title">Whole-class exit ticket · Auto-scored by APAS · Feeds Phase 3 directly</div>
+    <div class="exit-grid">
+      <div class="exit-q"><div class="eq-num">Question 1 · Recall</div><div class="eq-q">Name the key concept discussed today and give one reason why it is important.</div><div class="eq-type">Short answer · Bloom L1 · All groups</div></div>
+      <div class="exit-q"><div class="eq-num">Question 2 · Understanding</div><div class="eq-q">A system is unable to perform its primary function. Which component is most likely not working? Explain.</div><div class="eq-type">Reasoning · Bloom L2 · Core + Extension</div></div>
+      <div class="exit-q"><div class="eq-num">Question 3 · Application</div><div class="eq-q">Compare two variations of the system. Which is more resilient and why?</div><div class="eq-type">Applied · Bloom L3 · Extension tier</div></div>
+    </div>
+  </div>
+</div>
+<div class="footer"><div class="footer-note">APAS AI · ${classLabel}${sectionLabel} Curative Plan · Teacher: ${teacherName}</div><div class="footer-brand">APAS · ${new Date().getFullYear()}</div></div>
+</div></body></html>`;
+}
+
 export default TeacherPanel;
