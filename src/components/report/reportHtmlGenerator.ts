@@ -136,8 +136,7 @@ export function generateReportHtml(data: ReportData): string {
   <!-- HEADER -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #1a1a2e;">
     <div>
-      <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#1a1a2e;letter-spacing:-0.5px;">APAS <span style="color:#0e9a7b;font-style:italic;">Diagnostic</span></div>
-      <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#6b6b8a;margin-top:4px;">Personalized Learner Report · Phase 1</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:28px;color:#1a1a2e;letter-spacing:-0.5px;">APAS <span style="color:#0e9a7b;font-style:italic;">Diagnostic</span> Report</div>
     </div>
     <div style="text-align:right;">
       <div style="font-size:12px;color:#6b6b8a;font-weight:300;">Report ID: ${reportId}</div>
