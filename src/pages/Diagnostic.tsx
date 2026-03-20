@@ -415,6 +415,9 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     );
   }
 
+  return null;
+};
+
 // ─── Teacher/Admin Diagnostic ───────────────────
 
 interface StudentProfile {
