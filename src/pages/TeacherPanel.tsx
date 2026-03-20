@@ -355,7 +355,19 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
     });
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 300);
+    // Wait for Chart.js CDN to load and render charts before printing
+    const waitForCharts = () => {
+      const canvases = printWindow.document.querySelectorAll("canvas");
+      const allRendered = canvases.length > 0 && Array.from(canvases).every(
+        (c: HTMLCanvasElement) => c.width > 0 && c.height > 0
+      );
+      if (allRendered) {
+        setTimeout(() => printWindow.print(), 500);
+      } else {
+        setTimeout(waitForCharts, 200);
+      }
+    };
+    setTimeout(waitForCharts, 500);
   };
 
   return (
