@@ -339,6 +339,7 @@ interface ClassReportProps {
 const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: ClassReportProps) => {
   const classLabel = CLASS_OPTIONS.find(c => c.value === filterClass)?.label || filterClass;
   const [showFullReport, setShowFullReport] = useState(false);
+  const [showLessonPlan, setShowLessonPlan] = useState(false);
 
   const reportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const reportId = `APD-CLS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
