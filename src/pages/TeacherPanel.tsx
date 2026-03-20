@@ -318,6 +318,8 @@ const TeacherPanel = () => {
           ageGroup={selectedAssessment.age_group}
           responses={selectedAssessment.responses}
           submittedAt={selectedAssessment.created_at}
+          studentClass={selectedAssessment.student_class || undefined}
+          teacherName={profile?.full_name || undefined}
         />
       )}
     </AppLayout>

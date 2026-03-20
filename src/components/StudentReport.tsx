@@ -2,6 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { analyzeResponses, getReportConfig, type DimensionScore } from "@/data/reportTheories";
+import { deriveVarkScores } from "@/data/varkMapping";
 import { Download } from "lucide-react";
 import { ReportContent } from "./report/ReportContent";
 import { generateReportHtml } from "./report/reportHtmlGenerator";
@@ -14,6 +15,8 @@ interface StudentReportProps {
   ageGroup: number;
   responses: Record<string, any>;
   submittedAt: string;
+  studentClass?: string;
+  teacherName?: string;
 }
 
 export const StudentReport = ({
@@ -24,9 +27,12 @@ export const StudentReport = ({
   ageGroup,
   responses,
   submittedAt,
+  studentClass,
+  teacherName,
 }: StudentReportProps) => {
   const reportConfig = getReportConfig(ageGroup);
   const scores = analyzeResponses(ageGroup, responses as Record<string, number>);
+  const varkScores = deriveVarkScores(ageGroup, responses as Record<string, number>);
 
   if (!reportConfig || !scores) return null;
 
@@ -41,6 +47,9 @@ export const StudentReport = ({
       submittedAt,
       reportConfig,
       scores,
+      varkScores,
+      studentClass,
+      teacherName,
     });
 
     printWindow.document.write(html);
@@ -65,6 +74,9 @@ export const StudentReport = ({
             submittedAt={submittedAt}
             reportConfig={reportConfig}
             scores={scores}
+            varkScores={varkScores}
+            studentClass={studentClass}
+            teacherName={teacherName}
           />
         </ScrollArea>
       </DialogContent>
