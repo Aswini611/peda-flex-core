@@ -392,6 +392,20 @@ const StudentDashboard = () => {
           })}
         </div>
       )}
+
+      {myAssessment && (
+        <StudentReport
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          studentName={myAssessment.student_name}
+          studentAge={myAssessment.student_age}
+          ageGroup={myAssessment.age_group}
+          responses={myAssessment.responses as Record<string, any>}
+          submittedAt={myAssessment.created_at}
+          studentClass={myAssessment.student_class || undefined}
+          teacherName={teacherProfile?.full_name || undefined}
+        />
+      )}
     </AppLayout>
   );
 };
