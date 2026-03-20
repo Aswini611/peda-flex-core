@@ -97,6 +97,7 @@ const StudentDashboard = () => {
   const { profile, user } = useAuth();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
