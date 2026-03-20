@@ -5,9 +5,10 @@ import { StatCard } from "@/components/StatCard";
 import { GettingStartedBanner } from "@/components/GettingStartedBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain } from "lucide-react";
+import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StudentReport } from "@/components/StudentReport";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -96,6 +97,7 @@ const StudentDashboard = () => {
   const { profile, user } = useAuth();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
@@ -148,6 +150,19 @@ const StudentDashboard = () => {
     enabled: !!user?.id,
   });
 
+  const { data: teacherProfile } = useQuery({
+    queryKey: ["teacher-profile", myAssessment?.teacher_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", myAssessment!.teacher_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!myAssessment?.teacher_id,
+  });
+
   const reportConfig = myAssessment ? getReportConfig(myAssessment.age_group) : null;
   const scores = myAssessment ? analyzeResponses(myAssessment.age_group, myAssessment.responses as Record<string, number>) : null;
 
@@ -165,9 +180,14 @@ const StudentDashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Your Assessment Results</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
-              {showReport ? "Hide Details" : "View Full Report"}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setReportOpen(true)} className="gap-1.5">
+                <FileText className="h-4 w-4" /> View Full Report
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
+                {showReport ? "Hide Details" : "Show Details"}
+              </Button>
+            </div>
           </div>
 
           {/* Summary Cards */}
@@ -371,6 +391,20 @@ const StudentDashboard = () => {
             );
           })}
         </div>
+      )}
+
+      {myAssessment && (
+        <StudentReport
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          studentName={myAssessment.student_name}
+          studentAge={myAssessment.student_age}
+          ageGroup={myAssessment.age_group}
+          responses={myAssessment.responses as Record<string, any>}
+          submittedAt={myAssessment.created_at}
+          studentClass={myAssessment.student_class || undefined}
+          teacherName={teacherProfile?.full_name || undefined}
+        />
       )}
     </AppLayout>
   );
