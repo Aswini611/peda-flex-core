@@ -49,7 +49,7 @@ interface Teacher {
 }
 
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
-  const [phase, setPhase] = useState<"form" | "quiz" | "vark" | "done">("form");
+  const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
   const name = studentName;
   const [age, setAge] = useState("");
   const [studentClass, setStudentClass] = useState("");
@@ -59,14 +59,11 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [loadingTeachers, setLoadingTeachers] = useState(true);
 
   const [config, setConfig] = useState<AgeGroupConfig | null>(null);
+  const [varkConfig, setVarkConfig] = useState<VarkAgeGroupConfig | null>(null);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [submitting, setSubmitting] = useState(false);
-
-  // VARK state
-  const [varkConfig, setVarkConfig] = useState<VarkAgeGroupConfig | null>(null);
-  const [varkCurrentQ, setVarkCurrentQ] = useState(0);
   const [varkAnswers, setVarkAnswers] = useState<Record<number, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchTeachers = async () => {
