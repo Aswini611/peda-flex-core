@@ -649,35 +649,38 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);padding:0;-we
 </div>
 
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"><\/script>
 <script>
-document.querySelector('script[src*="Chart.js"]').onload = function() { renderCharts(); };
-if (typeof Chart !== 'undefined') renderCharts();
-function renderCharts() {
-const learners=${JSON.stringify(allScores.map(s => ({ n: s.name, s: s.avg, v: s.vark.charAt(0) })))};
-const varkColor=${JSON.stringify(varkColor)};
-const varkMap={"V":"Visual","A":"Auditory","R":"Read/Write","K":"Kinesthetic"};
-
-new Chart(document.getElementById("varkChart"),{
-  type:"doughnut",
-  data:{labels:${JSON.stringify(Object.keys(varkCounts))},datasets:[{data:${JSON.stringify(Object.values(varkCounts))},backgroundColor:${JSON.stringify(Object.keys(varkCounts).map(k => varkColor[k]))},borderWidth:2,borderColor:"#ffffff"}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
-});
-
-new Chart(document.getElementById("scoreChart"),{
-  type:"bar",
-  data:{labels:["0–39%","40–54%","55–69%","70–84%","85%+"],datasets:[{data:${JSON.stringify(buckets)},backgroundColor:["#e55a3c","#e55a3c","#d97706","#0e9a7b","#0e9a7b"],borderRadius:4,borderSkipped:false}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#8282a8"}},y:{grid:{color:"#e4e2dc"},ticks:{stepSize:2,font:{size:11},color:"#8282a8"},beginAtZero:true}}}
-});
-
-const varkFillMap={"V":"#2563eb","A":"#d97706","R":"#7c3aed","K":"#e55a3c"};
-new Chart(document.getElementById("zpdChart"),{
-  type:"bar",
-  data:{labels:learners.map(l=>l.n.split(" ")[0]),datasets:[{label:"Avg score",data:learners.map(l=>l.s),backgroundColor:learners.map(l=>varkFillMap[l.v]||"#8282a8"),borderRadius:3,borderSkipped:false}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>\`\${learners[ctx.dataIndex].n}: \${ctx.raw}% (\${varkMap[learners[ctx.dataIndex].v]})\`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:"#8282a8",maxRotation:45,autoSkip:false}},y:{grid:{color:"#e4e2dc"},ticks:{font:{size:11},color:"#8282a8"},min:0,max:100}}}
-});
+function loadScript(src, cb) {
+  var s = document.createElement('script');
+  s.src = src;
+  s.onload = cb;
+  document.head.appendChild(s);
 }
-<\/script></body></html>`;
+loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js', function() {
+  var learners=${JSON.stringify(allScores.map(s => ({ n: s.name, s: s.avg, v: s.vark.charAt(0) })))};
+  var varkColor=${JSON.stringify(varkColor)};
+  var varkMap={"V":"Visual","A":"Auditory","R":"Read/Write","K":"Kinesthetic"};
+
+  new Chart(document.getElementById("varkChart"),{
+    type:"doughnut",
+    data:{labels:${JSON.stringify(Object.keys(varkCounts))},datasets:[{data:${JSON.stringify(Object.values(varkCounts))},backgroundColor:${JSON.stringify(Object.keys(varkCounts).map(k => varkColor[k]))},borderWidth:2,borderColor:"#ffffff"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+
+  new Chart(document.getElementById("scoreChart"),{
+    type:"bar",
+    data:{labels:["0-39%","40-54%","55-69%","70-84%","85%+"],datasets:[{data:${JSON.stringify(buckets)},backgroundColor:["#e55a3c","#e55a3c","#d97706","#0e9a7b","#0e9a7b"],borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#8282a8"}},y:{grid:{color:"#e4e2dc"},ticks:{stepSize:2,font:{size:11},color:"#8282a8"},beginAtZero:true}}}
+  });
+
+  var varkFillMap={"V":"#2563eb","A":"#d97706","R":"#7c3aed","K":"#e55a3c"};
+  new Chart(document.getElementById("zpdChart"),{
+    type:"bar",
+    data:{labels:learners.map(function(l){return l.n.split(" ")[0]}),datasets:[{label:"Avg score",data:learners.map(function(l){return l.s}),backgroundColor:learners.map(function(l){return varkFillMap[l.v]||"#8282a8"}),borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:"#8282a8",maxRotation:45,autoSkip:false}},y:{grid:{color:"#e4e2dc"},ticks:{font:{size:11},color:"#8282a8"},min:0,max:100}}}
+  });
+});
+</script></body></html>`;
 }
 
 export default TeacherPanel;
