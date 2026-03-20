@@ -478,8 +478,17 @@ function generateClassReportHtml(params: {
     { key: "Read/Write", label: "Group B — Read/Write processors", bg: "var(--teal-l)", border: "#6ee7c4", labelColor: "var(--teal-d)", countBg: "#99f6e4", strategy: "Structured note templates, written case studies, definition-first explanations." },
     { key: "Auditory", label: "Group C — Auditory learners", bg: "var(--amber-l)", border: "#fcd34d", labelColor: "var(--amber-d)", countBg: "#fde68a", strategy: "Discussion-based discovery, think-aloud protocols, podcast-style lesson summaries." },
     { key: "Kinesthetic", label: "Group D — Kinesthetic learners", bg: "var(--coral-l)", border: "#fca5a5", labelColor: "var(--coral-d)", countBg: "#fecaca", strategy: "Model-building tasks, hands-on activities, drag-and-drop simulations." },
-  ].filter(g => (varkGroups[g.key] || []).length > 0).map(g => {
+  ].map(g => {
     const names = varkGroups[g.key] || [];
+    if (names.length === 0) {
+      return `<div style="background:${g.bg};border:1.5px dashed ${g.border};border-radius:12px;padding:16px 18px;opacity:0.6;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;font-weight:600;color:${g.labelColor};">${g.label}</span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:${g.countBg};color:${g.labelColor};">0 learners</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);font-style:italic;">No ${g.key.toLowerCase()} learners identified in this class.</div>
+      </div>`;
+    }
     const gAvg = Math.round(allScores.filter(s => names.includes(s.name)).reduce((a, b) => a + b.avg, 0) / names.length);
     return `<div style="background:${g.bg};border:1.5px solid ${g.border};border-radius:12px;padding:16px 18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
