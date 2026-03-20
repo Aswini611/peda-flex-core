@@ -387,6 +387,10 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
                 <FileText className="h-4 w-4" />
                 View Full Report
               </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowLessonPlan(true)} className="gap-1.5">
+                <Sparkles className="h-4 w-4" />
+                Generate Lesson Plan
+              </Button>
               <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
                 <Download className="h-4 w-4" />
                 Download
