@@ -180,9 +180,14 @@ const StudentDashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Your Assessment Results</h2>
-            <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
-              {showReport ? "Hide Details" : "View Full Report"}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setReportOpen(true)} className="gap-1.5">
+                <FileText className="h-4 w-4" /> View Full Report
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
+                {showReport ? "Hide Details" : "Show Details"}
+              </Button>
+            </div>
           </div>
 
           {/* Summary Cards */}
