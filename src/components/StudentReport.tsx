@@ -32,7 +32,8 @@ export const StudentReport = ({
 }: StudentReportProps) => {
   const reportConfig = getReportConfig(ageGroup);
   const scores = analyzeResponses(ageGroup, responses as Record<string, number>);
-  const varkScores = deriveVarkScores(ageGroup, responses as Record<string, number>);
+  const varkResponses = (responses as any)?.vark as Record<string, string> | undefined;
+  const varkScores = deriveVarkScores(ageGroup, responses as Record<string, number>, varkResponses);
 
   if (!reportConfig || !scores) return null;
 
