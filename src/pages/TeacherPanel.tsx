@@ -676,7 +676,8 @@ new Chart(document.getElementById("zpdChart"),{
   data:{labels:learners.map(l=>l.n.split(" ")[0]),datasets:[{label:"Avg score",data:learners.map(l=>l.s),backgroundColor:learners.map(l=>varkFillMap[l.v]||"#8282a8"),borderRadius:3,borderSkipped:false}]},
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>\`\${learners[ctx.dataIndex].n}: \${ctx.raw}% (\${varkMap[learners[ctx.dataIndex].v]})\`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:"#8282a8",maxRotation:45,autoSkip:false}},y:{grid:{color:"#e4e2dc"},ticks:{font:{size:11},color:"#8282a8"},min:0,max:100}}}
 });
-</script></body></html>`;
+}
+<\/script></body></html>`;
 }
 
 export default TeacherPanel;
