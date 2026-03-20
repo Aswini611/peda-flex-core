@@ -150,9 +150,6 @@ export const ClassReportView = ({
           <h1 className="text-[26px] font-bold tracking-tight text-[#1c1c2e]" style={{ fontFamily: "'Playfair Display', 'DM Serif Display', serif" }}>
             APAS <em className="text-[#0e9a7b] italic">Class Diagnostic</em>
           </h1>
-          <p className="text-[10px] font-semibold tracking-[2px] uppercase text-[#8282a8] mt-1">
-            Cohort Report · Phase 1 → Curative Handoff
-          </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-[#8282a8]">Report ID: {reportId}</p>
@@ -270,7 +267,17 @@ export const ClassReportView = ({
         <div className="grid grid-cols-2 gap-3.5">
           {GROUP_META.map(g => {
             const names = data.varkGroups[g.key] || [];
-            if (names.length === 0) return null;
+            if (names.length === 0) {
+              return (
+                <div key={g.key} className="rounded-xl p-4 opacity-60" style={{ background: g.bg, border: `1.5px dashed ${g.border}` }}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[13px] font-semibold" style={{ color: g.labelColor }}>{g.label}</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[10px]" style={{ background: g.countBg, color: g.labelColor }}>0 learners</span>
+                  </div>
+                  <p className="text-[12px] text-[#8282a8] italic">No {g.key.toLowerCase()} learners identified in this class.</p>
+                </div>
+              );
+            }
             const groupAvg = Math.round(
               data.allScores.filter(s => names.includes(s.studentName)).reduce((a, b) => a + b.avgScore, 0) / names.length
             );

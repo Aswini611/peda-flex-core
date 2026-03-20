@@ -355,7 +355,19 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
     });
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 300);
+    // Wait for Chart.js CDN to load and render charts before printing
+    const waitForCharts = () => {
+      const canvases = printWindow.document.querySelectorAll("canvas");
+      const allRendered = canvases.length > 0 && Array.from(canvases).every(
+        (c: HTMLCanvasElement) => c.width > 0 && c.height > 0
+      );
+      if (allRendered) {
+        setTimeout(() => printWindow.print(), 500);
+      } else {
+        setTimeout(waitForCharts, 200);
+      }
+    };
+    setTimeout(waitForCharts, 500);
   };
 
   return (
@@ -478,8 +490,17 @@ function generateClassReportHtml(params: {
     { key: "Read/Write", label: "Group B — Read/Write processors", bg: "var(--teal-l)", border: "#6ee7c4", labelColor: "var(--teal-d)", countBg: "#99f6e4", strategy: "Structured note templates, written case studies, definition-first explanations." },
     { key: "Auditory", label: "Group C — Auditory learners", bg: "var(--amber-l)", border: "#fcd34d", labelColor: "var(--amber-d)", countBg: "#fde68a", strategy: "Discussion-based discovery, think-aloud protocols, podcast-style lesson summaries." },
     { key: "Kinesthetic", label: "Group D — Kinesthetic learners", bg: "var(--coral-l)", border: "#fca5a5", labelColor: "var(--coral-d)", countBg: "#fecaca", strategy: "Model-building tasks, hands-on activities, drag-and-drop simulations." },
-  ].filter(g => (varkGroups[g.key] || []).length > 0).map(g => {
+  ].map(g => {
     const names = varkGroups[g.key] || [];
+    if (names.length === 0) {
+      return `<div style="background:${g.bg};border:1.5px dashed ${g.border};border-radius:12px;padding:16px 18px;opacity:0.6;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;font-weight:600;color:${g.labelColor};">${g.label}</span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:${g.countBg};color:${g.labelColor};">0 learners</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);font-style:italic;">No ${g.key.toLowerCase()} learners identified in this class.</div>
+      </div>`;
+    }
     const gAvg = Math.round(allScores.filter(s => names.includes(s.name)).reduce((a, b) => a + b.avg, 0) / names.length);
     return `<div style="background:${g.bg};border:1.5px solid ${g.border};border-radius:12px;padding:16px 18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -560,7 +581,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);padding:0;-we
 </style></head><body><div class="wrap">
 
 <div class="hdr">
-  <div><div class="hdr-brand">APAS <em>Class Diagnostic</em></div><div class="hdr-sub">Cohort Report · Phase 1 → Curative Handoff</div></div>
+  <div><div class="hdr-brand">APAS <em>Class Diagnostic</em></div></div>
   <div class="hdr-right"><div>Report ID: ${reportId}</div><strong>${reportDate}</strong><div class="badge">${allScores.length} Learners Assessed</div></div>
 </div>
 
@@ -628,29 +649,36 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);padding:0;-we
 </div>
 
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const learners=${JSON.stringify(allScores.map(s => ({ n: s.name, s: s.avg, v: s.vark.charAt(0) })))};
-const varkColor=${JSON.stringify(varkColor)};
-const varkMap={"V":"Visual","A":"Auditory","R":"Read/Write","K":"Kinesthetic"};
+function loadScript(src, cb) {
+  var s = document.createElement('script');
+  s.src = src;
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js', function() {
+  var learners=${JSON.stringify(allScores.map(s => ({ n: s.name, s: s.avg, v: s.vark.charAt(0) })))};
+  var varkColor=${JSON.stringify(varkColor)};
+  var varkMap={"V":"Visual","A":"Auditory","R":"Read/Write","K":"Kinesthetic"};
 
-new Chart(document.getElementById("varkChart"),{
-  type:"doughnut",
-  data:{labels:${JSON.stringify(Object.keys(varkCounts))},datasets:[{data:${JSON.stringify(Object.values(varkCounts))},backgroundColor:${JSON.stringify(Object.keys(varkCounts).map(k => varkColor[k]))},borderWidth:2,borderColor:"#ffffff"}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
-});
+  new Chart(document.getElementById("varkChart"),{
+    type:"doughnut",
+    data:{labels:${JSON.stringify(Object.keys(varkCounts))},datasets:[{data:${JSON.stringify(Object.values(varkCounts))},backgroundColor:${JSON.stringify(Object.keys(varkCounts).map(k => varkColor[k]))},borderWidth:2,borderColor:"#ffffff"}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
 
-new Chart(document.getElementById("scoreChart"),{
-  type:"bar",
-  data:{labels:["0–39%","40–54%","55–69%","70–84%","85%+"],datasets:[{data:${JSON.stringify(buckets)},backgroundColor:["#e55a3c","#e55a3c","#d97706","#0e9a7b","#0e9a7b"],borderRadius:4,borderSkipped:false}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#8282a8"}},y:{grid:{color:"#e4e2dc"},ticks:{stepSize:2,font:{size:11},color:"#8282a8"},beginAtZero:true}}}
-});
+  new Chart(document.getElementById("scoreChart"),{
+    type:"bar",
+    data:{labels:["0-39%","40-54%","55-69%","70-84%","85%+"],datasets:[{data:${JSON.stringify(buckets)},backgroundColor:["#e55a3c","#e55a3c","#d97706","#0e9a7b","#0e9a7b"],borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#8282a8"}},y:{grid:{color:"#e4e2dc"},ticks:{stepSize:2,font:{size:11},color:"#8282a8"},beginAtZero:true}}}
+  });
 
-const varkFillMap={"V":"#2563eb","A":"#d97706","R":"#7c3aed","K":"#e55a3c"};
-new Chart(document.getElementById("zpdChart"),{
-  type:"bar",
-  data:{labels:learners.map(l=>l.n.split(" ")[0]),datasets:[{label:"Avg score",data:learners.map(l=>l.s),backgroundColor:learners.map(l=>varkFillMap[l.v]||"#8282a8"),borderRadius:3,borderSkipped:false}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>\`\${learners[ctx.dataIndex].n}: \${ctx.raw}% (\${varkMap[learners[ctx.dataIndex].v]})\`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:"#8282a8",maxRotation:45,autoSkip:false}},y:{grid:{color:"#e4e2dc"},ticks:{font:{size:11},color:"#8282a8"},min:0,max:100}}}
+  var varkFillMap={"V":"#2563eb","A":"#d97706","R":"#7c3aed","K":"#e55a3c"};
+  new Chart(document.getElementById("zpdChart"),{
+    type:"bar",
+    data:{labels:learners.map(function(l){return l.n.split(" ")[0]}),datasets:[{label:"Avg score",data:learners.map(function(l){return l.s}),backgroundColor:learners.map(function(l){return varkFillMap[l.v]||"#8282a8"}),borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:"#8282a8",maxRotation:45,autoSkip:false}},y:{grid:{color:"#e4e2dc"},ticks:{font:{size:11},color:"#8282a8"},min:0,max:100}}}
+  });
 });
 </script></body></html>`;
 }
