@@ -560,7 +560,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);padding:0;-we
 </style></head><body><div class="wrap">
 
 <div class="hdr">
-  <div><div class="hdr-brand">APAS <em>Class Diagnostic</em></div><div class="hdr-sub">Cohort Report · Phase 1 → Curative Handoff</div></div>
+  <div><div class="hdr-brand">APAS <em>Class Diagnostic</em></div></div>
   <div class="hdr-right"><div>Report ID: ${reportId}</div><strong>${reportDate}</strong><div class="badge">${allScores.length} Learners Assessed</div></div>
 </div>
 
