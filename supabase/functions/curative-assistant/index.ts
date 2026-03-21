@@ -278,11 +278,9 @@ When answering questions, always reference the assessment data and textbook cont
     if (mode === "generate") {
       openaiMessages.push({
         role: "user",
-        content: prompt || `Generate a comprehensive CLASS DIAGNOSTIC REPORT and CURATIVE LESSON PLAN for ${selectedClass} Section ${section} with the following structure:
+        content: prompt || `Generate a LESSON PLAN for ${selectedClass} Section ${section}. Do NOT generate a diagnostic report — focus ONLY on the lesson plan.
 
-1. First, create a detailed CLASS DIAGNOSTIC REPORT analyzing the assessment data — include cohort overview, VARK distribution, 4 instructional clusters (Visual, Read/Write, Auditory, Kinesthetic), ZPD analysis, and weak areas.
-
-2. Then, generate a CURATIVE LESSON PLAN derived from the diagnostic report — include lesson plan directives (opener, delivery, group activity, scaffolding, assessment, tools), differentiated group activities with 3-tier task cards, mismatch alerts, and post-lesson assessment design.
+Include lesson plan directives (opener, delivery, group activity, scaffolding, assessment, tools), differentiated group activities with 3-tier task cards for each VARK group, mismatch alerts, and post-lesson assessment design.
 
 Make the plan specific, actionable, and based on actual assessment data.`,
       });
