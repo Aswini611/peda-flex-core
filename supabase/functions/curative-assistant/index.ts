@@ -127,7 +127,7 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
     }
 
     // 3. Build system prompt
-    const systemPrompt = `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive CLASS DIAGNOSTIC REPORTS and CURATIVE LESSON PLANS.
+    const systemPrompt = `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive LESSON PLANS with differentiated activities based on VARK learning styles.
 
 You have access to the following context:
 
