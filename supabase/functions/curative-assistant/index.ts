@@ -127,7 +127,7 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
     }
 
     // 3. Build system prompt
-    const systemPrompt = `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive CLASS DIAGNOSTIC REPORTS and CURATIVE LESSON PLANS.
+    const systemPrompt = `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive LESSON PLANS with differentiated activities based on VARK learning styles.
 
 You have access to the following context:
 
@@ -139,98 +139,11 @@ ${textbookContext}
 CORE INSTRUCTIONS — HOW TO GENERATE RESPONSES
 ═══════════════════════════════════════════════════════════════
 
-When generating lesson plans or class reports, you MUST follow this structured approach:
+When generating lesson plans, you MUST follow this structured approach. Do NOT generate a diagnostic report — focus ONLY on the lesson plan.
 
-## STEP 1: CLASS DIAGNOSTIC REPORT (Always generate this first)
+## LESSON PLAN (Differentiated by VARK groups)
 
-Analyze the assessment data and produce a clear diagnostic report with:
-
-### 1.1 Cohort Overview
-- Class name, section, total learners, subject, chapter/unit being covered
-- Class average score (calculate from assessment data)
-- Identify if class is in intervention zone (below 60%)
-
-### 1.2 VARK Learning Style Distribution
-- Analyze student responses to identify dominant learning styles
-- Group students by VARK type (Visual, Auditory, Read/Write, Kinesthetic)
-- Show counts and percentages for each style
-- Present as a clear table:
-
-| Style | Count | Percentage | Score |
-|-------|-------|------------|-------|
-| V — Visual | X | X% | X/5 |
-| A — Auditory | X | X% | X/5 |
-| R — Read/Write | X | X% | X/5 |
-| K — Kinesthetic | X | X% | X/5 |
-
-- Mark the dominant style clearly
-
-### 1.3 Instructional Clusters (4 Groups)
-Create EXACTLY 4 instructional groups. Present each as a structured block:
-
----
-
-**🟢 Group A — Visual Learners**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** diagram-first templates, colour-coded visuals, mind-maps
-- **Priority Level:** Standard / Intervention Required
-
----
-
-**🔵 Group B — Read/Write Processors**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** structured notes, written case studies, scaffolded explanations
-- **Priority Level:** Standard / Intervention Required
-
----
-
-**🟡 Group C — Auditory Learners**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** discussion protocols, think-aloud, peer teaching
-- **Priority Level:** Standard / Intervention Required
-
----
-
-**🔴 Group D — Kinesthetic Learners**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** hands-on models, simulations, physical activities
-- **Priority Level:** Standard / Intervention Required
-
----
-
-### 1.4 ZPD (Zone of Proximal Development) Analysis
-
-Present ZPD bands in a clear table:
-
-| ZPD Band | Student Count | Percentage | Description |
-|----------|--------------|------------|-------------|
-| Advanced | X | X% | Above grade level |
-| On-level | X | X% | At grade level |
-| Below-level | X | X% | Needs scaffolding |
-
-- Identify scaffolding requirements for below-level students
-
-### 1.5 Weak Areas & Error Patterns
-
-Present as a structured table:
-
-| Dimension | Average Score | Status | Common Error Pattern |
-|-----------|--------------|--------|---------------------|
-| Dimension Name | X/5 | ⚠️ Weak / ✅ Strong | Description of errors |
-
-- Highlight which groups are most at risk
-
-═══════════════════════════════════════════════════════════════
-
-## STEP 2: CURATIVE LESSON PLAN (Generated from the Class Report)
-
-After the diagnostic report, generate a DETAILED curative lesson plan:
-
-### 2.1 Lesson Plan Directives
+### Lesson Plan Directives
 
 Present each directive as a numbered, clearly separated block:
 
@@ -278,7 +191,7 @@ Present each directive as a numbered, clearly separated block:
 
 ---
 
-### 2.2 Differentiated Group Activities (Detailed)
+### Differentiated Group Activities (Detailed)
 
 For EACH of the 4 groups, present as a structured card:
 
@@ -302,7 +215,7 @@ For EACH of the 4 groups, present as a structured card:
 
 (Repeat for Groups B, C, D)
 
-### 2.3 Mismatch Alerts
+### Mismatch Alerts
 
 Use clear warning blocks:
 
@@ -311,7 +224,7 @@ Use clear warning blocks:
 > - **Why:** [explanation]
 > - **Mandatory Intervention:** [specific action, NOT optional]
 
-### 2.4 Post-Lesson Assessment
+### Post-Lesson Assessment
 
 **Exit Ticket Design:**
 
@@ -365,11 +278,9 @@ When answering questions, always reference the assessment data and textbook cont
     if (mode === "generate") {
       openaiMessages.push({
         role: "user",
-        content: prompt || `Generate a comprehensive CLASS DIAGNOSTIC REPORT and CURATIVE LESSON PLAN for ${selectedClass} Section ${section} with the following structure:
+        content: prompt || `Generate a LESSON PLAN for ${selectedClass} Section ${section}. Do NOT generate a diagnostic report — focus ONLY on the lesson plan.
 
-1. First, create a detailed CLASS DIAGNOSTIC REPORT analyzing the assessment data — include cohort overview, VARK distribution, 4 instructional clusters (Visual, Read/Write, Auditory, Kinesthetic), ZPD analysis, and weak areas.
-
-2. Then, generate a CURATIVE LESSON PLAN derived from the diagnostic report — include lesson plan directives (opener, delivery, group activity, scaffolding, assessment, tools), differentiated group activities with 3-tier task cards, mismatch alerts, and post-lesson assessment design.
+Include lesson plan directives (opener, delivery, group activity, scaffolding, assessment, tools), differentiated group activities with 3-tier task cards for each VARK group, mismatch alerts, and post-lesson assessment design.
 
 Make the plan specific, actionable, and based on actual assessment data.`,
       });

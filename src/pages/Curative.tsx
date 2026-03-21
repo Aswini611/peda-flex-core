@@ -307,18 +307,11 @@ const Curative = () => {
     const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
     sendMessage(
-      `Generate a comprehensive CLASS DIAGNOSTIC REPORT and CURATIVE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
+      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
 
-STEP 1 — CLASS DIAGNOSTIC REPORT:
-- Cohort overview (class, section, subject, chapter, total students, class average score)
-- VARK learning style distribution with counts and percentages
-- 4 Instructional Clusters (Group A: Visual, Group B: Read/Write, Group C: Auditory, Group D: Kinesthetic) with student counts, avg scores, and curative strategies
-- ZPD analysis with band distribution
-- Weak areas and common error patterns from assessment data
-
-STEP 2 — CURATIVE LESSON PLAN (derived from the diagnostic report):
+Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagnostic is handled separately). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
-- Differentiated activities for each of the 4 groups with 3-tier task cards (Support/Core/Extension)
+- Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
 - Mismatch alerts for at-risk groups
 - Exit ticket design across Bloom's levels
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
@@ -334,7 +327,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
     }).replace(/[/:]/g, '-');
     
-    const filename = `APAS-Curative-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
+    const filename = `APAS-LessonPlan-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
     
     // Convert markdown to structured HTML
     let html = messageContent;
@@ -384,8 +377,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
       <div class="report">
         <div class="header">
           <div class="header-left">
-            <div class="brand">APAS <span>Curative</span></div>
-            <div class="report-label">Class Diagnostic Report & Curative Lesson Plan</div>
+            <div class="brand">APAS <span>Lesson Plan</span></div>
+            <div class="report-label">Differentiated Lesson Plan</div>
           </div>
           <div class="header-right">
             <div class="report-date">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
@@ -406,8 +399,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
           </div>
           <div class="lc-field">
             <label>Report Type</label>
-            <value>Curative Plan</value>
-            <small>Diagnostic + Lesson Plan</small>
+            <value>Lesson Plan</value>
+            <small>Differentiated</small>
           </div>
         </div>
 
@@ -492,7 +485,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
   return (
     <AppLayout>
-      <PageHeader title="Pillar 2: The Curative Phase" subtitle="AI-powered curative teaching assistant — generates lesson plans using class reports & textbooks" />
+      <PageHeader title="Lesson Plan Generator" subtitle="AI-powered teaching assistant — generates differentiated lesson plans using class reports & textbooks" />
 
       <Card className="mb-6">
         <CardContent className="p-5">
@@ -588,7 +581,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
             {chatMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-[260px] text-center">
                 <Bot className="h-12 w-12 text-muted-foreground mb-3" />
-                <h3 className="text-sm font-semibold mb-1">Curative AI Assistant</h3>
+                <h3 className="text-sm font-semibold mb-1">AI Teaching Assistant</h3>
                 <p className="text-xs text-muted-foreground max-w-sm">Select a class, section, and subject above, then click "Generate Lesson Plan" or ask any question.</p>
                 <div className="mt-4 flex flex-wrap gap-2 justify-center">
                   {isReady && (
@@ -596,7 +589,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
                       <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What are the class-wide weak areas for ${getClassLabel(selectedClass)} Section ${selectedSection} based on the assessment report? Focus on dimensions where the class is struggling overall and avoid mentioning individual student names. Provide a summary of weak dimensions and average performance levels.`, "chat")} disabled={isStreaming}>Show weak areas</Button>
                       <Button variant="outline" size="sm" className="text-xs" onClick={() => {
                         const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "English";
-                        sendMessage(`Generate a curative lesson plan for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} – Chapter 1 based on the class assessment report. Focus on class-wide performance patterns with ${studentCount} students. Do NOT mention individual student names - provide recommendations based on class-level weak areas and average performance metrics.`, "generate");
+                        sendMessage(`Generate a lesson plan for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} – Chapter 1 based on the class assessment report. Focus on class-wide performance patterns with ${studentCount} students. Do NOT mention individual student names - provide recommendations based on class-level weak areas and average performance metrics. Generate ONLY the lesson plan, not a diagnostic report.`, "generate");
                       }} disabled={isStreaming}>Lesson plan for Ch. 1</Button>
                       <Button variant="outline" size="sm" className="text-xs" onClick={() => {
                         const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "English";
@@ -622,7 +615,7 @@ REQUIREMENTS:
 - Include a COMPLETE ANSWER KEY at the end covering all pages
 - Professional formatting with clear section breaks between pages`, "generate");
                       }} disabled={isStreaming}>Generate Worksheets</Button>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What curative strategies would you recommend for ${getClassLabel(selectedClass)} Section ${selectedSection} with ${studentCount} students based on class-wide performance? Focus on class-level interventions and do NOT mention individual student names. Provide actionable teaching strategies for the entire section.`, "chat")} disabled={isStreaming}>Curative strategies</Button>
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What teaching strategies would you recommend for ${getClassLabel(selectedClass)} Section ${selectedSection} with ${studentCount} students based on class-wide performance? Focus on class-level interventions and do NOT mention individual student names. Provide actionable teaching strategies for the entire section.`, "chat")} disabled={isStreaming}>Teaching strategies</Button>
                     </>
                   )}
                 </div>

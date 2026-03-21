@@ -156,10 +156,10 @@ export const CurativeLessonPlanView = ({
       <div className="flex justify-between items-start pb-4" style={{ borderBottom: "2px solid #1c1c2e" }}>
         <div>
           <h1 className="text-[26px] font-bold tracking-tight" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: "-0.5px" }}>
-            APAS <em style={{ color: "#0e9a7b", fontStyle: "italic" }}>Curative Plan</em>
+            APAS <em style={{ color: "#0e9a7b", fontStyle: "italic" }}>Lesson Plan</em>
           </h1>
           <p className="text-[10px] font-semibold tracking-[2px] uppercase mt-1" style={{ color: "#8282a8" }}>
-            Phase 2 · Differentiated Lesson Plan · {classLabel}{sectionLabel}
+            Differentiated Lesson Plan · {classLabel}{sectionLabel}
           </p>
         </div>
         <div className="text-right text-xs" style={{ color: "#8282a8" }}>
