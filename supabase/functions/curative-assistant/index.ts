@@ -143,7 +143,7 @@ When generating lesson plans, you MUST follow this structured approach. Do NOT g
 
 ## LESSON PLAN (Differentiated by VARK groups)
 
-### 2.1 Lesson Plan Directives
+### Lesson Plan Directives
 
 Present each directive as a numbered, clearly separated block:
 
