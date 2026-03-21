@@ -485,7 +485,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
   return (
     <AppLayout>
-      <PageHeader title="Pillar 2: The Curative Phase" subtitle="AI-powered curative teaching assistant — generates lesson plans using class reports & textbooks" />
+      <PageHeader title="Lesson Plan Generator" subtitle="AI-powered teaching assistant — generates differentiated lesson plans using class reports & textbooks" />
 
       <Card className="mb-6">
         <CardContent className="p-5">
