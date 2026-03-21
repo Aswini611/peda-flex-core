@@ -215,7 +215,7 @@ For EACH of the 4 groups, present as a structured card:
 
 (Repeat for Groups B, C, D)
 
-### 2.3 Mismatch Alerts
+### Mismatch Alerts
 
 Use clear warning blocks:
 
