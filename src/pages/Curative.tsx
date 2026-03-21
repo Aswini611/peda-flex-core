@@ -615,7 +615,7 @@ REQUIREMENTS:
 - Include a COMPLETE ANSWER KEY at the end covering all pages
 - Professional formatting with clear section breaks between pages`, "generate");
                       }} disabled={isStreaming}>Generate Worksheets</Button>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What curative strategies would you recommend for ${getClassLabel(selectedClass)} Section ${selectedSection} with ${studentCount} students based on class-wide performance? Focus on class-level interventions and do NOT mention individual student names. Provide actionable teaching strategies for the entire section.`, "chat")} disabled={isStreaming}>Curative strategies</Button>
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What teaching strategies would you recommend for ${getClassLabel(selectedClass)} Section ${selectedSection} with ${studentCount} students based on class-wide performance? Focus on class-level interventions and do NOT mention individual student names. Provide actionable teaching strategies for the entire section.`, "chat")} disabled={isStreaming}>Teaching strategies</Button>
                     </>
                   )}
                 </div>
