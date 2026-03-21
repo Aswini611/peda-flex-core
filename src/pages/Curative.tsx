@@ -581,7 +581,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
             {chatMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-[260px] text-center">
                 <Bot className="h-12 w-12 text-muted-foreground mb-3" />
-                <h3 className="text-sm font-semibold mb-1">Curative AI Assistant</h3>
+                <h3 className="text-sm font-semibold mb-1">AI Teaching Assistant</h3>
                 <p className="text-xs text-muted-foreground max-w-sm">Select a class, section, and subject above, then click "Generate Lesson Plan" or ask any question.</p>
                 <div className="mt-4 flex flex-wrap gap-2 justify-center">
                   {isReady && (
