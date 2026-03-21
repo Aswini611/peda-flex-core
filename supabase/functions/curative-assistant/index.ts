@@ -139,96 +139,9 @@ ${textbookContext}
 CORE INSTRUCTIONS — HOW TO GENERATE RESPONSES
 ═══════════════════════════════════════════════════════════════
 
-When generating lesson plans or class reports, you MUST follow this structured approach:
+When generating lesson plans, you MUST follow this structured approach. Do NOT generate a diagnostic report — focus ONLY on the lesson plan.
 
-## STEP 1: CLASS DIAGNOSTIC REPORT (Always generate this first)
-
-Analyze the assessment data and produce a clear diagnostic report with:
-
-### 1.1 Cohort Overview
-- Class name, section, total learners, subject, chapter/unit being covered
-- Class average score (calculate from assessment data)
-- Identify if class is in intervention zone (below 60%)
-
-### 1.2 VARK Learning Style Distribution
-- Analyze student responses to identify dominant learning styles
-- Group students by VARK type (Visual, Auditory, Read/Write, Kinesthetic)
-- Show counts and percentages for each style
-- Present as a clear table:
-
-| Style | Count | Percentage | Score |
-|-------|-------|------------|-------|
-| V — Visual | X | X% | X/5 |
-| A — Auditory | X | X% | X/5 |
-| R — Read/Write | X | X% | X/5 |
-| K — Kinesthetic | X | X% | X/5 |
-
-- Mark the dominant style clearly
-
-### 1.3 Instructional Clusters (4 Groups)
-Create EXACTLY 4 instructional groups. Present each as a structured block:
-
----
-
-**🟢 Group A — Visual Learners**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** diagram-first templates, colour-coded visuals, mind-maps
-- **Priority Level:** Standard / Intervention Required
-
----
-
-**🔵 Group B — Read/Write Processors**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** structured notes, written case studies, scaffolded explanations
-- **Priority Level:** Standard / Intervention Required
-
----
-
-**🟡 Group C — Auditory Learners**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** discussion protocols, think-aloud, peer teaching
-- **Priority Level:** Standard / Intervention Required
-
----
-
-**🔴 Group D — Kinesthetic Learners**
-- **Student Count:** X students
-- **Average Score:** X/5
-- **Recommended Strategy:** hands-on models, simulations, physical activities
-- **Priority Level:** Standard / Intervention Required
-
----
-
-### 1.4 ZPD (Zone of Proximal Development) Analysis
-
-Present ZPD bands in a clear table:
-
-| ZPD Band | Student Count | Percentage | Description |
-|----------|--------------|------------|-------------|
-| Advanced | X | X% | Above grade level |
-| On-level | X | X% | At grade level |
-| Below-level | X | X% | Needs scaffolding |
-
-- Identify scaffolding requirements for below-level students
-
-### 1.5 Weak Areas & Error Patterns
-
-Present as a structured table:
-
-| Dimension | Average Score | Status | Common Error Pattern |
-|-----------|--------------|--------|---------------------|
-| Dimension Name | X/5 | ⚠️ Weak / ✅ Strong | Description of errors |
-
-- Highlight which groups are most at risk
-
-═══════════════════════════════════════════════════════════════
-
-## STEP 2: CURATIVE LESSON PLAN (Generated from the Class Report)
-
-After the diagnostic report, generate a DETAILED curative lesson plan:
+## LESSON PLAN (Differentiated by VARK groups)
 
 ### 2.1 Lesson Plan Directives
 
