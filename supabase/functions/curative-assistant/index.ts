@@ -224,7 +224,7 @@ Use clear warning blocks:
 > - **Why:** [explanation]
 > - **Mandatory Intervention:** [specific action, NOT optional]
 
-### 2.4 Post-Lesson Assessment
+### Post-Lesson Assessment
 
 **Exit Ticket Design:**
 
