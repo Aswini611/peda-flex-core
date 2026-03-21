@@ -191,7 +191,7 @@ Present each directive as a numbered, clearly separated block:
 
 ---
 
-### 2.2 Differentiated Group Activities (Detailed)
+### Differentiated Group Activities (Detailed)
 
 For EACH of the 4 groups, present as a structured card:
 
