@@ -307,18 +307,11 @@ const Curative = () => {
     const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
     sendMessage(
-      `Generate a comprehensive CLASS DIAGNOSTIC REPORT and CURATIVE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
+      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
 
-STEP 1 — CLASS DIAGNOSTIC REPORT:
-- Cohort overview (class, section, subject, chapter, total students, class average score)
-- VARK learning style distribution with counts and percentages
-- 4 Instructional Clusters (Group A: Visual, Group B: Read/Write, Group C: Auditory, Group D: Kinesthetic) with student counts, avg scores, and curative strategies
-- ZPD analysis with band distribution
-- Weak areas and common error patterns from assessment data
-
-STEP 2 — CURATIVE LESSON PLAN (derived from the diagnostic report):
+Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagnostic is handled separately). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
-- Differentiated activities for each of the 4 groups with 3-tier task cards (Support/Core/Extension)
+- Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
 - Mismatch alerts for at-risk groups
 - Exit ticket design across Bloom's levels
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
