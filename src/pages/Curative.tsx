@@ -327,7 +327,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
     }).replace(/[/:]/g, '-');
     
-    const filename = `APAS-Curative-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
+    const filename = `APAS-LessonPlan-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
     
     // Convert markdown to structured HTML
     let html = messageContent;
