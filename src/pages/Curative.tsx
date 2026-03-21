@@ -377,8 +377,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
       <div class="report">
         <div class="header">
           <div class="header-left">
-            <div class="brand">APAS <span>Curative</span></div>
-            <div class="report-label">Class Diagnostic Report & Curative Lesson Plan</div>
+            <div class="brand">APAS <span>Lesson Plan</span></div>
+            <div class="report-label">Differentiated Lesson Plan</div>
           </div>
           <div class="header-right">
             <div class="report-date">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
@@ -399,8 +399,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
           </div>
           <div class="lc-field">
             <label>Report Type</label>
-            <value>Curative Plan</value>
-            <small>Diagnostic + Lesson Plan</small>
+            <value>Lesson Plan</value>
+            <small>Differentiated</small>
           </div>
         </div>
 
