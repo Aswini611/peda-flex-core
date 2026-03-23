@@ -82,10 +82,11 @@ export const ReportContent = ({
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <SummaryCard count={highCount} label="Strong Areas" bgClass="bg-[#dff0d8]" textClass="text-[#2d6a2d]" borderClass="border-[#2d6a2d]/20" />
         <SummaryCard count={moderateCount} label="Moderate Areas" bgClass="bg-[#fef3c7]" textClass="text-[#92400e]" borderClass="border-[#92400e]/20" />
         <SummaryCard count={developingCount} label="Needs Attention" bgClass="bg-[#fee2e2]" textClass="text-[#991b1b]" borderClass="border-[#991b1b]/20" />
+        <SummaryCard count={totalNotSure + varkNotSure} label='"Not Sure" Responses' bgClass="bg-[#f0f0ff]" textClass="text-[#4338ca]" borderClass="border-[#4338ca]/20" />
       </div>
 
       {/* VARK LEARNING STYLE PROFILE */}
