@@ -27,6 +27,10 @@ export const ReportContent = ({
   const highCount = scores.filter((s) => s.level === "High").length;
   const moderateCount = scores.filter((s) => s.level === "Moderate").length;
   const developingCount = scores.filter((s) => s.level === "Developing").length;
+  const totalNotSure = scores.reduce((sum, s) => sum + s.notSureCount, 0);
+  const totalDiagnosticQuestions = scores.reduce((sum, s) => sum + s.totalQuestions, 0);
+  const varkNotSure = varkScores.notSureCount;
+  const varkTotal = varkScores.totalQuestions;
 
   const formattedDate = new Date(submittedAt).toLocaleDateString("en-US", {
     year: "numeric",
