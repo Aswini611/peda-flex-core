@@ -121,7 +121,9 @@ export const ClassReportView = ({
       else buckets[4].count++;
     });
 
-    return { allScores, varkCounts, varkGroups, dimensionAverages, classAvg, dominantVark, buckets, totalStudents: assessments.length };
+    const totalNotSure = allScores.reduce((sum, s) => sum + s.notSureCount + s.varkNotSure, 0);
+
+    return { allScores, varkCounts, varkGroups, dimensionAverages, classAvg, dominantVark, buckets, totalStudents: assessments.length, totalNotSure };
   }, [assessments]);
 
   // VARK pie data
