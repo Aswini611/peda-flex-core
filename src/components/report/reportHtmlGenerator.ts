@@ -86,6 +86,7 @@ export function generateReportHtml(data: ReportData): string {
       <td style="padding:10px 12px;color:#6b6b8a;font-size:12px;">${s.theory}</td>
       <td style="padding:10px 12px;text-align:center;font-weight:600;color:#3a3a5c;">${s.percentage}%</td>
       <td style="padding:10px 12px;text-align:center;">${levelPill(s.level)}</td>
+      <td style="padding:10px 12px;text-align:center;font-size:12px;color:${s.notSureCount > 0 ? '#4338ca' : '#6b6b8a'};font-weight:${s.notSureCount > 0 ? '600' : '400'};">${s.notSureCount > 0 ? `${s.notSureCount}/${s.totalQuestions}` : '0'}</td>
     </tr>`).join("");
 
   // AI recommendations
