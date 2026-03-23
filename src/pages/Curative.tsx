@@ -142,6 +142,7 @@ const Curative = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
