@@ -33,9 +33,12 @@ export function deriveVarkScores(
 function scoreFromVarkResponses(varkResponses: Record<string, string>): VarkScores {
   const counts = { V: 0, A: 0, R: 0, K: 0 };
   const total = Object.keys(varkResponses).length;
+  let notSureCount = 0;
 
   for (const modality of Object.values(varkResponses)) {
-    if (modality in counts) {
+    if (modality === "N") {
+      notSureCount++;
+    } else if (modality in counts) {
       counts[modality as keyof typeof counts]++;
     }
   }
@@ -54,7 +57,7 @@ function scoreFromVarkResponses(varkResponses: Record<string, string>): VarkScor
   if (max === auditory) dominant = "Auditory";
   if (max === visual) dominant = "Visual";
 
-  return { visual, auditory, readWrite, kinesthetic, dominant };
+  return { visual, auditory, readWrite, kinesthetic, dominant, notSureCount, totalQuestions: total };
 }
 
 // Legacy fallback — derive VARK from the 30-question assessment responses
