@@ -7,6 +7,8 @@ export interface VarkScores {
   readWrite: number;
   kinesthetic: number;
   dominant: "Visual" | "Auditory" | "Read/Write" | "Kinesthetic";
+  notSureCount: number;
+  totalQuestions: number;
 }
 
 /**
