@@ -76,6 +76,7 @@ export function generateReportHtml(data: ReportData): string {
       </div>
       <p style="font-size:12px;color:#6b6b8a;margin:0 0 4px 0;">${s.description}</p>
       <p style="font-size:12px;color:#3a3a5c;margin:0;line-height:1.6;">${s.interpretation}</p>
+      ${s.notSureCount > 0 ? `<p style="font-size:12px;color:#4338ca;margin:6px 0 0 0;display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(67,56,202,0.3);"></span>${s.notSureCount} of ${s.totalQuestions} questions answered "Not Sure" — indicates cognitive uncertainty.</p>` : ''}
     </div>`;
   }).join("");
 
