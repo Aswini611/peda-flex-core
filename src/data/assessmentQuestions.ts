@@ -65,6 +65,7 @@ export const AGE_GROUPS: AgeGroupConfig[] = [
       { label: "Sometimes", emoji: "🙂", value: 3 },
       { label: "Not Much", emoji: "😐", value: 2 },
       { label: "Never", emoji: "😶", value: 1 },
+      { label: "Not Sure", emoji: "🤷", value: 0 },
     ],
     questions: [
       { id: 1, text: "I enjoy listening to stories." },
