@@ -98,7 +98,7 @@ const VARK_MAPPINGS: Record<number, VarkMapping> = {
 function deriveFromAssessment(ageGroup: number, responses: Record<string, number>): VarkScores {
   const mapping = VARK_MAPPINGS[ageGroup];
   if (!mapping) {
-    return { visual: 50, auditory: 50, readWrite: 50, kinesthetic: 50, dominant: "Visual" };
+    return { visual: 50, auditory: 50, readWrite: 50, kinesthetic: 50, dominant: "Visual", notSureCount: 0, totalQuestions: 0 };
   }
 
   const maxPerQuestion = ageGroup <= 5 ? 4 : 5;
@@ -121,5 +121,5 @@ function deriveFromAssessment(ageGroup: number, responses: Record<string, number
   if (max === auditory) dominant = "Auditory";
   if (max === visual) dominant = "Visual";
 
-  return { visual, auditory, readWrite, kinesthetic, dominant };
+  return { visual, auditory, readWrite, kinesthetic, dominant, notSureCount: 0, totalQuestions: 0 };
 }
