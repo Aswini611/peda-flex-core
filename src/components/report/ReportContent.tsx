@@ -148,6 +148,7 @@ export const ReportContent = ({
                 <th className="text-left text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Theory</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Score</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Level</th>
+                <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Not Sure</th>
               </tr>
             </thead>
             <tbody>
