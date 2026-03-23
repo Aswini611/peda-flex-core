@@ -169,13 +169,14 @@ export const ClassReportView = ({
       </div>
 
       {/* META BAR */}
-      <div className="grid grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-6 gap-2.5">
         {[
           { label: "Class", value: `${classLabel}${filterSection !== "all" ? `-${filterSection}` : ""}` },
           { label: "Class Avg Score", value: `${data.classAvg}%` },
           { label: "Dominant VARK", value: data.dominantVark[0], color: VARK_COLORS[data.dominantVark[0]], sub: `${data.dominantVark[1]} of ${data.totalStudents} learners` },
           { label: "Class Teacher", value: teacherName },
           { label: "Students", value: `${data.totalStudents}` },
+          { label: '"Not Sure" Total', value: `${data.totalNotSure}`, color: "#4338ca", sub: "Across all assessments" },
         ].map((m, i) => (
           <div key={i} className="bg-white border border-[#e4e2dc] rounded-[10px] p-3">
             <p className="text-[10px] font-semibold tracking-[1.5px] uppercase text-[#8282a8] mb-1">{m.label}</p>
