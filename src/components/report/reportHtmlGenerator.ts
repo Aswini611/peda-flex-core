@@ -193,6 +193,7 @@ export function generateReportHtml(data: ReportData): string {
     <div class="section-title">VARK Learning Style Profile</div>
     <div class="vark-grid">${varkCards}</div>
     <p style="font-size:12px;color:#6b6b8a;margin-top:18px;line-height:1.6;">${varkDescription}</p>
+    ${varkNotSure > 0 ? `<p style="font-size:12px;color:#4338ca;margin-top:8px;display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(67,56,202,0.3);"></span>${varkNotSure} of ${varkTotal} VARK questions answered "Not Sure" — learning style preference may need further observation.</p>` : ''}
   </div>
 
   <!-- DIMENSION ANALYSIS -->
