@@ -98,7 +98,7 @@ export const ClassReportView = ({
     });
 
     const dimensionAverages = Object.entries(dimensionMap).map(([dimension, d]) => ({
-      dimension, average: Math.round(d.total / d.count),
+      dimension, average: Math.round(d.total / d.count), notSureTotal: d.notSureTotal,
     }));
 
     const classAvg = allScores.length > 0
