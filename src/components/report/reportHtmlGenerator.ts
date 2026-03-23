@@ -19,6 +19,9 @@ export function generateReportHtml(data: ReportData): string {
   const highCount = scores.filter((s) => s.level === "High").length;
   const moderateCount = scores.filter((s) => s.level === "Moderate").length;
   const developingCount = scores.filter((s) => s.level === "Developing").length;
+  const totalNotSure = scores.reduce((sum, s) => sum + s.notSureCount, 0);
+  const varkNotSure = varkScores.notSureCount;
+  const varkTotal = varkScores.totalQuestions;
 
   const formattedDate = new Date(submittedAt).toLocaleDateString("en-US", {
     year: "numeric", month: "long", day: "numeric",
@@ -73,6 +76,7 @@ export function generateReportHtml(data: ReportData): string {
       </div>
       <p style="font-size:12px;color:#6b6b8a;margin:0 0 4px 0;">${s.description}</p>
       <p style="font-size:12px;color:#3a3a5c;margin:0;line-height:1.6;">${s.interpretation}</p>
+      ${s.notSureCount > 0 ? `<p style="font-size:12px;color:#4338ca;margin:6px 0 0 0;display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(67,56,202,0.3);"></span>${s.notSureCount} of ${s.totalQuestions} questions answered "Not Sure" — indicates cognitive uncertainty.</p>` : ''}
     </div>`;
   }).join("");
 
@@ -82,6 +86,7 @@ export function generateReportHtml(data: ReportData): string {
       <td style="padding:10px 12px;color:#6b6b8a;font-size:12px;">${s.theory}</td>
       <td style="padding:10px 12px;text-align:center;font-weight:600;color:#3a3a5c;">${s.percentage}%</td>
       <td style="padding:10px 12px;text-align:center;">${levelPill(s.level)}</td>
+      <td style="padding:10px 12px;text-align:center;font-size:12px;color:${s.notSureCount > 0 ? '#4338ca' : '#6b6b8a'};font-weight:${s.notSureCount > 0 ? '600' : '400'};">${s.notSureCount > 0 ? `${s.notSureCount}/${s.totalQuestions}` : '0'}</td>
     </tr>`).join("");
 
   // AI recommendations
@@ -164,7 +169,7 @@ export function generateReportHtml(data: ReportData): string {
   </div>
 
   <!-- SUMMARY -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
     <div style="background:#dff0d8;border:1px solid rgba(45,106,45,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <div style="font-size:28px;font-weight:700;color:#2d6a2d;">${highCount}</div>
       <div style="font-size:12px;font-weight:500;color:#2d6a2d;">Strong Areas</div>
@@ -177,6 +182,10 @@ export function generateReportHtml(data: ReportData): string {
       <div style="font-size:28px;font-weight:700;color:#991b1b;">${developingCount}</div>
       <div style="font-size:12px;font-weight:500;color:#991b1b;">Needs Attention</div>
     </div>
+    <div style="background:#f0f0ff;border:1px solid rgba(67,56,202,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <div style="font-size:28px;font-weight:700;color:#4338ca;">${totalNotSure + varkNotSure}</div>
+      <div style="font-size:12px;font-weight:500;color:#4338ca;">"Not Sure" Responses</div>
+    </div>
   </div>
 
   <!-- VARK LEARNING STYLE PROFILE -->
@@ -184,6 +193,7 @@ export function generateReportHtml(data: ReportData): string {
     <div class="section-title">VARK Learning Style Profile</div>
     <div class="vark-grid">${varkCards}</div>
     <p style="font-size:12px;color:#6b6b8a;margin-top:18px;line-height:1.6;">${varkDescription}</p>
+    ${varkNotSure > 0 ? `<p style="font-size:12px;color:#4338ca;margin-top:8px;display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(67,56,202,0.3);"></span>${varkNotSure} of ${varkTotal} VARK questions answered "Not Sure" — learning style preference may need further observation.</p>` : ''}
   </div>
 
   <!-- DIMENSION ANALYSIS -->
@@ -202,6 +212,7 @@ export function generateReportHtml(data: ReportData): string {
           <th style="text-align:left;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Theory</th>
           <th style="text-align:center;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Score</th>
           <th style="text-align:center;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Level</th>
+          <th style="text-align:center;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Not Sure</th>
         </tr>
       </thead>
       <tbody>${tableRows}</tbody>

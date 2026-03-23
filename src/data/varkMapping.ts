@@ -7,6 +7,8 @@ export interface VarkScores {
   readWrite: number;
   kinesthetic: number;
   dominant: "Visual" | "Auditory" | "Read/Write" | "Kinesthetic";
+  notSureCount: number;
+  totalQuestions: number;
 }
 
 /**
@@ -31,9 +33,12 @@ export function deriveVarkScores(
 function scoreFromVarkResponses(varkResponses: Record<string, string>): VarkScores {
   const counts = { V: 0, A: 0, R: 0, K: 0 };
   const total = Object.keys(varkResponses).length;
+  let notSureCount = 0;
 
   for (const modality of Object.values(varkResponses)) {
-    if (modality in counts) {
+    if (modality === "N") {
+      notSureCount++;
+    } else if (modality in counts) {
       counts[modality as keyof typeof counts]++;
     }
   }
@@ -52,7 +57,7 @@ function scoreFromVarkResponses(varkResponses: Record<string, string>): VarkScor
   if (max === auditory) dominant = "Auditory";
   if (max === visual) dominant = "Visual";
 
-  return { visual, auditory, readWrite, kinesthetic, dominant };
+  return { visual, auditory, readWrite, kinesthetic, dominant, notSureCount, totalQuestions: total };
 }
 
 // Legacy fallback — derive VARK from the 30-question assessment responses
@@ -93,7 +98,7 @@ const VARK_MAPPINGS: Record<number, VarkMapping> = {
 function deriveFromAssessment(ageGroup: number, responses: Record<string, number>): VarkScores {
   const mapping = VARK_MAPPINGS[ageGroup];
   if (!mapping) {
-    return { visual: 50, auditory: 50, readWrite: 50, kinesthetic: 50, dominant: "Visual" };
+    return { visual: 50, auditory: 50, readWrite: 50, kinesthetic: 50, dominant: "Visual", notSureCount: 0, totalQuestions: 0 };
   }
 
   const maxPerQuestion = ageGroup <= 5 ? 4 : 5;
@@ -116,5 +121,5 @@ function deriveFromAssessment(ageGroup: number, responses: Record<string, number
   if (max === auditory) dominant = "Auditory";
   if (max === visual) dominant = "Visual";
 
-  return { visual, auditory, readWrite, kinesthetic, dominant };
+  return { visual, auditory, readWrite, kinesthetic, dominant, notSureCount: 0, totalQuestions: 0 };
 }

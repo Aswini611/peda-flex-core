@@ -27,6 +27,10 @@ export const ReportContent = ({
   const highCount = scores.filter((s) => s.level === "High").length;
   const moderateCount = scores.filter((s) => s.level === "Moderate").length;
   const developingCount = scores.filter((s) => s.level === "Developing").length;
+  const totalNotSure = scores.reduce((sum, s) => sum + s.notSureCount, 0);
+  const totalDiagnosticQuestions = scores.reduce((sum, s) => sum + s.totalQuestions, 0);
+  const varkNotSure = varkScores.notSureCount;
+  const varkTotal = varkScores.totalQuestions;
 
   const formattedDate = new Date(submittedAt).toLocaleDateString("en-US", {
     year: "numeric",
@@ -78,10 +82,11 @@ export const ReportContent = ({
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <SummaryCard count={highCount} label="Strong Areas" bgClass="bg-[#dff0d8]" textClass="text-[#2d6a2d]" borderClass="border-[#2d6a2d]/20" />
         <SummaryCard count={moderateCount} label="Moderate Areas" bgClass="bg-[#fef3c7]" textClass="text-[#92400e]" borderClass="border-[#92400e]/20" />
         <SummaryCard count={developingCount} label="Needs Attention" bgClass="bg-[#fee2e2]" textClass="text-[#991b1b]" borderClass="border-[#991b1b]/20" />
+        <SummaryCard count={totalNotSure + varkNotSure} label='"Not Sure" Responses' bgClass="bg-[#f0f0ff]" textClass="text-[#4338ca]" borderClass="border-[#4338ca]/20" />
       </div>
 
       {/* VARK LEARNING STYLE PROFILE */}
@@ -114,6 +119,12 @@ export const ReportContent = ({
           })}
         </div>
         <p className="text-xs text-[#6b6b8a] mt-4 leading-relaxed">{varkDescription}</p>
+        {varkNotSure > 0 && (
+          <p className="text-xs text-[#4338ca] mt-2 flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#4338ca]/30" />
+            {varkNotSure} of {varkTotal} VARK questions answered "Not Sure" — learning style preference may need further observation.
+          </p>
+        )}
       </div>
 
       {/* DIMENSION SCORES */}
@@ -137,6 +148,7 @@ export const ReportContent = ({
                 <th className="text-left text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Theory</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Score</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Level</th>
+                <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Not Sure</th>
               </tr>
             </thead>
             <tbody>
@@ -147,6 +159,13 @@ export const ReportContent = ({
                   <td className="px-4 py-2.5 text-center font-semibold text-[#3a3a5c]">{score.percentage}%</td>
                   <td className="px-4 py-2.5 text-center">
                     <ScorePill level={score.level} />
+                  </td>
+                  <td className="px-4 py-2.5 text-center text-xs">
+                    {score.notSureCount > 0 ? (
+                      <span className="text-[#4338ca] font-medium">{score.notSureCount}/{score.totalQuestions}</span>
+                    ) : (
+                      <span className="text-[#6b6b8a]">0</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -260,6 +279,12 @@ const DimensionRow = ({ score }: { score: DimensionScore }) => {
       </div>
       <p className="text-xs text-[#6b6b8a] mb-1">{score.description}</p>
       <p className="text-xs text-[#3a3a5c] leading-relaxed">{score.interpretation}</p>
+      {score.notSureCount > 0 && (
+        <p className="text-xs text-[#4338ca] mt-1.5 flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#4338ca]/30" />
+          {score.notSureCount} of {score.totalQuestions} questions answered "Not Sure" — indicates cognitive uncertainty in this area.
+        </p>
+      )}
     </div>
   );
 };

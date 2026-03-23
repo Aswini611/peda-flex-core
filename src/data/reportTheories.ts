@@ -312,6 +312,8 @@ export interface DimensionScore {
   level: "High" | "Moderate" | "Developing";
   description: string;
   interpretation: string;
+  notSureCount: number;
+  totalQuestions: number;
 }
 
 export function analyzeResponses(
@@ -324,7 +326,9 @@ export function analyzeResponses(
   const maxPerQuestion = ageGroup <= 5 ? 4 : 5;
 
   return config.dimensions.map((dim) => {
-    const scores = dim.questionIds.map((qId) => responses[String(qId)] || 0);
+    const rawScores = dim.questionIds.map((qId) => responses[String(qId)]);
+    const notSureCount = rawScores.filter((v) => v === 0).length;
+    const scores = rawScores.map((v) => v || 0);
     const totalScore = scores.reduce((sum, s) => sum + s, 0);
     const maxScore = dim.questionIds.length * maxPerQuestion;
     const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
@@ -352,6 +356,8 @@ export function analyzeResponses(
       level,
       description: dim.description,
       interpretation,
+      notSureCount,
+      totalQuestions: dim.questionIds.length,
     };
   });
 }

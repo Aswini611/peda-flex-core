@@ -64,11 +64,14 @@ export const ClassReportView = ({
       varkDominant: string;
       strongAreas: number;
       needsAttention: number;
+      notSureCount: number;
+      totalQuestions: number;
+      varkNotSure: number;
     }[] = [];
 
     const varkCounts: Record<string, number> = { Visual: 0, Auditory: 0, "Read/Write": 0, Kinesthetic: 0 };
     const varkGroups: Record<string, string[]> = { Visual: [], Auditory: [], "Read/Write": [], Kinesthetic: [] };
-    const dimensionMap: Record<string, { total: number; count: number }> = {};
+    const dimensionMap: Record<string, { total: number; count: number; notSureTotal: number }> = {};
 
     assessments.forEach(a => {
       const scores = analyzeResponses(a.age_group, a.responses as Record<string, number>);
@@ -79,20 +82,23 @@ export const ClassReportView = ({
       const avgScore = Math.round(scores.reduce((s, d) => s + d.percentage, 0) / scores.length);
       const strong = scores.filter(s => s.level === "High").length;
       const needs = scores.filter(s => s.level === "Developing").length;
+      const notSureCount = scores.reduce((sum, s) => sum + s.notSureCount, 0);
+      const totalQuestions = scores.reduce((sum, s) => sum + s.totalQuestions, 0);
 
-      allScores.push({ studentName: a.student_name, avgScore, varkDominant: vark.dominant, strongAreas: strong, needsAttention: needs });
+      allScores.push({ studentName: a.student_name, avgScore, varkDominant: vark.dominant, strongAreas: strong, needsAttention: needs, notSureCount, totalQuestions, varkNotSure: vark.notSureCount });
       varkCounts[vark.dominant]++;
       varkGroups[vark.dominant]?.push(a.student_name);
 
       scores.forEach(dim => {
-        if (!dimensionMap[dim.dimension]) dimensionMap[dim.dimension] = { total: 0, count: 0 };
+        if (!dimensionMap[dim.dimension]) dimensionMap[dim.dimension] = { total: 0, count: 0, notSureTotal: 0 };
         dimensionMap[dim.dimension].total += dim.percentage;
         dimensionMap[dim.dimension].count += 1;
+        dimensionMap[dim.dimension].notSureTotal += dim.notSureCount;
       });
     });
 
     const dimensionAverages = Object.entries(dimensionMap).map(([dimension, d]) => ({
-      dimension, average: Math.round(d.total / d.count),
+      dimension, average: Math.round(d.total / d.count), notSureTotal: d.notSureTotal,
     }));
 
     const classAvg = allScores.length > 0
@@ -115,7 +121,9 @@ export const ClassReportView = ({
       else buckets[4].count++;
     });
 
-    return { allScores, varkCounts, varkGroups, dimensionAverages, classAvg, dominantVark, buckets, totalStudents: assessments.length };
+    const totalNotSure = allScores.reduce((sum, s) => sum + s.notSureCount + s.varkNotSure, 0);
+
+    return { allScores, varkCounts, varkGroups, dimensionAverages, classAvg, dominantVark, buckets, totalStudents: assessments.length, totalNotSure };
   }, [assessments]);
 
   // VARK pie data
@@ -161,13 +169,14 @@ export const ClassReportView = ({
       </div>
 
       {/* META BAR */}
-      <div className="grid grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-6 gap-2.5">
         {[
           { label: "Class", value: `${classLabel}${filterSection !== "all" ? `-${filterSection}` : ""}` },
           { label: "Class Avg Score", value: `${data.classAvg}%` },
           { label: "Dominant VARK", value: data.dominantVark[0], color: VARK_COLORS[data.dominantVark[0]], sub: `${data.dominantVark[1]} of ${data.totalStudents} learners` },
           { label: "Class Teacher", value: teacherName },
           { label: "Students", value: `${data.totalStudents}` },
+          { label: '"Not Sure" Total', value: `${data.totalNotSure}`, color: "#4338ca", sub: "Across all assessments" },
         ].map((m, i) => (
           <div key={i} className="bg-white border border-[#e4e2dc] rounded-[10px] p-3">
             <p className="text-[10px] font-semibold tracking-[1.5px] uppercase text-[#8282a8] mb-1">{m.label}</p>
@@ -184,7 +193,7 @@ export const ClassReportView = ({
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b-[1.5px] border-[#e4e2dc]">
-                {["#", "Learner", "Avg Score", "VARK", "Strong Areas", "Needs Attention"].map(h => (
+                {["#", "Learner", "Avg Score", "VARK", "Strong Areas", "Needs Attention", "Not Sure"].map(h => (
                   <th key={h} className="text-left text-[10px] font-semibold tracking-[1.2px] uppercase text-[#8282a8] px-2.5 py-2 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -205,6 +214,9 @@ export const ClassReportView = ({
                   </td>
                   <td className="px-2.5 py-[7px] text-emerald-600 font-medium">{s.strongAreas}</td>
                   <td className="px-2.5 py-[7px] text-red-500 font-medium">{s.needsAttention}</td>
+                  <td className="px-2.5 py-[7px] font-medium" style={{ color: (s.notSureCount + s.varkNotSure) > 0 ? '#4338ca' : '#8282a8' }}>
+                    {s.notSureCount + s.varkNotSure}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -342,6 +354,9 @@ export const ClassReportView = ({
                   <div className="h-full rounded" style={{ width: `${d.average}%`, background: barColor }} />
                 </div>
                 <span className="text-[13px] font-semibold text-[#3d3d5c] w-10 text-right">{d.average}%</span>
+                {d.notSureTotal > 0 && (
+                  <span className="text-[11px] font-medium text-[#4338ca] min-w-[60px]">🤷 {d.notSureTotal}</span>
+                )}
               </div>
             );
           })}
