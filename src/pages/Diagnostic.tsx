@@ -197,6 +197,16 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
             </div>
 
             <div className="space-y-2">
+              <Label>Curriculum</Label>
+              <Select value={curriculum} onValueChange={setCurriculum}>
+                <SelectTrigger><SelectValue placeholder="Select your curriculum" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CBSE">CBSE</SelectItem>
+                  <SelectItem value="IB">IB</SelectItem>
+                  <SelectItem value="Cambridge">Cambridge</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
               <Label>Class Teacher</Label>
               <Select value={teacherId} onValueChange={setTeacherId}>
                 <SelectTrigger>
