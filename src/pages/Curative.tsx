@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,13 @@ const CLASS_OPTIONS = [
 ];
 
 const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
+
+const CURRICULUM_OPTIONS = [
+  { value: "ib", label: "Inquiry-Based (IB)" },
+  { value: "cbse", label: "5E Instructional Model (CBSE)" },
+  { value: "cambridge", label: "Project-Based Learning (Cambridge)" },
+  { value: "ai", label: "AI (Auto-detect)" },
+];
 
 const getClassFolder = (classValue: string): string => {
   const folderMap: Record<string, string> = { nursery: "nursery", lkg: "lkg", ukg: "ukg" };
@@ -135,6 +142,7 @@ const Curative = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -306,8 +314,10 @@ const Curative = () => {
       : "";
     const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
+    const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
+    const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
     sendMessage(
-      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
+      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagnostic is handled separately). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
@@ -315,6 +325,7 @@ Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagn
 - Mismatch alerts for at-risk groups
 - Exit ticket design across Bloom's levels
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
+${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use 5E Instructional Model: Engage, Explore, Explain, Elaborate, Evaluate with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
 
 Do NOT mention individual student names. Focus on class-wide patterns and actionable teaching strategies.`,
       "generate",
@@ -545,6 +556,19 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Curriculum</label>
+              <Select value={selectedCurriculum} onValueChange={setSelectedCurriculum}>
+                <SelectTrigger><SelectValue placeholder="Choose curriculum..." /></SelectTrigger>
+                <SelectContent>
+                  {CURRICULUM_OPTIONS.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      <span className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" />{c.label}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
               {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate Lesson Plan</>)}
@@ -558,6 +582,11 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               {selectedSubject && (
                 <Badge variant="outline" className="text-xs gap-1">
                   <BookOpen className="h-3 w-3" /> {selectedSubject}
+                </Badge>
+              )}
+              {selectedCurriculum && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Globe className="h-3 w-3" /> {CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label}
                 </Badge>
               )}
               <span className="text-xs text-muted-foreground ml-2">
