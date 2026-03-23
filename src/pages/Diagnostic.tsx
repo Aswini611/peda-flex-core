@@ -122,6 +122,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         submitted_by: userId,
         student_class: studentClass,
         section: section.trim(),
+        curriculum: curriculum,
       } as any);
       if (error) throw error;
       setPhase("done");
