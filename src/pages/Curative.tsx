@@ -314,8 +314,10 @@ const Curative = () => {
       : "";
     const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
+    const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
+    const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
     sendMessage(
-      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText} with ${studentCount} students.
+      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagnostic is handled separately). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
@@ -323,6 +325,7 @@ Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagn
 - Mismatch alerts for at-risk groups
 - Exit ticket design across Bloom's levels
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
+${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use 5E Instructional Model: Engage, Explore, Explain, Elaborate, Evaluate with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
 
 Do NOT mention individual student names. Focus on class-wide patterns and actionable teaching strategies.`,
       "generate",
