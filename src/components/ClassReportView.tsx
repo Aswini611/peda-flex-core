@@ -64,11 +64,14 @@ export const ClassReportView = ({
       varkDominant: string;
       strongAreas: number;
       needsAttention: number;
+      notSureCount: number;
+      totalQuestions: number;
+      varkNotSure: number;
     }[] = [];
 
     const varkCounts: Record<string, number> = { Visual: 0, Auditory: 0, "Read/Write": 0, Kinesthetic: 0 };
     const varkGroups: Record<string, string[]> = { Visual: [], Auditory: [], "Read/Write": [], Kinesthetic: [] };
-    const dimensionMap: Record<string, { total: number; count: number }> = {};
+    const dimensionMap: Record<string, { total: number; count: number; notSureTotal: number }> = {};
 
     assessments.forEach(a => {
       const scores = analyzeResponses(a.age_group, a.responses as Record<string, number>);
@@ -79,15 +82,18 @@ export const ClassReportView = ({
       const avgScore = Math.round(scores.reduce((s, d) => s + d.percentage, 0) / scores.length);
       const strong = scores.filter(s => s.level === "High").length;
       const needs = scores.filter(s => s.level === "Developing").length;
+      const notSureCount = scores.reduce((sum, s) => sum + s.notSureCount, 0);
+      const totalQuestions = scores.reduce((sum, s) => sum + s.totalQuestions, 0);
 
-      allScores.push({ studentName: a.student_name, avgScore, varkDominant: vark.dominant, strongAreas: strong, needsAttention: needs });
+      allScores.push({ studentName: a.student_name, avgScore, varkDominant: vark.dominant, strongAreas: strong, needsAttention: needs, notSureCount, totalQuestions, varkNotSure: vark.notSureCount });
       varkCounts[vark.dominant]++;
       varkGroups[vark.dominant]?.push(a.student_name);
 
       scores.forEach(dim => {
-        if (!dimensionMap[dim.dimension]) dimensionMap[dim.dimension] = { total: 0, count: 0 };
+        if (!dimensionMap[dim.dimension]) dimensionMap[dim.dimension] = { total: 0, count: 0, notSureTotal: 0 };
         dimensionMap[dim.dimension].total += dim.percentage;
         dimensionMap[dim.dimension].count += 1;
+        dimensionMap[dim.dimension].notSureTotal += dim.notSureCount;
       });
     });
 
