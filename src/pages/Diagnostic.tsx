@@ -78,7 +78,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     fetchTeachers();
   }, []);
 
-  const canStartQuiz = name.trim() && age && studentClass && section.trim() && teacherId;
+  const canStartQuiz = name.trim() && age && studentClass && section.trim() && curriculum && teacherId;
 
   const getAgeGroupFromAge = (ageVal: number) => {
     if (ageVal >= 3 && ageVal < 5) return 3;
