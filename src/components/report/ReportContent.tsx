@@ -174,6 +174,18 @@ export const ReportContent = ({
         </div>
       </div>
 
+      {/* NOT SURE INSIGHT */}
+      {(totalNotSure + varkNotSure) > 0 && (
+        <NotSureInsight
+          studentName={studentName}
+          scores={scores}
+          varkNotSure={varkNotSure}
+          totalNotSure={totalNotSure}
+          totalDiagnosticQuestions={totalDiagnosticQuestions}
+          varkTotal={varkTotal}
+        />
+      )}
+
       {/* AI RECOMMENDATIONS */}
       <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-2xl px-7 py-6 text-white">
         <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
