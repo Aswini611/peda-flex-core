@@ -23,6 +23,13 @@ const CLASS_OPTIONS = [
 
 const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
 
+const CURRICULUM_OPTIONS = [
+  { value: "ib", label: "Inquiry-Based (IB)" },
+  { value: "cbse", label: "5E Instructional Model (CBSE)" },
+  { value: "cambridge", label: "Project-Based Learning (Cambridge)" },
+  { value: "ai", label: "AI (Auto-detect)" },
+];
+
 const getClassFolder = (classValue: string): string => {
   const folderMap: Record<string, string> = { nursery: "nursery", lkg: "lkg", ukg: "ukg" };
   for (let i = 1; i <= 10; i++) folderMap[`${i}`] = `class${i}`;
