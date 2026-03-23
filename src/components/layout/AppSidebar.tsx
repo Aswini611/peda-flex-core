@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments" },
-  { title: "Curative", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
+  { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
@@ -30,7 +30,7 @@ const getMobileNavItems = (role?: string) => {
   const items = [
     { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
     { title: isStudent ? "Assessments" : "Diagnostic", icon: Brain, path: "/diagnostic" },
-    ...(!isStudent ? [{ title: "Curative", icon: BookOpen, path: "/curative" }] : []),
+    ...(!isStudent ? [{ title: "Lesson Plan", icon: BookOpen, path: "/curative" }] : []),
     ...(!isStudent ? [{ title: "Analytics", icon: BarChart3, path: "/analytics" }] : []),
     ...(!isStudent ? [{ title: "Alerts", icon: AlertCircle, path: "/alerts" }] : []),
     { title: "Settings", icon: Settings, path: "/settings" },
