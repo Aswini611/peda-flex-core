@@ -553,6 +553,19 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Curriculum</label>
+              <Select value={selectedCurriculum} onValueChange={setSelectedCurriculum}>
+                <SelectTrigger><SelectValue placeholder="Choose curriculum..." /></SelectTrigger>
+                <SelectContent>
+                  {CURRICULUM_OPTIONS.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      <span className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" />{c.label}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
               {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate Lesson Plan</>)}
