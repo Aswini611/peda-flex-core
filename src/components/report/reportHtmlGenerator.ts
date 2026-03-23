@@ -211,6 +211,7 @@ export function generateReportHtml(data: ReportData): string {
           <th style="text-align:left;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Theory</th>
           <th style="text-align:center;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Score</th>
           <th style="text-align:center;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Level</th>
+          <th style="text-align:center;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b8a;padding:10px 12px;">Not Sure</th>
         </tr>
       </thead>
       <tbody>${tableRows}</tbody>
