@@ -293,6 +293,7 @@ export type Database = {
         Row: {
           age_group: number
           created_at: string
+          curriculum: string | null
           id: string
           responses: Json
           section: string | null
@@ -305,6 +306,7 @@ export type Database = {
         Insert: {
           age_group: number
           created_at?: string
+          curriculum?: string | null
           id?: string
           responses?: Json
           section?: string | null
@@ -317,6 +319,7 @@ export type Database = {
         Update: {
           age_group?: number
           created_at?: string
+          curriculum?: string | null
           id?: string
           responses?: Json
           section?: string | null

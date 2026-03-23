@@ -21,6 +21,7 @@ export const AGE_GROUPS: AgeGroupConfig[] = [
       { label: "Sometimes", emoji: "🙂", value: 3 },
       { label: "Rarely", emoji: "😐", value: 2 },
       { label: "Never", emoji: "😶", value: 1 },
+      { label: "Not Sure", emoji: "🤷", value: 0 },
     ],
     questions: [
       { id: 1, text: "I smile at others." },
@@ -64,6 +65,7 @@ export const AGE_GROUPS: AgeGroupConfig[] = [
       { label: "Sometimes", emoji: "🙂", value: 3 },
       { label: "Not Much", emoji: "😐", value: 2 },
       { label: "Never", emoji: "😶", value: 1 },
+      { label: "Not Sure", emoji: "🤷", value: 0 },
     ],
     questions: [
       { id: 1, text: "I enjoy listening to stories." },
@@ -108,6 +110,7 @@ export const AGE_GROUPS: AgeGroupConfig[] = [
       { label: "Neutral", emoji: "😐", value: 3 },
       { label: "Disagree", emoji: "👎", value: 2 },
       { label: "Strongly Disagree", emoji: "❌", value: 1 },
+      { label: "Not Sure", emoji: "🤷", value: 0 },
     ],
     questions: [
       { id: 1, text: "I enjoy reading books." },
@@ -152,6 +155,7 @@ export const AGE_GROUPS: AgeGroupConfig[] = [
       { label: "Neutral", emoji: "😐", value: 3 },
       { label: "Disagree", emoji: "👎", value: 2 },
       { label: "Strongly Disagree", emoji: "❌", value: 1 },
+      { label: "Not Sure", emoji: "🤷", value: 0 },
     ],
     questions: [
       { id: 1, text: "I am organized." },

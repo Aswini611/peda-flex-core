@@ -54,6 +54,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [age, setAge] = useState("");
   const [studentClass, setStudentClass] = useState("");
   const [section, setSection] = useState("");
+  const [curriculum, setCurriculum] = useState("");
   const [teacherId, setTeacherId] = useState("");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loadingTeachers, setLoadingTeachers] = useState(true);
@@ -77,7 +78,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     fetchTeachers();
   }, []);
 
-  const canStartQuiz = name.trim() && age && studentClass && section.trim() && teacherId;
+  const canStartQuiz = name.trim() && age && studentClass && section.trim() && curriculum && teacherId;
 
   const getAgeGroupFromAge = (ageVal: number) => {
     if (ageVal >= 3 && ageVal < 5) return 3;
@@ -121,6 +122,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         submitted_by: userId,
         student_class: studentClass,
         section: section.trim(),
+        curriculum: curriculum,
       } as any);
       if (error) throw error;
       setPhase("done");
@@ -194,6 +196,17 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Curriculum</Label>
+              <Select value={curriculum} onValueChange={setCurriculum}>
+                <SelectTrigger><SelectValue placeholder="Select your curriculum" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CBSE">CBSE</SelectItem>
+                  <SelectItem value="IB">IB</SelectItem>
+                  <SelectItem value="Cambridge">Cambridge</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Class Teacher</Label>
               <Select value={teacherId} onValueChange={setTeacherId}>
