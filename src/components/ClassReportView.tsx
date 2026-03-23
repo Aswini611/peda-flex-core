@@ -354,6 +354,9 @@ export const ClassReportView = ({
                   <div className="h-full rounded" style={{ width: `${d.average}%`, background: barColor }} />
                 </div>
                 <span className="text-[13px] font-semibold text-[#3d3d5c] w-10 text-right">{d.average}%</span>
+                {d.notSureTotal > 0 && (
+                  <span className="text-[11px] font-medium text-[#4338ca] min-w-[60px]">🤷 {d.notSureTotal}</span>
+                )}
               </div>
             );
           })}
