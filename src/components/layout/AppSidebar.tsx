@@ -30,7 +30,7 @@ const getMobileNavItems = (role?: string) => {
   const items = [
     { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
     { title: isStudent ? "Assessments" : "Diagnostic", icon: Brain, path: "/diagnostic" },
-    ...(!isStudent ? [{ title: "Curative", icon: BookOpen, path: "/curative" }] : []),
+    ...(!isStudent ? [{ title: "Lesson Plan", icon: BookOpen, path: "/curative" }] : []),
     ...(!isStudent ? [{ title: "Analytics", icon: BarChart3, path: "/analytics" }] : []),
     ...(!isStudent ? [{ title: "Alerts", icon: AlertCircle, path: "/alerts" }] : []),
     { title: "Settings", icon: Settings, path: "/settings" },
