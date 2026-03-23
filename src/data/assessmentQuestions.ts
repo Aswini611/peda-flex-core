@@ -110,6 +110,7 @@ export const AGE_GROUPS: AgeGroupConfig[] = [
       { label: "Neutral", emoji: "😐", value: 3 },
       { label: "Disagree", emoji: "👎", value: 2 },
       { label: "Strongly Disagree", emoji: "❌", value: 1 },
+      { label: "Not Sure", emoji: "🤷", value: 0 },
     ],
     questions: [
       { id: 1, text: "I enjoy reading books." },
