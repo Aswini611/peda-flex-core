@@ -312,6 +312,8 @@ export interface DimensionScore {
   level: "High" | "Moderate" | "Developing";
   description: string;
   interpretation: string;
+  notSureCount: number;
+  totalQuestions: number;
 }
 
 export function analyzeResponses(
