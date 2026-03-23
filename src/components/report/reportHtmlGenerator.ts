@@ -167,7 +167,7 @@ export function generateReportHtml(data: ReportData): string {
   </div>
 
   <!-- SUMMARY -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
     <div style="background:#dff0d8;border:1px solid rgba(45,106,45,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <div style="font-size:28px;font-weight:700;color:#2d6a2d;">${highCount}</div>
       <div style="font-size:12px;font-weight:500;color:#2d6a2d;">Strong Areas</div>
@@ -179,6 +179,10 @@ export function generateReportHtml(data: ReportData): string {
     <div style="background:#fee2e2;border:1px solid rgba(153,27,27,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
       <div style="font-size:28px;font-weight:700;color:#991b1b;">${developingCount}</div>
       <div style="font-size:12px;font-weight:500;color:#991b1b;">Needs Attention</div>
+    </div>
+    <div style="background:#f0f0ff;border:1px solid rgba(67,56,202,0.2);border-radius:12px;padding:16px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+      <div style="font-size:28px;font-weight:700;color:#4338ca;">${totalNotSure + varkNotSure}</div>
+      <div style="font-size:12px;font-weight:500;color:#4338ca;">"Not Sure" Responses</div>
     </div>
   </div>
 
