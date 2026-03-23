@@ -160,6 +160,13 @@ export const ReportContent = ({
                   <td className="px-4 py-2.5 text-center">
                     <ScorePill level={score.level} />
                   </td>
+                  <td className="px-4 py-2.5 text-center text-xs">
+                    {score.notSureCount > 0 ? (
+                      <span className="text-[#4338ca] font-medium">{score.notSureCount}/{score.totalQuestions}</span>
+                    ) : (
+                      <span className="text-[#6b6b8a]">0</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
