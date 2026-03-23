@@ -207,6 +207,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
               <Label>Class Teacher</Label>
               <Select value={teacherId} onValueChange={setTeacherId}>
                 <SelectTrigger>
