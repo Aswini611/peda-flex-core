@@ -219,6 +219,63 @@ export function generateReportHtml(data: ReportData): string {
     </table>
   </div>
 
+  <!-- NOT SURE INSIGHT -->
+  ${(() => {
+    const allNotSure = totalNotSure + varkNotSure;
+    const allTotal = scores.reduce((s, sc) => s + sc.totalQuestions, 0) + varkTotal;
+    const pct = allTotal > 0 ? Math.round((allNotSure / allTotal) * 100) : 0;
+    if (allNotSure === 0) return '';
+    const unsureDims = scores.filter(s => s.notSureCount > 0);
+    let sevLabel = "Low", sevColor = "#0e9a7b", sevBg = "#e1f5ee";
+    if (pct >= 40) { sevLabel = "High"; sevColor = "#991b1b"; sevBg = "#fee2e2"; }
+    else if (pct >= 20) { sevLabel = "Moderate"; sevColor = "#92400e"; sevBg = "#fef3c7"; }
+    const interpretation = pct >= 40
+      ? "This is a significant number, suggesting the student may lack confidence or familiarity in several areas. The teacher should provide additional support and one-on-one guidance."
+      : pct >= 20
+        ? "This indicates moderate uncertainty. The student may benefit from revisiting foundational concepts in the affected areas with guided practice."
+        : "This is within a normal range. The student shows reasonable confidence across most areas.";
+    const dimRows = unsureDims.map(s => {
+      const dp = s.totalQuestions > 0 ? Math.round((s.notSureCount / s.totalQuestions) * 100) : 0;
+      return `<div style="display:flex;align-items:center;gap:12px;background:#f8f8ff;border-radius:8px;padding:8px 16px;margin-bottom:6px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(67,56,202,0.4);flex-shrink:0;"></span>
+        <span style="flex:1;font-size:13px;color:#3a3a5c;"><strong>${s.dimension}</strong> <span style="color:#6b6b8a;font-size:12px;">(${s.notSureCount} of ${s.totalQuestions} — ${dp}%)</span></span>
+        <div style="width:96px;height:6px;background:#e2e0d8;border-radius:3px;overflow:hidden;"><div style="height:100%;border-radius:3px;background:#4338ca;width:${dp}%;"></div></div>
+      </div>`;
+    }).join('');
+    const varkRow = varkNotSure > 0 ? `<div style="display:flex;align-items:center;gap:12px;background:#f8f8ff;border-radius:8px;padding:8px 16px;margin-bottom:6px;">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(67,56,202,0.4);flex-shrink:0;"></span>
+      <span style="font-size:13px;color:#3a3a5c;"><strong>VARK Learning Style:</strong> ${varkNotSure} of ${varkTotal} questions answered "Not Sure" — learning style preference may need further observation.</span>
+    </div>` : '';
+    return `<div class="section" style="background:#fff;border:1.5px solid #e2e0d8;border-radius:16px;overflow:hidden;">
+      <div style="background:#f0f0ff;padding:16px 24px;border-bottom:1px solid #e2e0d8;">
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#1a1a2e;display:flex;align-items:center;gap:10px;">
+          <span style="display:block;width:4px;height:22px;border-radius:2px;background:#4338ca;"></span>"Not Sure" Response Analysis
+        </div>
+        <p style="font-size:12px;color:#6b6b8a;margin-top:4px;">Why this matters: The "Not Sure" option lets students honestly indicate uncertainty rather than guessing randomly. This helps identify genuine areas of cognitive uncertainty.</p>
+      </div>
+      <div style="padding:20px 24px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+          <div style="text-align:center;padding:8px 16px;border-radius:12px;background:${sevBg};">
+            <div style="font-size:24px;font-weight:700;color:${sevColor};">${allNotSure}</div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${sevColor};">${sevLabel} Uncertainty</div>
+          </div>
+          <p style="font-size:13px;color:#3a3a5c;line-height:1.6;flex:1;">${studentName} selected "Not Sure" for <strong>${allNotSure} out of ${allTotal}</strong> questions (${pct}%). ${interpretation}</p>
+        </div>
+        ${unsureDims.length > 0 ? `<p style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b6b8a;margin-bottom:8px;">Dimensions with uncertainty</p>${dimRows}` : ''}
+        ${varkRow}
+        <div style="background:#faf9f6;border:1px dashed #d4d0c8;border-radius:12px;padding:16px 20px;margin-top:12px;">
+          <p style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b6b8a;margin-bottom:8px;">🧑‍🏫 Teacher Guidance</p>
+          <ul style="list-style:none;padding:0;margin:0;font-size:12px;color:#3a3a5c;line-height:1.7;">
+            <li>• "Not Sure" does not mean wrong — it means the student honestly expressed uncertainty.</li>
+            <li>• High "Not Sure" in a specific dimension suggests the student needs more exposure and confidence-building.</li>
+            <li>• Use formative check-ins and low-stakes activities to help the student engage without pressure.</li>
+            <li>• Re-assessment after targeted intervention can reveal if uncertainty has converted to understanding.</li>
+          </ul>
+        </div>
+      </div>
+    </div>`;
+  })()}
+
   <!-- AI RECOMMENDATIONS -->
   <div class="section">
     <div class="ai-box">

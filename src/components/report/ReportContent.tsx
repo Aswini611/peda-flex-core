@@ -174,6 +174,18 @@ export const ReportContent = ({
         </div>
       </div>
 
+      {/* NOT SURE INSIGHT */}
+      {(totalNotSure + varkNotSure) > 0 && (
+        <NotSureInsight
+          studentName={studentName}
+          scores={scores}
+          varkNotSure={varkNotSure}
+          totalNotSure={totalNotSure}
+          totalDiagnosticQuestions={totalDiagnosticQuestions}
+          varkTotal={varkTotal}
+        />
+      )}
+
       {/* AI RECOMMENDATIONS */}
       <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-2xl px-7 py-6 text-white">
         <h3 className="text-lg font-bold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
@@ -310,3 +322,106 @@ const AiRecItem = ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
   </li>
 );
+
+const NotSureInsight = ({
+  studentName,
+  scores,
+  varkNotSure,
+  totalNotSure,
+  totalDiagnosticQuestions,
+  varkTotal,
+}: {
+  studentName: string;
+  scores: DimensionScore[];
+  varkNotSure: number;
+  totalNotSure: number;
+  totalDiagnosticQuestions: number;
+  varkTotal: number;
+}) => {
+  const allNotSure = totalNotSure + varkNotSure;
+  const allTotal = totalDiagnosticQuestions + varkTotal;
+  const percentage = allTotal > 0 ? Math.round((allNotSure / allTotal) * 100) : 0;
+
+  const unsureDimensions = scores.filter(s => s.notSureCount > 0);
+
+  let severityLabel = "Low";
+  let severityColor = "#0e9a7b";
+  let severityBg = "#e1f5ee";
+  if (percentage >= 40) { severityLabel = "High"; severityColor = "#991b1b"; severityBg = "#fee2e2"; }
+  else if (percentage >= 20) { severityLabel = "Moderate"; severityColor = "#92400e"; severityBg = "#fef3c7"; }
+
+  return (
+    <div className="bg-white border border-[#e2e0d8] rounded-2xl overflow-hidden">
+      <div className="bg-[#f0f0ff] px-6 py-4 border-b border-[#e2e0d8]">
+        <h3 className="text-lg font-bold text-[#1a1a2e] flex items-center gap-2.5" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          <span className="block w-1 h-5 rounded-sm bg-[#4338ca]" />
+          "Not Sure" Response Analysis
+        </h3>
+        <p className="text-xs text-[#6b6b8a] mt-1">
+          Why this matters: The "Not Sure" option is provided so students can honestly indicate when they are unsure about a question rather than guessing randomly. This helps identify genuine areas of cognitive uncertainty.
+        </p>
+      </div>
+      <div className="px-6 py-5 space-y-4">
+        {/* Overview */}
+        <div className="flex items-center gap-4">
+          <div className="text-center px-4 py-2 rounded-xl" style={{ background: severityBg }}>
+            <div className="text-2xl font-bold" style={{ color: severityColor }}>{allNotSure}</div>
+            <div className="text-[10px] font-semibold tracking-[1px] uppercase" style={{ color: severityColor }}>{severityLabel} Uncertainty</div>
+          </div>
+          <p className="text-sm text-[#3a3a5c] leading-relaxed flex-1">
+            {studentName} selected "Not Sure" for <strong>{allNotSure} out of {allTotal}</strong> questions ({percentage}%).
+            {percentage >= 40
+              ? " This is a significant number, suggesting the student may lack confidence or familiarity in several areas. The teacher should provide additional support and one-on-one guidance."
+              : percentage >= 20
+                ? " This indicates moderate uncertainty. The student may benefit from revisiting foundational concepts in the affected areas with guided practice."
+                : " This is within a normal range. The student shows reasonable confidence across most areas."}
+          </p>
+        </div>
+
+        {/* Per-dimension breakdown */}
+        {unsureDimensions.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold tracking-[1px] uppercase text-[#6b6b8a] mb-2">Dimensions with uncertainty</p>
+            <div className="space-y-2">
+              {unsureDimensions.map((s, i) => {
+                const dimPct = s.totalQuestions > 0 ? Math.round((s.notSureCount / s.totalQuestions) * 100) : 0;
+                return (
+                  <div key={i} className="flex items-center gap-3 bg-[#f8f8ff] rounded-lg px-4 py-2.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-[#4338ca]/40 shrink-0" />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-[#3a3a5c]">{s.dimension}</span>
+                      <span className="text-xs text-[#6b6b8a] ml-2">({s.notSureCount} of {s.totalQuestions} questions — {dimPct}%)</span>
+                    </div>
+                    <div className="w-24 h-1.5 bg-[#e2e0d8] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-[#4338ca]" style={{ width: `${dimPct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {varkNotSure > 0 && (
+          <div className="flex items-center gap-3 bg-[#f8f8ff] rounded-lg px-4 py-2.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#4338ca]/40 shrink-0" />
+            <span className="text-sm text-[#3a3a5c]">
+              <strong>VARK Learning Style:</strong> {varkNotSure} of {varkTotal} questions answered "Not Sure" — the student's learning style preference may need further classroom observation.
+            </span>
+          </div>
+        )}
+
+        {/* Teacher guidance */}
+        <div className="bg-[#faf9f6] border border-dashed border-[#d4d0c8] rounded-xl px-5 py-4">
+          <p className="text-xs font-semibold tracking-[1px] uppercase text-[#6b6b8a] mb-2">🧑‍🏫 Teacher Guidance</p>
+          <ul className="space-y-1.5 text-xs text-[#3a3a5c] leading-relaxed">
+            <li>• "Not Sure" does not mean wrong — it means the student chose not to guess and honestly expressed uncertainty.</li>
+            <li>• High "Not Sure" in a specific dimension suggests the student needs more exposure and confidence-building in that topic area.</li>
+            <li>• Consider using formative check-ins and low-stakes activities to help the student engage with uncertain areas without pressure.</li>
+            <li>• Re-assessment after targeted intervention can reveal if uncertainty has converted to understanding.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
