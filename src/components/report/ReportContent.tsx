@@ -265,6 +265,12 @@ const DimensionRow = ({ score }: { score: DimensionScore }) => {
       </div>
       <p className="text-xs text-[#6b6b8a] mb-1">{score.description}</p>
       <p className="text-xs text-[#3a3a5c] leading-relaxed">{score.interpretation}</p>
+      {score.notSureCount > 0 && (
+        <p className="text-xs text-[#4338ca] mt-1.5 flex items-center gap-1">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#4338ca]/30" />
+          {score.notSureCount} of {score.totalQuestions} questions answered "Not Sure" — indicates cognitive uncertainty in this area.
+        </p>
+      )}
     </div>
   );
 };
