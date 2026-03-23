@@ -54,6 +54,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [age, setAge] = useState("");
   const [studentClass, setStudentClass] = useState("");
   const [section, setSection] = useState("");
+  const [curriculum, setCurriculum] = useState("");
   const [teacherId, setTeacherId] = useState("");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loadingTeachers, setLoadingTeachers] = useState(true);
