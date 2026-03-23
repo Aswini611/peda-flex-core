@@ -193,7 +193,7 @@ export const ClassReportView = ({
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b-[1.5px] border-[#e4e2dc]">
-                {["#", "Learner", "Avg Score", "VARK", "Strong Areas", "Needs Attention"].map(h => (
+                {["#", "Learner", "Avg Score", "VARK", "Strong Areas", "Needs Attention", "Not Sure"].map(h => (
                   <th key={h} className="text-left text-[10px] font-semibold tracking-[1.2px] uppercase text-[#8282a8] px-2.5 py-2 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -214,6 +214,9 @@ export const ClassReportView = ({
                   </td>
                   <td className="px-2.5 py-[7px] text-emerald-600 font-medium">{s.strongAreas}</td>
                   <td className="px-2.5 py-[7px] text-red-500 font-medium">{s.needsAttention}</td>
+                  <td className="px-2.5 py-[7px] font-medium" style={{ color: (s.notSureCount + s.varkNotSure) > 0 ? '#4338ca' : '#8282a8' }}>
+                    {s.notSureCount + s.varkNotSure}
+                  </td>
                 </tr>
               ))}
             </tbody>
