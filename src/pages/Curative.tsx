@@ -296,11 +296,28 @@ const Curative = () => {
         subject: selectedChapter || selectedSubject,
         prompt, mode, chatHistory: chatMessages,
         onDelta: (chunk) => upsertAssistant(chunk),
-        onDone: () => {
+        onDone: async () => {
           setIsStreaming(false);
           if (mode === "generate") {
             setHasGeneratedContent(true);
             awardXp("generate_lesson", "Generated a lesson plan");
+            // Save lesson plan to database
+            try {
+              const classLabel = getClassLabel(selectedClass);
+              const subjectLabel = selectedSubject || "General";
+              const title = `${classLabel} ${subjectLabel} Lesson Plan`;
+              await supabase.from("lessons").insert({
+                title,
+                subject: subjectLabel,
+                curriculum: selectedCurriculum || null,
+                class_level: selectedClass,
+                section: selectedSection,
+                lesson_content: assistantSoFar,
+                ai_generated: true,
+              });
+            } catch (err) {
+              console.error("Failed to save lesson plan:", err);
+            }
           }
         },
         onError: (msg) => { toast.error(msg); setIsStreaming(false); },

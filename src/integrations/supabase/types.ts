@@ -182,12 +182,15 @@ export type Database = {
         Row: {
           ai_generated: boolean | null
           approach: string | null
+          class_level: string | null
           content: Json | null
           created_at: string
           curriculum: string | null
           delivery_method: string | null
           duration_minutes: number | null
           id: string
+          lesson_content: string | null
+          section: string | null
           subject: string | null
           title: string
           vark_target: string | null
@@ -195,12 +198,15 @@ export type Database = {
         Insert: {
           ai_generated?: boolean | null
           approach?: string | null
+          class_level?: string | null
           content?: Json | null
           created_at?: string
           curriculum?: string | null
           delivery_method?: string | null
           duration_minutes?: number | null
           id?: string
+          lesson_content?: string | null
+          section?: string | null
           subject?: string | null
           title: string
           vark_target?: string | null
@@ -208,12 +214,15 @@ export type Database = {
         Update: {
           ai_generated?: boolean | null
           approach?: string | null
+          class_level?: string | null
           content?: Json | null
           created_at?: string
           curriculum?: string | null
           delivery_method?: string | null
           duration_minutes?: number | null
           id?: string
+          lesson_content?: string | null
+          section?: string | null
           subject?: string | null
           title?: string
           vark_target?: string | null
