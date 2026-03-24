@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PerformanceEntryModal } from "@/components/PerformanceEntryModal";
 import ReactMarkdown from "react-markdown";
-import html2pdf from "html2pdf.js";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -25,6 +24,8 @@ const CLASS_OPTIONS = [
 
 const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
 
+const getClassLabel = (value: string) => CLASS_OPTIONS.find(c => c.value === value)?.label || value;
+
 const Analytics = () => {
   const { profile, user } = useAuth();
   const [selectedClass, setSelectedClass] = useState("");
@@ -33,23 +34,6 @@ const Analytics = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"pretest" | "exit_ticket">("pretest");
   const [showPdfPreview, setShowPdfPreview] = useState(false);
-
-  if (profile?.role !== "teacher") {
-    return (
-      <AppLayout>
-        <PageHeader title="Pillar 3: The Analytics Phase" subtitle="Performance Analytics & Tracking" />
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Lock className="h-12 w-12 text-danger mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground max-w-md">Only teachers can access the Analytics Page.</p>
-          </CardContent>
-        </Card>
-      </AppLayout>
-    );
-  }
-
-  const getClassLabel = (value: string) => CLASS_OPTIONS.find(c => c.value === value)?.label || value;
 
   const { data: sections = [] } = useQuery({
     queryKey: ["analytics-sections", selectedClass, user?.id],
@@ -67,7 +51,6 @@ const Analytics = () => {
     enabled: !!selectedClass && !!user?.id,
   });
 
-  // Fetch lessons filtered by class & section
   const { data: lessons = [] } = useQuery({
     queryKey: ["analytics-lessons", selectedClass, selectedSection, user?.id],
     queryFn: async () => {
@@ -85,7 +68,6 @@ const Analytics = () => {
 
   const currentLesson = lessons.find(l => l.id === selectedLesson);
 
-  // Performance records for selected lesson
   const { data: records = [], refetch: refetchRecords } = useQuery({
     queryKey: ["analytics-perf-records", selectedLesson],
     queryFn: async () => {
@@ -99,7 +81,6 @@ const Analytics = () => {
     enabled: !!selectedLesson,
   });
 
-  // Student names from student_assessments
   const { data: studentAssessments = [] } = useQuery({
     queryKey: ["analytics-students", selectedClass, selectedSection, user?.id],
     queryFn: async () => {
@@ -147,17 +128,27 @@ const Analytics = () => {
     return { avg: Math.round(avg * 1000) / 1000, high, medium, low, total: withGain.length };
   }, [records]);
 
-  // Simple display name for lesson
   const getLessonDisplayName = (lesson: typeof lessons[0]) => {
     const classLabel = getClassLabel(lesson.class_level || "");
     const subject = lesson.subject || "General";
     return `${classLabel} ${subject} Lesson Plan`;
   };
 
-  // PDF preview render function using same styling as Curative
-  const handleViewPdf = () => {
-    setShowPdfPreview(!showPdfPreview);
-  };
+  // Role guard - after all hooks
+  if (profile?.role !== "teacher") {
+    return (
+      <AppLayout>
+        <PageHeader title="Pillar 3: The Analytics Phase" subtitle="Performance Analytics & Tracking" />
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <Lock className="h-12 w-12 text-danger mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h2>
+            <p className="text-muted-foreground max-w-md">Only teachers can access the Analytics Page.</p>
+          </CardContent>
+        </Card>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -233,7 +224,7 @@ const Analytics = () => {
             </CardContent>
           </Card>
 
-          {/* Selected Lesson Actions & Preview */}
+          {/* Selected Lesson Content */}
           {selectedLesson && currentLesson && (
             <>
               {/* Lesson Header & Actions */}
@@ -250,7 +241,7 @@ const Analytics = () => {
                       <FileText className="h-4 w-4 mr-1" /> Record Exit Ticket
                     </Button>
                     {currentLesson.lesson_content && (
-                      <Button size="sm" variant="outline" onClick={handleViewPdf}>
+                      <Button size="sm" variant="outline" onClick={() => setShowPdfPreview(!showPdfPreview)}>
                         <Eye className="h-4 w-4 mr-1" /> {showPdfPreview ? "Hide" : "View"} Lesson Plan
                       </Button>
                     )}
@@ -258,11 +249,11 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              {/* PDF-style Lesson Plan Preview */}
+              {/* Lesson Plan Preview */}
               {showPdfPreview && currentLesson.lesson_content && (
                 <Card className="overflow-hidden">
                   <CardContent className="p-0">
-                    <div className="bg-[#f7f5f0] p-6 sm:p-8">
+                    <div className="bg-[hsl(var(--muted))] p-6 sm:p-8">
                       {/* Header */}
                       <div className="flex justify-between items-start mb-6 pb-4 border-b-2 border-foreground">
                         <div>
@@ -317,7 +308,7 @@ const Analytics = () => {
 
                       {/* Footer */}
                       <div className="border-t border-border pt-3 mt-5 flex justify-between items-center">
-                        <p className="text-[10px] text-muted-foreground">This report is auto-generated by the APAS AI engine. For academic use only.</p>
+                        <p className="text-[10px] text-muted-foreground">Auto-generated by APAS AI engine. For academic use only.</p>
                         <p className="font-serif text-[13px] text-muted-foreground italic">APAS · {new Date().getFullYear()}</p>
                       </div>
                     </div>
@@ -426,7 +417,6 @@ const Analytics = () => {
                 </Card>
               )}
 
-              {/* Performance Entry Modal */}
               <PerformanceEntryModal
                 open={modalOpen}
                 onOpenChange={setModalOpen}
