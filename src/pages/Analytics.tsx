@@ -300,8 +300,11 @@ const Analytics = () => {
       </Card>
 
       {selectedClass && selectedSection && (
-        <Tabs defaultValue="class" className="mb-6" onValueChange={() => { resetClassGain(); resetIndGain(); setSelectedStudentId(null); }}>
+        <Tabs defaultValue="performance" className="mb-6" onValueChange={() => { resetClassGain(); resetIndGain(); setSelectedStudentId(null); }}>
           <TabsList className="mb-4">
+            <TabsTrigger value="performance" className="gap-1.5">
+              <Activity className="h-4 w-4" /> Performance Tracking
+            </TabsTrigger>
             <TabsTrigger value="class" className="gap-1.5">
               <BarChart3 className="h-4 w-4" /> Class Analytics
             </TabsTrigger>
@@ -309,6 +312,11 @@ const Analytics = () => {
               <User className="h-4 w-4" /> Individual Analytics
             </TabsTrigger>
           </TabsList>
+
+          {/* ─── PERFORMANCE TRACKING TAB ─── */}
+          <TabsContent value="performance">
+            <PerformanceTrackingTab selectedClass={selectedClass} selectedSection={selectedSection} userId={user?.id} />
+          </TabsContent>
 
           {/* ─── CLASS ANALYTICS TAB ─── */}
           <TabsContent value="class">
