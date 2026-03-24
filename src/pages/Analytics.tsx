@@ -298,6 +298,7 @@ const Analytics = () => {
     setIndGainCalculated(true);
   };
 
+  const getClassLabel = (value: string) => CLASS_OPTIONS.find(c => c.value === value)?.label || value;
   const resetClassGain = () => { setClassPretest(""); setClassPosttest(""); setClassGain(null); setClassGainCalculated(false); };
   const resetIndGain = () => { setIndPretest(""); setIndPosttest(""); setIndGain(null); setIndGainCalculated(false); };
 
