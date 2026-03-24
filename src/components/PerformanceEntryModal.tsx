@@ -87,8 +87,8 @@ export function PerformanceEntryModal({
           .eq("student_id", selectedStudent);
         if (error) throw error;
 
-        toast.success("Exit ticket recorded ✓");
-        awardXp("record_exit_ticket", "Recorded exit ticket scores");
+        toast.success("Post-test recorded ✓");
+        awardXp("record_exit_ticket", "Recorded post-test scores");
 
         // Check mismatch alert trigger
         await checkMismatchAlert(lessonId);
