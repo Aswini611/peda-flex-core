@@ -128,6 +128,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
       } as any);
       if (error) throw error;
       setPhase("done");
+      awardXp("complete_assessment", "Completed student assessment");
       toast.success("You have successfully completed the Assessment! 🎉");
     } catch (e: any) {
       toast.error(e.message || "Failed to submit assessment");
