@@ -16,6 +16,7 @@ import Analytics from "./pages/Analytics";
 import Alerts from "./pages/Alerts";
 import TeacherPanel from "./pages/TeacherPanel";
 import SettingsPage from "./pages/Settings";
+import Gamification from "./pages/Gamification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
