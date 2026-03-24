@@ -505,6 +505,7 @@ const DiagnosticTeacher = () => {
       } as any);
       if (error) throw error;
       setPhase("done");
+      awardXp("complete_assessment", "Submitted teacher assessment");
       toast.success("Teacher assessment submitted successfully! 🎉");
     } catch (e: any) {
       toast.error(e.message || "Failed to submit assessment");
