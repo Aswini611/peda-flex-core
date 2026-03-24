@@ -151,7 +151,7 @@ export function PerformanceEntryModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === "pretest" ? "Record Pre-test Score" : "Record Exit Ticket"}
+            {mode === "pretest" ? "Record Pre-test Score" : "Record Post-test Score"}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">{lessonTitle}</p>
         </DialogHeader>
