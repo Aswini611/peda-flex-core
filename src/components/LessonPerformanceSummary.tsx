@@ -63,7 +63,7 @@ export function LessonPerformanceSummary({ lessonId, lessonTitle, students }: Le
             <ClipboardCheck className="h-4 w-4 mr-1" /> Record Pre-test Score
           </Button>
           <Button size="sm" variant="outline" onClick={() => { setModalMode("exit_ticket"); setModalOpen(true); }}>
-            <FileText className="h-4 w-4 mr-1" /> Record Exit Ticket
+            <FileText className="h-4 w-4 mr-1" /> Record Post-test Score
           </Button>
         </div>
 

@@ -81,26 +81,58 @@ const Analytics = () => {
     enabled: !!selectedLesson,
   });
 
-  const { data: studentAssessments = [] } = useQuery({
-    queryKey: ["analytics-students", selectedClass, selectedSection, user?.id],
+  const { data: lessonStudents = [] } = useQuery({
+    queryKey: ["analytics-lesson-students", selectedLesson],
     queryFn: async () => {
-      if (!user?.id) return [];
-      let q = supabase.from("student_assessments").select("id, student_name").eq("teacher_id", user.id);
-      if (selectedClass) q = q.eq("student_class", selectedClass);
-      if (selectedSection) q = q.eq("section", selectedSection);
-      const { data } = await q;
-      return data || [];
+      if (!selectedLesson) return [];
+
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from("lesson_assignments")
+        .select("student_id")
+        .eq("lesson_id", selectedLesson);
+
+      if (assignmentsError) throw assignmentsError;
+
+      const studentIds = [...new Set((assignments || []).map((a) => a.student_id).filter(Boolean))];
+      if (studentIds.length === 0) return [];
+
+      const { data: students, error: studentsError } = await supabase
+        .from("students")
+        .select("id, profile_id")
+        .in("id", studentIds);
+
+      if (studentsError) throw studentsError;
+
+      const studentMap = new Map((students || []).map((s) => [s.id, s.profile_id]));
+      const profileIds = [...new Set((students || []).map((s) => s.profile_id).filter(Boolean))];
+
+      let profileNameMap = new Map<string, string>();
+      if (profileIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", profileIds);
+
+        if (profilesError) throw profilesError;
+        profileNameMap = new Map((profiles || []).map((p) => [p.id, p.full_name || ""]));
+      }
+
+      return studentIds.map((studentId) => {
+        const profileId = studentMap.get(studentId);
+        const name = profileId ? profileNameMap.get(profileId) : undefined;
+        return { id: studentId, name: name || `Student ${studentId.slice(0, 8)}` };
+      });
     },
-    enabled: !!user?.id && !!selectedClass && !!selectedSection,
+    enabled: !!selectedLesson,
   });
 
   const studentNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    studentAssessments.forEach(sa => map.set(sa.id, sa.student_name));
+    lessonStudents.forEach((student) => map.set(student.id, student.name));
     return map;
-  }, [studentAssessments]);
+  }, [lessonStudents]);
 
-  const studentsForModal = studentAssessments.map(sa => ({ id: sa.id, name: sa.student_name }));
+  const studentsForModal = lessonStudents;
 
   const existingRecords = records.map(r => ({
     student_id: r.student_id,
@@ -128,8 +160,17 @@ const Analytics = () => {
     return { avg: Math.round(avg * 1000) / 1000, high, medium, low, total: withGain.length };
   }, [records]);
 
+  const toTitleCase = (value: string) =>
+    value
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+
   const getLessonDisplayName = (lesson: typeof lessons[0]) => {
-    return lesson.title || `${getClassLabel(lesson.class_level || "")} ${lesson.subject || "General"} Lesson Plan`;
+    const classLabel = getClassLabel(lesson.class_level || selectedClass || "");
+    const subjectLabel = toTitleCase((lesson.subject || "General").trim());
+    return `${classLabel} ${subjectLabel} Lesson Plan`;
   };
 
   // Role guard - after all hooks
