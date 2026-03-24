@@ -19,6 +19,7 @@ const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments" },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
+  { title: "Lessons", icon: BookOpen, path: "/lessons", roles: ["teacher", "admin"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
