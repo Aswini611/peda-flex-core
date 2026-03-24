@@ -6,14 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
+import { NormalizedGainBadge } from "@/components/NormalizedGainBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, Users, User, TrendingUp, BarChart3, Lightbulb, CheckCircle, Lock } from "lucide-react";
+import { Calculator, Users, User, TrendingUp, BarChart3, Lightbulb, CheckCircle, Lock, ClipboardCheck, FileText, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PerformanceEntryModal } from "@/components/PerformanceEntryModal";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
