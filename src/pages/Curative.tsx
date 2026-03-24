@@ -140,6 +140,7 @@ async function streamChat({
 
 const Curative = () => {
   const { profile, user } = useAuth();
+  const { awardXp } = useGamification();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
