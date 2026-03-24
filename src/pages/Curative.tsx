@@ -298,7 +298,10 @@ const Curative = () => {
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: () => {
           setIsStreaming(false);
-          if (mode === "generate") setHasGeneratedContent(true);
+          if (mode === "generate") {
+            setHasGeneratedContent(true);
+            awardXp("generate_lesson", "Generated a lesson plan");
+          }
         },
         onError: (msg) => { toast.error(msg); setIsStreaming(false); },
       });
