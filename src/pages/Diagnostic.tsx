@@ -50,6 +50,7 @@ interface Teacher {
 }
 
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
+  const { awardXp } = useGamification();
   const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
   const name = studentName;
   const [age, setAge] = useState("");
