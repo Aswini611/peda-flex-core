@@ -82,7 +82,7 @@ const Analytics = () => {
   });
 
   const { data: lessonStudents = [] } = useQuery({
-    queryKey: ["analytics-lesson-students", selectedLesson],
+    queryKey: ["analytics-lesson-students", selectedLesson, selectedClass, selectedSection, user?.id],
     queryFn: async () => {
       if (!selectedLesson) return [];
 
@@ -93,7 +93,63 @@ const Analytics = () => {
 
       if (assignmentsError) throw assignmentsError;
 
-      const studentIds = [...new Set((assignments || []).map((a) => a.student_id).filter(Boolean))];
+      let studentIds = [...new Set((assignments || []).map((a) => a.student_id).filter(Boolean))];
+
+      if (studentIds.length === 0) {
+        const studentIdsFromRecords = [...new Set(records.map((record) => record.student_id).filter(Boolean))];
+        studentIds = studentIdsFromRecords;
+      }
+
+      if (studentIds.length === 0 && user?.id && selectedClass && selectedSection) {
+        const { data: classAssessments, error: classAssessmentsError } = await supabase
+          .from("student_assessments")
+          .select("student_name")
+          .eq("teacher_id", user.id)
+          .eq("student_class", selectedClass)
+          .eq("section", selectedSection);
+
+        if (classAssessmentsError) throw classAssessmentsError;
+
+        const normalizedAssessmentNames = new Set(
+          (classAssessments || [])
+            .map((assessment) => assessment.student_name?.trim().toLowerCase())
+            .filter(Boolean)
+        );
+
+        const { data: allStudents, error: allStudentsError } = await supabase
+          .from("students")
+          .select("id, profile_id");
+
+        if (allStudentsError) throw allStudentsError;
+
+        const allProfileIds = [...new Set((allStudents || []).map((student) => student.profile_id).filter(Boolean))];
+        const { data: allProfiles, error: allProfilesError } = await supabase
+          .from("profiles")
+          .select("id, full_name, role")
+          .in("id", allProfileIds);
+
+        if (allProfilesError) throw allProfilesError;
+
+        const profileById = new Map((allProfiles || []).map((profile) => [profile.id, profile]));
+
+        const matchedStudents = (allStudents || []).filter((student) => {
+          const profile = profileById.get(student.profile_id);
+          const normalizedName = profile?.full_name?.trim().toLowerCase();
+          return profile?.role === "student" && !!normalizedName && normalizedAssessmentNames.has(normalizedName);
+        });
+
+        studentIds = matchedStudents.map((student) => student.id);
+      }
+
+      if (studentIds.length === 0) {
+        const { data: fallbackStudents, error: fallbackStudentsError } = await supabase
+          .from("students")
+          .select("id, profile_id");
+
+        if (fallbackStudentsError) throw fallbackStudentsError;
+        studentIds = (fallbackStudents || []).map((student) => student.id);
+      }
+
       if (studentIds.length === 0) return [];
 
       const { data: students, error: studentsError } = await supabase
@@ -169,7 +225,21 @@ const Analytics = () => {
 
   const getLessonDisplayName = (lesson: typeof lessons[0]) => {
     const classLabel = getClassLabel(lesson.class_level || selectedClass || "");
-    const subjectLabel = toTitleCase((lesson.subject || "General").trim());
+    const classValue = lesson.class_level || selectedClass || "";
+    const classPrefixes = [
+      classLabel,
+      classValue ? `Class ${classValue}` : "",
+      classValue,
+    ].filter(Boolean);
+
+    let rawSubject = (lesson.subject || "General").trim();
+    for (const prefix of classPrefixes) {
+      const pattern = new RegExp(`^${prefix}\\s*`, "i");
+      rawSubject = rawSubject.replace(pattern, "").trim();
+    }
+
+    rawSubject = rawSubject.replace(/^class\s*\d+\s*/i, "").trim();
+    const subjectLabel = toTitleCase(rawSubject || "General");
     return `${classLabel} ${subjectLabel} Lesson Plan`;
   };
 
