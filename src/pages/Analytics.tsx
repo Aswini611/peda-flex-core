@@ -134,6 +134,12 @@ const Analytics = () => {
     return `${classLabel} ${subject} Lesson Plan`;
   };
 
+  const getLessonDropdownName = (lesson: typeof lessons[0]) => {
+    const classLabel = getClassLabel(lesson.class_level || "");
+    const subject = lesson.subject || "General";
+    return `${classLabel} ${subject} Lesson Plan`;
+  };
+
   // Role guard - after all hooks
   if (profile?.role !== "teacher") {
     return (
