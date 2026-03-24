@@ -99,41 +99,22 @@ const Analytics = () => {
   const [studentSearchQuery, setStudentSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("class");
 
-  // Lesson-based performance tracking
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"pretest" | "exitticket">("pretest");
 
-  // Class-level gain calculator
   const [classPretest, setClassPretest] = useState("");
   const [classPosttest, setClassPosttest] = useState("");
   const [classGain, setClassGain] = useState<number | null>(null);
   const [classGainCalculated, setClassGainCalculated] = useState(false);
 
-  // Individual gain calculator
   const [indPretest, setIndPretest] = useState("");
   const [indPosttest, setIndPosttest] = useState("");
   const [indGain, setIndGain] = useState<number | null>(null);
   const [indGainCalculated, setIndGainCalculated] = useState(false);
 
-  if (profile?.role !== "teacher" && profile?.role !== "admin") {
-    return (
-      <AppLayout>
-        <PageHeader title="Pillar 3: The Analytics Phase" subtitle="Class & Individual Student Performance Analytics" />
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Lock className="h-12 w-12 text-danger mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground max-w-md">Only teachers can access the Analytics Page.</p>
-          </CardContent>
-        </Card>
-      </AppLayout>
-    );
-  }
+  const isAuthorized = profile?.role === "teacher" || profile?.role === "admin";
 
-  const getClassLabel = (value: string) => CLASS_OPTIONS.find(c => c.value === value)?.label || value;
-
-  // Sections
   const { data: sections = [] } = useQuery({
     queryKey: ["analytics-sections", selectedClass, user?.id],
     queryFn: async () => {
@@ -147,10 +128,9 @@ const Analytics = () => {
       const unique = [...new Set(data.map((d) => d.section).filter(Boolean))] as string[];
       return [...new Set([...unique, ...DEFAULT_SECTIONS])].sort();
     },
-    enabled: !!selectedClass && !!user?.id,
+    enabled: !!selectedClass && !!user?.id && isAuthorized,
   });
 
-  // Students from student_assessments
   const { data: students = [], isLoading: loadingStudents } = useQuery({
     queryKey: ["analytics-students", selectedClass, selectedSection, user?.id],
     queryFn: async () => {
@@ -165,10 +145,9 @@ const Analytics = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!selectedClass && !!selectedSection && !!user?.id,
+    enabled: !!selectedClass && !!selectedSection && !!user?.id && isAuthorized,
   });
 
-  // Lessons created by this teacher (from lessons table)
   const { data: lessons = [] } = useQuery({
     queryKey: ["analytics-lessons", user?.id],
     queryFn: async () => {
@@ -181,10 +160,9 @@ const Analytics = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isAuthorized,
   });
 
-  // Performance records for selected lesson
   const { data: performanceRecords = [], refetch: refetchPerformance } = useQuery({
     queryKey: ["analytics-performance", selectedLessonId],
     queryFn: async () => {
@@ -196,7 +174,6 @@ const Analytics = () => {
         .order("recorded_at");
       if (error) throw error;
 
-      // Enrich with student names from profiles
       if (data && data.length > 0) {
         const studentIds = [...new Set(data.map((r: any) => r.student_id))];
         const { data: studentRows } = await supabase
@@ -220,10 +197,9 @@ const Analytics = () => {
       }
       return data || [];
     },
-    enabled: !!selectedLessonId,
+    enabled: !!selectedLessonId && isAuthorized,
   });
 
-  // Get students for the performance entry modal (from students table)
   const { data: dbStudents = [] } = useQuery({
     queryKey: ["analytics-db-students"],
     queryFn: async () => {
@@ -236,7 +212,7 @@ const Analytics = () => {
         name: (s.profiles as any)?.full_name || "Unknown",
       }));
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isAuthorized,
   });
 
   const filteredStudents = useMemo(() => {
@@ -267,7 +243,6 @@ const Analytics = () => {
     return { avg, highest, lowest, total: scores.length, aboveAvg };
   }, [studentAnalytics]);
 
-  // Chart data for lesson performance
   const chartData = useMemo(() => {
     return performanceRecords
       .filter((r: any) => r.pretest_score !== null)
@@ -278,7 +253,6 @@ const Analytics = () => {
       }));
   }, [performanceRecords]);
 
-  // Lesson-level stats
   const lessonStats = useMemo(() => {
     const completed = performanceRecords.filter((r: any) => r.normalized_gain !== null);
     if (completed.length === 0) return null;
@@ -288,6 +262,21 @@ const Analytics = () => {
   }, [performanceRecords]);
 
   const selectedStudent = selectedStudentId ? studentAnalytics.find(s => s.id === selectedStudentId) : null;
+
+  if (!isAuthorized) {
+    return (
+      <AppLayout>
+        <PageHeader title="Pillar 3: The Analytics Phase" subtitle="Class & Individual Student Performance Analytics" />
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <Lock className="h-12 w-12 text-danger mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h2>
+            <p className="text-muted-foreground max-w-md">Only teachers can access the Analytics Page.</p>
+          </CardContent>
+        </Card>
+      </AppLayout>
+    );
+  }
 
   const handleClassGainCalc = () => {
     const pre = Number(classPretest);
