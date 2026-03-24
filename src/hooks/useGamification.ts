@@ -53,6 +53,7 @@ const XP_ACTIONS: Record<string, { xp: number; label: string }> = {
   complete_assessment: { xp: 50, label: "Completed assessment" },
   generate_lesson: { xp: 40, label: "Generated lesson plan" },
   generate_report: { xp: 30, label: "Generated class report" },
+  record_exit_ticket: { xp: 15, label: "Recorded exit ticket" },
   daily_login: { xp: 10, label: "Daily login bonus" },
   view_analytics: { xp: 5, label: "Reviewed analytics" },
 };
