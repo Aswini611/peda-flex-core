@@ -443,6 +443,7 @@ interface StudentProfile {
 
 const DiagnosticTeacher = () => {
   const { user } = useAuth();
+  const { awardXp } = useGamification();
   const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
   const [ageGroup, setAgeGroup] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
