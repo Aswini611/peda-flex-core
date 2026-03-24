@@ -129,15 +129,7 @@ const Analytics = () => {
   }, [records]);
 
   const getLessonDisplayName = (lesson: typeof lessons[0]) => {
-    const classLabel = getClassLabel(lesson.class_level || "");
-    const subject = lesson.subject || "General";
-    return `${classLabel} ${subject} Lesson Plan`;
-  };
-
-  const getLessonDropdownName = (lesson: typeof lessons[0]) => {
-    const classLabel = getClassLabel(lesson.class_level || "");
-    const subject = lesson.subject || "General";
-    return `${classLabel} ${subject} Lesson Plan`;
+    return lesson.title || `${getClassLabel(lesson.class_level || "")} ${lesson.subject || "General"} Lesson Plan`;
   };
 
   // Role guard - after all hooks
