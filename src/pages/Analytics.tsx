@@ -129,9 +129,7 @@ const Analytics = () => {
   }, [records]);
 
   const getLessonDisplayName = (lesson: typeof lessons[0]) => {
-    const classLabel = getClassLabel(lesson.class_level || "");
-    const subject = lesson.subject || "General";
-    return `${classLabel} ${subject} Lesson Plan`;
+    return lesson.title || `${getClassLabel(lesson.class_level || "")} ${lesson.subject || "General"} Lesson Plan`;
   };
 
   // Role guard - after all hooks
@@ -238,7 +236,7 @@ const Analytics = () => {
                       <ClipboardCheck className="h-4 w-4 mr-1" /> Record Pre-test Score
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => { setModalMode("exit_ticket"); setModalOpen(true); }}>
-                      <FileText className="h-4 w-4 mr-1" /> Record Exit Ticket
+                      <FileText className="h-4 w-4 mr-1" /> Record Post-test Score
                     </Button>
                     {currentLesson.lesson_content && (
                       <Button size="sm" variant="outline" onClick={() => setShowPdfPreview(!showPdfPreview)}>

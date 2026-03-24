@@ -87,8 +87,8 @@ export function PerformanceEntryModal({
           .eq("student_id", selectedStudent);
         if (error) throw error;
 
-        toast.success("Exit ticket recorded ✓");
-        awardXp("record_exit_ticket", "Recorded exit ticket scores");
+        toast.success("Post-test recorded ✓");
+        awardXp("record_exit_ticket", "Recorded post-test scores");
 
         // Check mismatch alert trigger
         await checkMismatchAlert(lessonId);
@@ -151,7 +151,7 @@ export function PerformanceEntryModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === "pretest" ? "Record Pre-test Score" : "Record Exit Ticket"}
+            {mode === "pretest" ? "Record Pre-test Score" : "Record Post-test Score"}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">{lessonTitle}</p>
         </DialogHeader>
