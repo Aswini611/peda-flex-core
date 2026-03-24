@@ -6,14 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
+import { NormalizedGainBadge } from "@/components/NormalizedGainBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calculator, Users, User, TrendingUp, BarChart3, Lightbulb, CheckCircle, Lock } from "lucide-react";
+import { Calculator, Users, User, TrendingUp, BarChart3, Lightbulb, CheckCircle, Lock, ClipboardCheck, FileText, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PerformanceEntryModal } from "@/components/PerformanceEntryModal";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -91,6 +94,239 @@ function getIndividualSuggestions(score: number, gain: number | null) {
     suggestions.push("Conduct a diagnostic assessment to identify specific knowledge gaps and misconceptions.");
   }
   return suggestions;
+}
+
+// ─── Performance Tracking Tab Component ───
+function PerformanceTrackingTab({ selectedClass, selectedSection, userId }: { selectedClass: string; selectedSection: string; userId?: string }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"pretest" | "exit_ticket">("pretest");
+  const [selectedLesson, setSelectedLesson] = useState("");
+
+  const { data: lessons = [] } = useQuery({
+    queryKey: ["perf-lessons", userId],
+    queryFn: async () => {
+      const { data } = await supabase.from("lessons").select("id, title, subject").order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  const { data: records = [], refetch: refetchRecords } = useQuery({
+    queryKey: ["perf-records", selectedLesson],
+    queryFn: async () => {
+      if (!selectedLesson) return [];
+      const { data } = await supabase
+        .from("performance_records")
+        .select("*")
+        .eq("lesson_id", selectedLesson);
+      return data || [];
+    },
+    enabled: !!selectedLesson,
+  });
+
+  // Fetch student names for records
+  const studentIds = useMemo(() => [...new Set(records.map(r => r.student_id))], [records]);
+  const { data: studentAssessments = [] } = useQuery({
+    queryKey: ["perf-student-names", selectedClass, selectedSection, userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      let q = supabase.from("student_assessments").select("id, student_name").eq("teacher_id", userId);
+      if (selectedClass) q = q.eq("student_class", selectedClass);
+      if (selectedSection) q = q.eq("section", selectedSection);
+      const { data } = await q;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  // Build a map: for performance_records, student_id references `students` table which uses profile_id
+  // But student_assessments uses submitted_by. We'll use student_id from records to match.
+  const studentNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    studentAssessments.forEach(sa => map.set(sa.id, sa.student_name));
+    return map;
+  }, [studentAssessments]);
+
+  const studentsForModal = studentAssessments.map(sa => ({ id: sa.id, name: sa.student_name }));
+
+  const existingRecords = records.map(r => ({
+    student_id: r.student_id,
+    pretest_score: r.pretest_score,
+  }));
+
+  const chartData = useMemo(() => {
+    return records
+      .filter(r => r.pretest_score != null && r.posttest_score != null)
+      .map(r => ({
+        name: studentNameMap.get(r.student_id) || r.student_id.slice(0, 8),
+        "Pre-test": r.pretest_score,
+        "Post-test": r.posttest_score,
+      }));
+  }, [records, studentNameMap]);
+
+  const summary = useMemo(() => {
+    const withGain = records.filter(r => r.normalized_gain != null);
+    if (withGain.length === 0) return null;
+    const gains = withGain.map(r => Number(r.normalized_gain));
+    const avg = gains.reduce((a, b) => a + b, 0) / gains.length;
+    const high = gains.filter(g => g >= 0.7).length;
+    const medium = gains.filter(g => g >= 0.3 && g < 0.7).length;
+    const low = gains.filter(g => g < 0.3).length;
+    return { avg: Math.round(avg * 1000) / 1000, high, medium, low, total: withGain.length };
+  }, [records]);
+
+  const currentLesson = lessons.find(l => l.id === selectedLesson);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity className="h-5 w-5 text-accent" />
+            Pre-test → Lesson → Exit Ticket Pipeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Select Lesson</Label>
+            <Select value={selectedLesson} onValueChange={setSelectedLesson}>
+              <SelectTrigger><SelectValue placeholder="Choose a lesson plan" /></SelectTrigger>
+              <SelectContent>
+                {lessons.map(l => (
+                  <SelectItem key={l.id} value={l.id}>{l.title} {l.subject ? `(${l.subject})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedLesson && (
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => { setModalMode("pretest"); setModalOpen(true); }}>
+                <ClipboardCheck className="h-4 w-4 mr-1" /> Record Pre-test Score
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => { setModalMode("exit_ticket"); setModalOpen(true); }}>
+                <FileText className="h-4 w-4 mr-1" /> Record Exit Ticket
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards */}
+      {summary && (
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-3xl font-bold text-foreground">{summary.avg.toFixed(3)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Class Avg Normalized Gain</p>
+              <NormalizedGainBadge gain={summary.avg} showValue={false} className="mt-2" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-3xl font-bold text-success">{summary.high}</p>
+              <p className="text-xs text-muted-foreground mt-1">High Gain (≥0.7)</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-3xl font-bold text-warning">{summary.medium}</p>
+              <p className="text-xs text-muted-foreground mt-1">Medium Gain (0.3–0.7)</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-3xl font-bold text-danger">{summary.low}</p>
+              <p className="text-xs text-muted-foreground mt-1">Low Gain (&lt;0.3)</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Bar Chart */}
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pre-test vs Post-test Scores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                <YAxis domain={[0, 100]} className="fill-muted-foreground" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Pre-test" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Post-test" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Performance Table */}
+      {records.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Student Performance Records</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Pre-test</TableHead>
+                  <TableHead>Post-test</TableHead>
+                  <TableHead>Normalized Gain</TableHead>
+                  <TableHead>Mastery</TableHead>
+                  <TableHead>Effort</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {records.map(r => (
+                  <TableRow key={r.id}>
+                    <TableCell>{studentNameMap.get(r.student_id) || r.student_id.slice(0, 8)}</TableCell>
+                    <TableCell>{r.pretest_score ?? "—"}</TableCell>
+                    <TableCell>{r.posttest_score ?? "—"}</TableCell>
+                    <TableCell>
+                      {r.normalized_gain != null ? (
+                        <NormalizedGainBadge gain={Number(r.normalized_gain)} />
+                      ) : "—"}
+                    </TableCell>
+                    <TableCell>{r.mastery_score ?? "—"}</TableCell>
+                    <TableCell>{r.effort_score != null ? `${r.effort_score}/5` : "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedLesson && records.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <ClipboardCheck className="h-10 w-10 mb-3 opacity-40" />
+            <p className="text-sm">No performance records yet. Start by recording pre-test scores.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedLesson && (
+        <PerformanceEntryModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          mode={modalMode}
+          lessonId={selectedLesson}
+          lessonTitle={currentLesson?.title || ""}
+          students={studentsForModal}
+          existingRecords={existingRecords}
+          onSaved={refetchRecords}
+        />
+      )}
+    </div>
+  );
 }
 
 const Analytics = () => {
@@ -297,8 +533,11 @@ const Analytics = () => {
       </Card>
 
       {selectedClass && selectedSection && (
-        <Tabs defaultValue="class" className="mb-6" onValueChange={() => { resetClassGain(); resetIndGain(); setSelectedStudentId(null); }}>
+        <Tabs defaultValue="performance" className="mb-6" onValueChange={() => { resetClassGain(); resetIndGain(); setSelectedStudentId(null); }}>
           <TabsList className="mb-4">
+            <TabsTrigger value="performance" className="gap-1.5">
+              <Activity className="h-4 w-4" /> Performance Tracking
+            </TabsTrigger>
             <TabsTrigger value="class" className="gap-1.5">
               <BarChart3 className="h-4 w-4" /> Class Analytics
             </TabsTrigger>
@@ -306,6 +545,11 @@ const Analytics = () => {
               <User className="h-4 w-4" /> Individual Analytics
             </TabsTrigger>
           </TabsList>
+
+          {/* ─── PERFORMANCE TRACKING TAB ─── */}
+          <TabsContent value="performance">
+            <PerformanceTrackingTab selectedClass={selectedClass} selectedSection={selectedSection} userId={user?.id} />
+          </TabsContent>
 
           {/* ─── CLASS ANALYTICS TAB ─── */}
           <TabsContent value="class">

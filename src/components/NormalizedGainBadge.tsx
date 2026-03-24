@@ -1,30 +1,25 @@
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface NormalizedGainBadgeProps {
   gain: number;
-  showLabel?: boolean;
+  className?: string;
+  showValue?: boolean;
 }
 
-export function NormalizedGainBadge({ gain, showLabel = true }: NormalizedGainBadgeProps) {
-  const getGainColor = (g: number) => {
-    if (g >= 0.7) return "bg-green-100 text-green-700";
-    if (g >= 0.3) return "bg-amber-100 text-amber-700";
-    return "bg-red-100 text-red-700";
-  };
+function getGainInfo(g: number) {
+  if (g >= 0.7) return { label: "High Gain 🟢", variant: "success" as const, color: "text-success bg-success/15" };
+  if (g >= 0.3) return { label: "Medium Gain 🟡", variant: "warning" as const, color: "text-warning bg-warning/15" };
+  return { label: "Low Gain 🔴", variant: "danger" as const, color: "text-danger bg-danger/15" };
+}
 
-  const getGainLabel = (g: number) => {
-    if (g >= 0.7) return "High";
-    if (g >= 0.3) return "Med";
-    return "Low";
-  };
-
-  const displayText = showLabel
-    ? `${getGainLabel(gain)} ${gain.toFixed(2)}`
-    : `${(gain * 100).toFixed(0)}%`;
-
+export function NormalizedGainBadge({ gain, className, showValue = true }: NormalizedGainBadgeProps) {
+  const info = getGainInfo(gain);
   return (
-    <Badge className={`font-mono ${getGainColor(gain)}`}>
-      {displayText}
-    </Badge>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", info.color, className)}>
+      {showValue && <span className="font-bold">{gain.toFixed(3)}</span>}
+      {info.label}
+    </span>
   );
 }
+
+export { getGainInfo };

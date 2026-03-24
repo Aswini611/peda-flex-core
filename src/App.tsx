@@ -18,9 +18,6 @@ import TeacherPanel from "./pages/TeacherPanel";
 import SettingsPage from "./pages/Settings";
 import Gamification from "./pages/Gamification";
 import NotFound from "./pages/NotFound";
-import Lessons from "./pages/Lessons";
-import ScoreEntry from "./pages/ScoreEntry";
-import LessonAnalytics from "./pages/LessonAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -49,27 +46,6 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleGuard allowedRoles={["teacher", "admin"]}>
                     <Analytics />
-                  </RoleGuard>
-                </ProtectedRoute>
-              } />
-              <Route path="/lessons" element={
-                <ProtectedRoute>
-                  <RoleGuard allowedRoles={["teacher", "admin"]}>
-                    <Lessons />
-                  </RoleGuard>
-                </ProtectedRoute>
-              } />
-              <Route path="/lessons/:lessonId/scores" element={
-                <ProtectedRoute>
-                  <RoleGuard allowedRoles={["teacher", "admin"]}>
-                    <ScoreEntry />
-                  </RoleGuard>
-                </ProtectedRoute>
-              } />
-              <Route path="/lessons/:lessonId/analytics" element={
-                <ProtectedRoute>
-                  <RoleGuard allowedRoles={["teacher", "admin"]}>
-                    <LessonAnalytics />
                   </RoleGuard>
                 </ProtectedRoute>
               } />
