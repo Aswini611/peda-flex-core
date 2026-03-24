@@ -66,6 +66,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -22,6 +22,7 @@ const navItems = [
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
+  { title: "Gamification", icon: Trophy, path: "/gamification" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
