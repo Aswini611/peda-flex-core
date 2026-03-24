@@ -16,6 +16,7 @@ import Analytics from "./pages/Analytics";
 import Alerts from "./pages/Alerts";
 import TeacherPanel from "./pages/TeacherPanel";
 import SettingsPage from "./pages/Settings";
+import Gamification from "./pages/Gamification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

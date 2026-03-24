@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useGamification } from "@/hooks/useGamification";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ interface Teacher {
 }
 
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
+  const { awardXp } = useGamification();
   const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
   const name = studentName;
   const [age, setAge] = useState("");
@@ -126,6 +128,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
       } as any);
       if (error) throw error;
       setPhase("done");
+      awardXp("complete_assessment", "Completed student assessment");
       toast.success("You have successfully completed the Assessment! 🎉");
     } catch (e: any) {
       toast.error(e.message || "Failed to submit assessment");
@@ -440,6 +443,7 @@ interface StudentProfile {
 
 const DiagnosticTeacher = () => {
   const { user } = useAuth();
+  const { awardXp } = useGamification();
   const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
   const [ageGroup, setAgeGroup] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -501,6 +505,7 @@ const DiagnosticTeacher = () => {
       } as any);
       if (error) throw error;
       setPhase("done");
+      awardXp("complete_assessment", "Submitted teacher assessment");
       toast.success("Teacher assessment submitted successfully! 🎉");
     } catch (e: any) {
       toast.error(e.message || "Failed to submit assessment");

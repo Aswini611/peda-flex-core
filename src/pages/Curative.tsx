@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -139,6 +140,7 @@ async function streamChat({
 
 const Curative = () => {
   const { profile, user } = useAuth();
+  const { awardXp } = useGamification();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
@@ -296,7 +298,10 @@ const Curative = () => {
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: () => {
           setIsStreaming(false);
-          if (mode === "generate") setHasGeneratedContent(true);
+          if (mode === "generate") {
+            setHasGeneratedContent(true);
+            awardXp("generate_lesson", "Generated a lesson plan");
+          }
         },
         onError: (msg) => { toast.error(msg); setIsStreaming(false); },
       });

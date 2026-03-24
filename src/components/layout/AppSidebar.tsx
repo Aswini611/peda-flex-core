@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   GraduationCap,
   AlertCircle,
+  Trophy,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,7 @@ const navItems = [
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
+  { title: "Gamification", icon: Trophy, path: "/gamification" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
