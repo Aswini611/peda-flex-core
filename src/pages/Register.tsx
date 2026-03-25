@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const roles = [
   { value: "student", label: "Student", desc: "Track your learning" },
   { value: "teacher", label: "Teacher", desc: "Manage courses" },
+  { value: "parent", label: "Parent", desc: "Monitor progress" },
 ] as const;
 
 // Password validation functions
@@ -44,6 +45,7 @@ const Register = () => {
   const { toast } = useToast();
 
   const isStudent = role === "student";
+  const usesEmail = role === "teacher" || role === "parent";
   const passwordIsValid = isPasswordValid(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
   const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim();
@@ -155,8 +157,8 @@ const Register = () => {
               </Label>
               <Input
                 id="regIdentifier"
-                type={isStudent ? "text" : "email"}
-                placeholder={isStudent ? "e.g. STU2024001" : "you@example.com"}
+                type={usesEmail ? "email" : "text"}
+                placeholder={isStudent ? "e.g. STU2024001" : role === "parent" ? "parent@example.com" : "you@example.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
@@ -235,7 +237,7 @@ const Register = () => {
             {/* Role selector */}
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">Role</Label>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
                 {roles.map((r) => (
                   <button
                     key={r.value}
