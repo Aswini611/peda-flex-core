@@ -340,10 +340,20 @@ const Curative = () => {
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
     const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
+    const outcomesText = learningOutcomes.trim()
+      ? `\n\nTEACHER-DEFINED LEARNING OUTCOMES (refine these, align with curriculum, ensure they use measurable Bloom's taxonomy verbs — Remember, Understand, Apply, Analyze, Evaluate, Create):\n${learningOutcomes.trim()}`
+      : `\n\nNo learning outcomes provided by teacher — auto-generate 3-5 measurable learning objectives using Bloom's taxonomy action verbs aligned with the topic and curriculum.`;
     sendMessage(
-      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
+      `Generate a 40-MINUTE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
 
-Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagnostic is handled separately). Include:
+IMPORTANT: The lesson MUST be exactly 40 minutes. Structure the timing as:
+- Hook/Introduction: 5 minutes (Primacy Effect — deliver key concept here)
+- Main Teaching: TWO 10-2-10 chunks = 24 minutes (10 min input → 2 min processing → 10 min application, repeated twice)
+- Assessment/Exit Ticket: 5 minutes
+- Closure/Revision: 6 minutes (Recency Effect — recap here)
+${outcomesText}
+
+Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
 - Mismatch alerts for at-risk groups
