@@ -715,10 +715,24 @@ REQUIREMENTS:
                   {msg.role === "assistant" && (
                     <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5"><Bot className="h-4 w-4 text-primary" /></div>
                   )}
-                  <div className={`rounded-lg px-4 py-3 max-w-[85%] text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
+                  <div className={`rounded-lg px-4 py-3 max-w-[85%] ${msg.role === "user" ? "bg-primary text-primary-foreground text-sm" : "bg-card border border-border shadow-sm"}`}>
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
-                    ) : (<p>{msg.content}</p>)}
+                      <div className="prose prose-sm dark:prose-invert max-w-none
+                        [&>*:first-child]:mt-0 [&>*:last-child]:mb-0
+                        [&>h1]:text-lg [&>h1]:font-bold [&>h1]:mb-3 [&>h1]:mt-4 [&>h1]:text-foreground
+                        [&>h2]:text-base [&>h2]:font-bold [&>h2]:mb-2 [&>h2]:mt-4 [&>h2]:text-foreground
+                        [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:mb-2 [&>h3]:mt-3 [&>h3]:text-foreground
+                        [&>p]:text-sm [&>p]:leading-relaxed [&>p]:mb-3 [&>p]:text-foreground/90
+                        [&>ul]:space-y-1.5 [&>ul]:mb-3 [&>ul]:pl-5 [&>ul>li]:text-sm [&>ul>li]:text-foreground/85
+                        [&>ol]:space-y-1.5 [&>ol]:mb-3 [&>ol]:pl-5 [&>ol>li]:text-sm [&>ol>li]:text-foreground/85
+                        [&>blockquote]:border-l-4 [&>blockquote]:border-primary/40 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-muted-foreground [&>blockquote]:my-3
+                        [&_strong]:font-semibold [&_strong]:text-foreground
+                        [&_em]:italic [&_em]:text-foreground/80
+                        [&>hr]:my-4 [&>hr]:border-border
+                        ">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (<p className="text-sm">{msg.content}</p>)}
                   </div>
                   {msg.role === "user" && (
                     <div className="shrink-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center mt-0.5"><User className="h-4 w-4 text-primary-foreground" /></div>
