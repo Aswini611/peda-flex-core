@@ -60,7 +60,7 @@ const Analytics = () => {
       if (!selectedClass || !selectedSection) return [];
       const { data } = await supabase
         .from("lessons")
-        .select("id, title, subject, curriculum, class_level, section, lesson_content")
+        .select("id, title, subject, curriculum, class_level, section, lesson_content, learning_outcomes")
         .eq("class_level", selectedClass)
         .eq("section", selectedSection)
         .order("created_at", { ascending: false });
