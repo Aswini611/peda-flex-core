@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { NormalizedGainBadge } from "@/components/NormalizedGainBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, TrendingUp, Activity, ClipboardCheck, FileText, Lock, Eye } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, TrendingUp, Activity, ClipboardCheck, FileText, Lock, Eye, CheckCircle, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PerformanceEntryModal } from "@/components/PerformanceEntryModal";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
