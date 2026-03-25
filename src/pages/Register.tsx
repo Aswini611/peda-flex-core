@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const roles = [
   { value: "student", label: "Student", desc: "Track your learning" },
   { value: "teacher", label: "Teacher", desc: "Manage courses" },
+  { value: "parent", label: "Parent", desc: "Monitor progress" },
 ] as const;
 
 // Password validation functions
