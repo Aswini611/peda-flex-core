@@ -23,6 +23,7 @@ const Login = () => {
   const { toast } = useToast();
 
   const isStudent = loginRole === "student";
+  const isParent = loginRole === "parent";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
