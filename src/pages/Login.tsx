@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const loginRoles = [
   { value: "student", label: "Student" },
   { value: "staff", label: "Teacher / Admin" },
+  { value: "parent", label: "Parent" },
 ] as const;
 
 const Login = () => {
