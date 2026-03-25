@@ -189,6 +189,7 @@ export type Database = {
           delivery_method: string | null
           duration_minutes: number | null
           id: string
+          learning_outcomes: string | null
           lesson_content: string | null
           section: string | null
           subject: string | null
@@ -205,6 +206,7 @@ export type Database = {
           delivery_method?: string | null
           duration_minutes?: number | null
           id?: string
+          learning_outcomes?: string | null
           lesson_content?: string | null
           section?: string | null
           subject?: string | null
@@ -221,6 +223,7 @@ export type Database = {
           delivery_method?: string | null
           duration_minutes?: number | null
           id?: string
+          learning_outcomes?: string | null
           lesson_content?: string | null
           section?: string | null
           subject?: string | null
