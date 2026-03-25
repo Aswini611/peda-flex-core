@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { NormalizedGainBadge } from "@/components/NormalizedGainBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, TrendingUp, Activity, ClipboardCheck, FileText, Lock, Eye } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, TrendingUp, Activity, ClipboardCheck, FileText, Lock, Eye, CheckCircle, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PerformanceEntryModal } from "@/components/PerformanceEntryModal";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -34,7 +36,8 @@ const Analytics = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"pretest" | "exit_ticket">("pretest");
   const [showPdfPreview, setShowPdfPreview] = useState(false);
-
+  const [learningOutcomes, setLearningOutcomes] = useState("");
+  const [savingOutcomes, setSavingOutcomes] = useState(false);
   const { data: sections = [] } = useQuery({
     queryKey: ["analytics-sections", selectedClass, user?.id],
     queryFn: async () => {
@@ -57,7 +60,7 @@ const Analytics = () => {
       if (!selectedClass || !selectedSection) return [];
       const { data } = await supabase
         .from("lessons")
-        .select("id, title, subject, curriculum, class_level, section, lesson_content")
+        .select("id, title, subject, curriculum, class_level, section, lesson_content, learning_outcomes")
         .eq("class_level", selectedClass)
         .eq("section", selectedSection)
         .order("created_at", { ascending: false });
@@ -67,6 +70,32 @@ const Analytics = () => {
   });
 
   const currentLesson = lessons.find(l => l.id === selectedLesson);
+
+  // Sync learning outcomes when lesson changes
+  useEffect(() => {
+    if (currentLesson?.learning_outcomes) {
+      setLearningOutcomes(currentLesson.learning_outcomes);
+    } else {
+      setLearningOutcomes("");
+    }
+  }, [currentLesson?.id, currentLesson?.learning_outcomes]);
+
+  const saveLearningOutcomes = async () => {
+    if (!selectedLesson) return;
+    setSavingOutcomes(true);
+    try {
+      const { error } = await supabase
+        .from("lessons")
+        .update({ learning_outcomes: learningOutcomes } as any)
+        .eq("id", selectedLesson);
+      if (error) throw error;
+      toast.success("Learning outcomes saved ✓");
+    } catch (err: any) {
+      toast.error("Failed to save: " + err.message);
+    } finally {
+      setSavingOutcomes(false);
+    }
+  };
 
   const { data: records = [], refetch: refetchRecords } = useQuery({
     queryKey: ["analytics-perf-records", selectedLesson],
@@ -358,7 +387,32 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              {/* Lesson Plan Preview */}
+              {/* Learning Outcomes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <CheckCircle className="h-5 w-5 text-success" />
+                    Learning Outcomes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Enter the learning outcomes for this lesson. What should students be able to do by the end?
+                  </p>
+                  <Textarea
+                    placeholder={"By the end of the lesson, students will be able to:\n• Identify...\n• Explain...\n• Solve..."}
+                    value={learningOutcomes}
+                    onChange={(e) => setLearningOutcomes(e.target.value)}
+                    rows={6}
+                    className="text-sm"
+                  />
+                  <Button size="sm" onClick={saveLearningOutcomes} disabled={savingOutcomes}>
+                    <Save className="h-4 w-4 mr-1" />
+                    {savingOutcomes ? "Saving..." : "Save Learning Outcomes"}
+                  </Button>
+                </CardContent>
+              </Card>
+
               {showPdfPreview && currentLesson.lesson_content && (
                 <Card className="overflow-hidden">
                   <CardContent className="p-0">

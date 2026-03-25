@@ -370,6 +370,33 @@ For EACH group, present as a structured card:
 | ZPD 3-tier tasks | ✅ | Sections 3 & 4 |
 | MI multi-channel delivery | ✅ | Throughout |
 
+---
+
+## ✅ 7. Learning Outcomes
+
+**At the very end of every lesson plan, list clear and measurable learning outcomes.**
+
+Write exactly like this:
+
+✅ **Learning Outcomes**
+
+By the end of the lesson, students will be able to:
+
+1. [Use a Bloom's action verb — Identify / Explain / Solve / Compare / Create / Represent] + [specific skill related to the lesson topic]
+2. [Another measurable outcome]
+3. [Another measurable outcome]
+4. [Another measurable outcome]
+5. [Another measurable outcome — connect to real-life application]
+6. [Optional: one more outcome if needed]
+
+**Rules for Learning Outcomes:**
+- Write 5-6 outcomes minimum
+- Each outcome must start with a measurable action verb (Identify, Explain, Construct, Compare, Represent, Solve, Apply, Classify, Demonstrate)
+- Outcomes must be specific to the lesson topic — NOT generic
+- Include at least one outcome about real-life application
+- Keep language simple — a parent should understand each outcome
+- Connect outcomes to the textbook content when available
+
 ═══════════════════════════════════════════════════════════════
 
 ## FORMATTING RULES (CRITICAL — FOLLOW EXACTLY)
