@@ -36,7 +36,8 @@ const Analytics = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"pretest" | "exit_ticket">("pretest");
   const [showPdfPreview, setShowPdfPreview] = useState(false);
-
+  const [learningOutcomes, setLearningOutcomes] = useState("");
+  const [savingOutcomes, setSavingOutcomes] = useState(false);
   const { data: sections = [] } = useQuery({
     queryKey: ["analytics-sections", selectedClass, user?.id],
     queryFn: async () => {
@@ -69,6 +70,32 @@ const Analytics = () => {
   });
 
   const currentLesson = lessons.find(l => l.id === selectedLesson);
+
+  // Sync learning outcomes when lesson changes
+  useEffect(() => {
+    if (currentLesson?.learning_outcomes) {
+      setLearningOutcomes(currentLesson.learning_outcomes);
+    } else {
+      setLearningOutcomes("");
+    }
+  }, [currentLesson?.id, currentLesson?.learning_outcomes]);
+
+  const saveLearningOutcomes = async () => {
+    if (!selectedLesson) return;
+    setSavingOutcomes(true);
+    try {
+      const { error } = await supabase
+        .from("lessons")
+        .update({ learning_outcomes: learningOutcomes } as any)
+        .eq("id", selectedLesson);
+      if (error) throw error;
+      toast.success("Learning outcomes saved ✓");
+    } catch (err: any) {
+      toast.error("Failed to save: " + err.message);
+    } finally {
+      setSavingOutcomes(false);
+    }
+  };
 
   const { data: records = [], refetch: refetchRecords } = useQuery({
     queryKey: ["analytics-perf-records", selectedLesson],
