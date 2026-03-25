@@ -104,7 +104,7 @@ const Login = () => {
               <Input
                 id="identifier"
                 type={isStudent ? "text" : "email"}
-                placeholder={isStudent ? "e.g. STU2024001" : "you@example.com"}
+                placeholder={isStudent ? "e.g. STU2024001" : isParent ? "parent@example.com" : "you@example.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
