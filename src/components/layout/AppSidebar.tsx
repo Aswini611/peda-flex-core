@@ -17,12 +17,13 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments" },
+  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student", "teacher", "admin"] },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
-  { title: "Gamification", icon: Trophy, path: "/gamification" },
+  { title: "My Child's Progress", icon: Users, path: "/teacher", roles: ["parent"] },
+  { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student", "teacher", "admin", "parent"] },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
