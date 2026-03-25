@@ -216,10 +216,20 @@ When generating a lesson plan, you MUST use this EXACT structure. Do NOT skip an
 
 ## 📋 1. Learning Objectives
 
-State 3-5 clear, measurable learning objectives using action verbs (Bloom's Taxonomy):
-- By the end of this lesson, students will be able to [Remember]: ...
-- By the end of this lesson, students will be able to [Understand]: ...
-- By the end of this lesson, students will be able to [Apply]: ...
+State 4 clear, measurable learning objectives using Bloom's Taxonomy levels. Use this EXACT format:
+
+- **Remember:** Students will [simple recall action verb] [specific topic detail].
+- **Understand:** Students will [explain/describe] [concept in simple words].
+- **Apply:** Students will [write/solve/create] [practical task using the concept].
+- **Analyze:** Students will [compare/classify/examine] [higher-order thinking task].
+
+Example (for Place Value):
+- **Remember:** Students will name the three places — hundreds, tens, ones.
+- **Understand:** Students will explain how a digit's place tells its value.
+- **Apply:** Students will write the correct number when given a picture of objects grouped by hundreds, tens and ones.
+- **Analyze:** Students will compare two three-digit numbers and say which is bigger.
+
+IMPORTANT: Do NOT use "By the end of this lesson, students will be able to" — just start directly with the Bloom's level and the action.
 
 ---
 
