@@ -147,7 +147,7 @@ const Curative = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
-  const [learningOutcomes, setLearningOutcomes] = useState("");
+  
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -340,9 +340,6 @@ const Curative = () => {
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
     const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
-    const outcomesText = learningOutcomes.trim()
-      ? `\n\nTEACHER-DEFINED LEARNING OUTCOMES (refine these, align with curriculum, ensure they use measurable Bloom's taxonomy verbs — Remember, Understand, Apply, Analyze, Evaluate, Create):\n${learningOutcomes.trim()}`
-      : `\n\nNo learning outcomes provided by teacher — auto-generate 3-5 measurable learning objectives using Bloom's taxonomy action verbs aligned with the topic and curriculum.`;
     sendMessage(
       `Generate a 40-MINUTE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
 
@@ -351,7 +348,8 @@ IMPORTANT: The lesson MUST be exactly 40 minutes. Structure the timing as:
 - Main Teaching: TWO 10-2-10 chunks = 24 minutes (10 min input → 2 min processing → 10 min application, repeated twice)
 - Assessment/Exit Ticket: 5 minutes
 - Closure/Revision: 6 minutes (Recency Effect — recap here)
-${outcomesText}
+
+Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs aligned with the topic and curriculum.
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
@@ -606,19 +604,6 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
           </div>
 
-          <div className="mt-4">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Target className="h-3.5 w-3.5" /> Learning Outcomes <span className="text-muted-foreground/60 font-normal normal-case">(optional — leave empty to auto-generate)</span>
-            </label>
-            <Textarea
-              value={learningOutcomes}
-              onChange={(e) => setLearningOutcomes(e.target.value)}
-              placeholder="e.g. Students will be able to identify parts of a plant and explain the function of each part. Students will be able to compare monocot and dicot leaves..."
-              className="min-h-[70px] text-sm"
-              disabled={!isReady}
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">Use measurable verbs: identify, explain, compare, classify, apply, create. AI will refine and align with Bloom's taxonomy.</p>
-          </div>
 
           <div className="mt-4 flex items-center gap-3">
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
