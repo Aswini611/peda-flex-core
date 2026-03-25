@@ -604,8 +604,25 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
+          </div>
+
+          <div className="mt-4">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Target className="h-3.5 w-3.5" /> Learning Outcomes <span className="text-muted-foreground/60 font-normal normal-case">(optional — leave empty to auto-generate)</span>
+            </label>
+            <Textarea
+              value={learningOutcomes}
+              onChange={(e) => setLearningOutcomes(e.target.value)}
+              placeholder="e.g. Students will be able to identify parts of a plant and explain the function of each part. Students will be able to compare monocot and dicot leaves..."
+              className="min-h-[70px] text-sm"
+              disabled={!isReady}
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">Use measurable verbs: identify, explain, compare, classify, apply, create. AI will refine and align with Bloom's taxonomy.</p>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
-              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate Lesson Plan</>)}
+              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate 40-Min Lesson Plan</>)}
             </Button>
           </div>
 
