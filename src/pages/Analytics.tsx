@@ -387,7 +387,32 @@ const Analytics = () => {
                 </CardContent>
               </Card>
 
-              {/* Lesson Plan Preview */}
+              {/* Learning Outcomes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <CheckCircle className="h-5 w-5 text-success" />
+                    Learning Outcomes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Enter the learning outcomes for this lesson. What should students be able to do by the end?
+                  </p>
+                  <Textarea
+                    placeholder={"By the end of the lesson, students will be able to:\n• Identify...\n• Explain...\n• Solve..."}
+                    value={learningOutcomes}
+                    onChange={(e) => setLearningOutcomes(e.target.value)}
+                    rows={6}
+                    className="text-sm"
+                  />
+                  <Button size="sm" onClick={saveLearningOutcomes} disabled={savingOutcomes}>
+                    <Save className="h-4 w-4 mr-1" />
+                    {savingOutcomes ? "Saving..." : "Save Learning Outcomes"}
+                  </Button>
+                </CardContent>
+              </Card>
+
               {showPdfPreview && currentLesson.lesson_content && (
                 <Card className="overflow-hidden">
                   <CardContent className="p-0">
