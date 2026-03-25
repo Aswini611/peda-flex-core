@@ -269,7 +269,8 @@ const Analytics = () => {
 
     rawSubject = rawSubject.replace(/^class\s*\d+\s*/i, "").trim();
     const subjectLabel = toTitleCase(rawSubject || "General");
-    return `${classLabel} ${subjectLabel} Lesson Plan`;
+    const curriculumSuffix = lesson.curriculum ? ` (${toTitleCase(lesson.curriculum)})` : "";
+    return `${classLabel} ${subjectLabel} Lesson Plan${curriculumSuffix}`;
   };
 
   // Role guard - after all hooks

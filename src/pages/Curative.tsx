@@ -307,16 +307,38 @@ const Curative = () => {
             try {
               const classLabel = getClassLabel(selectedClass);
               const subjectLabel = selectedSubject || "General";
-              const title = `${classLabel} ${subjectLabel} Lesson Plan`;
-              await supabase.from("lessons").insert({
-                title,
-                subject: subjectLabel,
-                curriculum: selectedCurriculum || null,
-                class_level: selectedClass,
-                section: selectedSection,
-                lesson_content: assistantSoFar,
-                ai_generated: true,
-              });
+              const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || selectedCurriculum || "";
+              const title = `${classLabel} ${subjectLabel} Lesson Plan${curriculumLabel ? ` (${curriculumLabel})` : ""}`;
+              
+              // Check if a lesson with same class+section+subject+curriculum exists
+              const { data: existing } = await supabase
+                .from("lessons")
+                .select("id")
+                .eq("class_level", selectedClass)
+                .eq("section", selectedSection)
+                .eq("subject", subjectLabel)
+                .eq("curriculum", selectedCurriculum || "")
+                .maybeSingle();
+
+              if (existing) {
+                // Override existing lesson
+                await supabase.from("lessons").update({
+                  title,
+                  lesson_content: assistantSoFar,
+                  ai_generated: true,
+                } as any).eq("id", existing.id);
+              } else {
+                // Create new lesson
+                await supabase.from("lessons").insert({
+                  title,
+                  subject: subjectLabel,
+                  curriculum: selectedCurriculum || "",
+                  class_level: selectedClass,
+                  section: selectedSection,
+                  lesson_content: assistantSoFar,
+                  ai_generated: true,
+                });
+              }
             } catch (err) {
               console.error("Failed to save lesson plan:", err);
             }
