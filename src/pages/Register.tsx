@@ -45,6 +45,7 @@ const Register = () => {
   const { toast } = useToast();
 
   const isStudent = role === "student";
+  const usesEmail = role === "teacher" || role === "parent";
   const passwordIsValid = isPasswordValid(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
   const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim();
