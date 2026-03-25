@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Target } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
@@ -146,6 +147,7 @@ const Curative = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
+  const [learningOutcomes, setLearningOutcomes] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -338,10 +340,20 @@ const Curative = () => {
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
     const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
+    const outcomesText = learningOutcomes.trim()
+      ? `\n\nTEACHER-DEFINED LEARNING OUTCOMES (refine these, align with curriculum, ensure they use measurable Bloom's taxonomy verbs — Remember, Understand, Apply, Analyze, Evaluate, Create):\n${learningOutcomes.trim()}`
+      : `\n\nNo learning outcomes provided by teacher — auto-generate 3-5 measurable learning objectives using Bloom's taxonomy action verbs aligned with the topic and curriculum.`;
     sendMessage(
-      `Generate a LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
+      `Generate a 40-MINUTE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
 
-Generate ONLY the lesson plan (do NOT generate a diagnostic report — the diagnostic is handled separately). Include:
+IMPORTANT: The lesson MUST be exactly 40 minutes. Structure the timing as:
+- Hook/Introduction: 5 minutes (Primacy Effect — deliver key concept here)
+- Main Teaching: TWO 10-2-10 chunks = 24 minutes (10 min input → 2 min processing → 10 min application, repeated twice)
+- Assessment/Exit Ticket: 5 minutes
+- Closure/Revision: 6 minutes (Recency Effect — recap here)
+${outcomesText}
+
+Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
 - Mismatch alerts for at-risk groups
@@ -592,8 +604,25 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
+          </div>
+
+          <div className="mt-4">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Target className="h-3.5 w-3.5" /> Learning Outcomes <span className="text-muted-foreground/60 font-normal normal-case">(optional — leave empty to auto-generate)</span>
+            </label>
+            <Textarea
+              value={learningOutcomes}
+              onChange={(e) => setLearningOutcomes(e.target.value)}
+              placeholder="e.g. Students will be able to identify parts of a plant and explain the function of each part. Students will be able to compare monocot and dicot leaves..."
+              className="min-h-[70px] text-sm"
+              disabled={!isReady}
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">Use measurable verbs: identify, explain, compare, classify, apply, create. AI will refine and align with Bloom's taxonomy.</p>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
-              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate Lesson Plan</>)}
+              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate 40-Min Lesson Plan</>)}
             </Button>
           </div>
 
