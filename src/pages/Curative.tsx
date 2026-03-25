@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -22,6 +22,107 @@ const CLASS_OPTIONS = [
   { value: "ukg", label: "UKG" },
   ...Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `Class ${i + 1}` })),
 ];
+
+// ─── Custom Markdown Components ───────────────────────────────────────
+const MarkdownComponents = {
+  h1: ({ node, ...props }: any) => (
+    <h1 className="text-xl font-bold mt-6 mb-4 text-foreground border-b-2 border-primary/30 pb-2 flex items-center gap-2" {...props}>
+      <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary to-primary/60 rounded-sm"></span>
+      {props.children}
+    </h1>
+  ),
+  h2: ({ node, ...props }: any) => (
+    <h2 className="text-lg font-bold mt-5 mb-3 text-foreground flex items-center gap-2" {...props}>
+      <span className="inline-block w-1 h-5 bg-primary/70 rounded-sm"></span>
+      {props.children}
+    </h2>
+  ),
+  h3: ({ node, ...props }: any) => (
+    <h3 className="text-base font-semibold mt-4 mb-2 text-foreground/95" {...props}>
+      • {props.children}
+    </h3>
+  ),
+  h4: ({ node, ...props }: any) => (
+    <h4 className="text-sm font-semibold mt-3 mb-2 text-foreground/90" {...props}>
+      {props.children}
+    </h4>
+  ),
+  p: ({ node, ...props }: any) => (
+    <p className="text-sm leading-relaxed mb-3 text-foreground/85" {...props}>
+      {props.children}
+    </p>
+  ),
+  ul: ({ node, ...props }: any) => (
+    <ul className="space-y-2 mb-3 ml-4 list-none" {...props}>
+      {props.children}
+    </ul>
+  ),
+  ol: ({ node, ...props }: any) => (
+    <ol className="space-y-2 mb-3 ml-4 list-decimal list-inside" {...props}>
+      {props.children}
+    </ol>
+  ),
+  li: ({ node, ...props }: any) => (
+    <li className="text-sm text-foreground/85 flex gap-2 items-start">
+      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+      <span>{props.children}</span>
+    </li>
+  ),
+  blockquote: ({ node, ...props }: any) => (
+    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>
+      {props.children}
+    </blockquote>
+  ),
+  code: ({ node, inline, ...props }: any) => 
+    inline ? (
+      <code className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+    ) : (
+      <code className="block bg-foreground/5 border border-border rounded p-3 text-xs overflow-x-auto my-3 text-foreground/80 font-mono" {...props} />
+    ),
+  pre: ({ node, ...props }: any) => (
+    <pre className="block bg-foreground/5 border border-border rounded p-4 overflow-x-auto my-3 text-xs" {...props}>
+      {props.children}
+    </pre>
+  ),
+  table: ({ node, ...props }: any) => (
+    <table className="w-full border-collapse text-sm my-4" {...props}>
+      {props.children}
+    </table>
+  ),
+  thead: ({ node, ...props }: any) => (
+    <thead className="bg-primary/10 border-b-2 border-primary/30" {...props}>
+      {props.children}
+    </thead>
+  ),
+  th: ({ node, ...props }: any) => (
+    <th className="text-left px-3 py-2 font-semibold text-foreground/90" {...props}>
+      {props.children}
+    </th>
+  ),
+  td: ({ node, ...props }: any) => (
+    <td className="px-3 py-2 border-b border-border text-foreground/85" {...props}>
+      {props.children}
+    </td>
+  ),
+  strong: ({ node, ...props }: any) => (
+    <strong className="font-bold text-foreground" {...props}>
+      {props.children}
+    </strong>
+  ),
+  em: ({ node, ...props }: any) => (
+    <em className="italic text-foreground/80" {...props}>
+      {props.children}
+    </em>
+  ),
+  a: ({ node, ...props }: any) => (
+    <a className="text-primary hover:text-primary/80 underline" {...props}>
+      {props.children}
+    </a>
+  ),
+  hr: ({ node, ...props }: any) => (
+    <hr className="my-4 border-border" {...props} />
+  ),
+};
 
 const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
 
@@ -715,22 +816,12 @@ REQUIREMENTS:
                   {msg.role === "assistant" && (
                     <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5"><Bot className="h-4 w-4 text-primary" /></div>
                   )}
-                  <div className={`rounded-lg px-4 py-3 max-w-[85%] ${msg.role === "user" ? "bg-primary text-primary-foreground text-sm" : "bg-card border border-border shadow-sm"}`}>
+                  <div className={`rounded-lg px-5 py-4 max-w-[85%] ${msg.role === "user" ? "bg-primary text-primary-foreground text-sm" : "bg-card border border-border shadow-sm"}`}>
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none
-                        [&>*:first-child]:mt-0 [&>*:last-child]:mb-0
-                        [&>h1]:text-lg [&>h1]:font-bold [&>h1]:mb-3 [&>h1]:mt-4 [&>h1]:text-foreground
-                        [&>h2]:text-base [&>h2]:font-bold [&>h2]:mb-2 [&>h2]:mt-4 [&>h2]:text-foreground
-                        [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:mb-2 [&>h3]:mt-3 [&>h3]:text-foreground
-                        [&>p]:text-sm [&>p]:leading-relaxed [&>p]:mb-3 [&>p]:text-foreground/90
-                        [&>ul]:space-y-1.5 [&>ul]:mb-3 [&>ul]:pl-5 [&>ul>li]:text-sm [&>ul>li]:text-foreground/85
-                        [&>ol]:space-y-1.5 [&>ol]:mb-3 [&>ol]:pl-5 [&>ol>li]:text-sm [&>ol>li]:text-foreground/85
-                        [&>blockquote]:border-l-4 [&>blockquote]:border-primary/40 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:text-muted-foreground [&>blockquote]:my-3
-                        [&_strong]:font-semibold [&_strong]:text-foreground
-                        [&_em]:italic [&_em]:text-foreground/80
-                        [&>hr]:my-4 [&>hr]:border-border
-                        ">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown components={MarkdownComponents}>
+                          {msg.content}
+                        </ReactMarkdown>
                       </div>
                     ) : (<p className="text-sm">{msg.content}</p>)}
                   </div>
