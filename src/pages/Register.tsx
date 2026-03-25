@@ -236,7 +236,7 @@ const Register = () => {
             {/* Role selector */}
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium">Role</Label>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
                 {roles.map((r) => (
                   <button
                     key={r.value}
