@@ -548,10 +548,11 @@ const Analytics = () => {
                 <div className="space-y-2">
                   <Label>Student</Label>
                   <Select
-                    value={selectedStudent}
+                    value={selectedStudent || "__all__"}
                     onValueChange={(v) => {
-                      setSelectedStudent(v);
-                      setAnalyticsView(v ? "individual" : "class");
+                      const actual = v === "__all__" ? "" : v;
+                      setSelectedStudent(actual);
+                      setAnalyticsView(actual ? "individual" : "class");
                     }}
                   >
                     <SelectTrigger><SelectValue placeholder="All Students (Class View)" /></SelectTrigger>
