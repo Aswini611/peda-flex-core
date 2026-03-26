@@ -158,6 +158,7 @@ export function RapidSort({ onComplete }: GameProps) {
       setScore((p) => p + 8);
       setCorrect((p) => p + 1);
       setFeedback("✅");
+      playCorrectSound();
 
       const newStreak = streak + 1;
       setStreak(newStreak);
@@ -167,10 +168,12 @@ export function RapidSort({ onComplete }: GameProps) {
         setDiffLabel(LABELS[newDiff]);
         setStreak(0);
         setRuleTimeLeft(getRuleTime(newDiff));
+        playLevelUpSound();
       }
     } else {
       setScore((p) => p - 4);
       setFeedback("❌");
+      playWrongSound();
       setStreak(0);
       if (difficulty > 0) {
         const newDiff = difficulty - 1;
@@ -182,6 +185,7 @@ export function RapidSort({ onComplete }: GameProps) {
 
     setTimeout(() => {
       setFeedback(null);
+      playNextSound();
       spawnItem();
     }, 400);
   };
