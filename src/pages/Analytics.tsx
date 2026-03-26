@@ -524,7 +524,7 @@ const Analytics = () => {
               <Select value={selectedSection} onValueChange={(v) => { setSelectedSection(v); setSelectedLesson(""); setSelectedStudent(""); setAnalyticsView("class"); setShowPdfPreview(false); }} disabled={!selectedClass}>
                 <SelectTrigger><SelectValue placeholder="Select Section" /></SelectTrigger>
                 <SelectContent>
-                  {sections.map(s => (
+                  {sections.filter(s => !!s).map(s => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
@@ -558,7 +558,7 @@ const Analytics = () => {
                     <SelectTrigger><SelectValue placeholder="All Students (Class View)" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__all__">All Students (Class View)</SelectItem>
-                      {lessonStudents.map(student => (
+                      {lessonStudents.filter(student => !!student.id).map(student => (
                         <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
                       ))}
                     </SelectContent>
