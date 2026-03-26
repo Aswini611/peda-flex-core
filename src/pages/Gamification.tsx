@@ -916,6 +916,12 @@ const Gamification = () => {
         .progress-glow { box-shadow: 0 0 12px rgba(99,102,241,0.4); }
 
         .stat-card { animation: welcome-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+        @keyframes orbit {
+          0% { transform: translate(-50%, -50%) rotate(0deg) translateX(80px) rotate(0deg); }
+          100% { transform: translate(-50%, -50%) rotate(360deg) translateX(80px) rotate(-360deg); }
+        }
+        .orbit-particle { animation: orbit 6s linear infinite; }
       `}</style>
     </div>
   );
