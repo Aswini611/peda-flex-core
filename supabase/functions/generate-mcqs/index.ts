@@ -56,7 +56,7 @@ Make questions progressively harder from question 1 to 10.`;
         "X-Title": "PedaFlex Academic Tests",
       },
       body: JSON.stringify({
-        model: "gpt-oss/gpt-oss-120b",
+        model: "openai/gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
