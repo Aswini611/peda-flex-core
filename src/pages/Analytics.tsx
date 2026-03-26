@@ -548,15 +548,16 @@ const Analytics = () => {
                 <div className="space-y-2">
                   <Label>Student</Label>
                   <Select
-                    value={selectedStudent}
+                    value={selectedStudent || "__all__"}
                     onValueChange={(v) => {
-                      setSelectedStudent(v);
-                      setAnalyticsView(v ? "individual" : "class");
+                      const actual = v === "__all__" ? "" : v;
+                      setSelectedStudent(actual);
+                      setAnalyticsView(actual ? "individual" : "class");
                     }}
                   >
                     <SelectTrigger><SelectValue placeholder="All Students (Class View)" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Students (Class View)</SelectItem>
+                      <SelectItem value="__all__">All Students (Class View)</SelectItem>
                       {lessonStudents.map(student => (
                         <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
                       ))}
