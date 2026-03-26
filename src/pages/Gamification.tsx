@@ -245,13 +245,13 @@ const Gamification = () => {
     <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #0F172A 0%, #312E81 100%)" }}>
       <Confetti show={showConfetti} />
 
-      {/* Global timer - always visible during play */}
+      {/* Elapsed timer - always visible during play */}
       {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && (
         <div className="fixed top-4 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-xl"
           style={{ background: "rgba(15,23,42,0.8)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <Timer className="h-4 w-4" style={{ color: globalTime > 120 ? "#22C55E" : globalTime > 60 ? "#F59E0B" : "#EF4444" }} />
+          <Timer className="h-4 w-4" style={{ color: "#38BDF8" }} />
           <span className="text-sm font-mono font-bold" style={{ color: "#F1F5F9" }}>
-            {Math.floor(globalTime / 60)}:{String(globalTime % 60).padStart(2, "0")}
+            {formatElapsed(elapsedTime)}
           </span>
         </div>
       )}
@@ -631,7 +631,7 @@ const Gamification = () => {
             </div>
 
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setPhase("WELCOME"); setResults([]); setCurrentGame(0); setGlobalTime(480); setTermsAccepted(false); }}
+              <button onClick={() => { setPhase("WELCOME"); setResults([]); setCurrentGame(0); setElapsedTime(0); setTermsAccepted(false); }}
                 className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105"
                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#F1F5F9" }}>
                 🔄 Retake Round
