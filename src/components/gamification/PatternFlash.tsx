@@ -2,10 +2,15 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { GameProps, GameResult } from "./types";
 
 const GRID_SIZE = 4;
+
+// Difficulty levels: start super easy, gradually increase
 const LEVELS = [
-  { tiles: 3, memorizeTime: 5000 },
-  { tiles: 5, memorizeTime: 4000 },
-  { tiles: 7, memorizeTime: 3000 },
+  { tiles: 2, memorizeTime: 6000, label: "Very Easy" },
+  { tiles: 3, memorizeTime: 5000, label: "Easy" },
+  { tiles: 4, memorizeTime: 4500, label: "Medium" },
+  { tiles: 5, memorizeTime: 4000, label: "Hard" },
+  { tiles: 6, memorizeTime: 3500, label: "Very Hard" },
+  { tiles: 7, memorizeTime: 3000, label: "Expert" },
 ];
 
 export function PatternFlash({ onComplete }: GameProps) {
@@ -19,6 +24,8 @@ export function PatternFlash({ onComplete }: GameProps) {
   const [totalAttempted, setTotalAttempted] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [roundsPlayed, setRoundsPlayed] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [diffLabel, setDiffLabel] = useState("Very Easy");
   const responseTimes = useRef<number[]>([]);
   const roundStart = useRef(Date.now());
   const startTime = useRef(Date.now());
@@ -34,6 +41,7 @@ export function PatternFlash({ onComplete }: GameProps) {
 
   const startRound = useCallback(() => {
     const lvl = LEVELS[Math.min(level, LEVELS.length - 1)];
+    setDiffLabel(lvl.label);
     const targets = generateTargets(lvl.tiles);
     setTargetTiles(targets);
     setSelectedTiles([]);
@@ -50,12 +58,8 @@ export function PatternFlash({ onComplete }: GameProps) {
     startRound();
   }, []);
 
-  // Global timer
   useEffect(() => {
-    if (timeLeft <= 0) {
-      finishGame();
-      return;
-    }
+    if (timeLeft <= 0) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft((p) => p - 1), 1000);
     return () => clearTimeout(t);
   }, [timeLeft]);
@@ -65,7 +69,7 @@ export function PatternFlash({ onComplete }: GameProps) {
     const avgResp = responseTimes.current.length > 0
       ? Math.round(responseTimes.current.reduce((a, b) => a + b, 0) / responseTimes.current.length)
       : 0;
-    const result: GameResult = {
+    onComplete({
       gameIndex: 0,
       gameName: "Pattern Flash",
       rawScore: Math.max(0, score),
@@ -76,8 +80,7 @@ export function PatternFlash({ onComplete }: GameProps) {
       questionsCorrect: totalCorrect,
       timeUsed,
       timeLimit: 60,
-    };
-    onComplete(result);
+    });
   };
 
   const handleTileClick = (idx: number) => {
@@ -95,15 +98,26 @@ export function PatternFlash({ onComplete }: GameProps) {
       setScore((p) => p - 5);
     }
 
-    // Check if all targets selected
     const correctSelected = newSelected.filter((t) => targetTiles.includes(t)).length;
     if (correctSelected >= targetTiles.length || newSelected.length >= targetTiles.length + 2) {
       setPhase("feedback");
       setRoundsPlayed((p) => p + 1);
 
+      const roundAccuracy = correctSelected / targetTiles.length;
+
       setTimeout(() => {
-        if (correctSelected >= targetTiles.length * 0.8) {
-          setLevel((p) => Math.min(p + 1, LEVELS.length - 1));
+        if (roundAccuracy >= 0.8) {
+          // Good round — increase streak, maybe level up
+          const newStreak = streak + 1;
+          setStreak(newStreak);
+          if (newStreak >= 2) {
+            setLevel((p) => Math.min(p + 1, LEVELS.length - 1));
+            setStreak(0);
+          }
+        } else {
+          // Poor round — decrease difficulty
+          setStreak(0);
+          setLevel((p) => Math.max(p - 1, 0));
         }
         setRound((p) => p + 1);
         startRound();
@@ -115,22 +129,23 @@ export function PatternFlash({ onComplete }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Header */}
       <div className="flex items-center justify-between w-full max-w-md">
-        <div className="text-sm font-medium" style={{ color: "#38BDF8" }}>
-          Round {round + 1} · Level {level + 1}
+        <div className="flex flex-col">
+          <span className="text-sm font-medium" style={{ color: "#38BDF8" }}>
+            Round {round + 1}
+          </span>
+          <span className="text-xs px-2 py-0.5 rounded-full mt-1" style={{ background: "rgba(56,189,248,0.2)", color: "#38BDF8" }}>
+            {diffLabel}
+          </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>
-            Score: {score}
-          </span>
+          <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>
             {timeLeft}s
           </span>
         </div>
       </div>
 
-      {/* Status */}
       <div className="text-center">
         {phase === "memorize" && (
           <p className="text-sm animate-pulse" style={{ color: "#38BDF8" }}>
@@ -149,11 +164,7 @@ export function PatternFlash({ onComplete }: GameProps) {
         )}
       </div>
 
-      {/* Grid */}
-      <div
-        className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)` }}
-      >
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)` }}>
         {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, idx) => {
           const isTarget = targetTiles.includes(idx);
           const isSelected = selectedTiles.includes(idx);
