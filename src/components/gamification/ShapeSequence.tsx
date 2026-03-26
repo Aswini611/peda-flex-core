@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { GameProps, GameResult } from "./types";
+import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "./sounds";
 
 interface SequenceQuestion {
   sequence: (string | number)[];

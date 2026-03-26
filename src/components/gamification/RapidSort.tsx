@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { GameProps, GameResult } from "./types";
+import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "./sounds";
 
 interface SortRule {
   description: string;
