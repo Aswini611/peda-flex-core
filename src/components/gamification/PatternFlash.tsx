@@ -116,6 +116,7 @@ export function PatternFlash({ onComplete }: GameProps) {
           if (newStreak >= 2) {
             setLevel((p) => Math.min(p + 1, LEVELS.length - 1));
             setStreak(0);
+            playLevelUpSound();
           }
         } else {
           // Poor round — decrease difficulty
@@ -123,6 +124,7 @@ export function PatternFlash({ onComplete }: GameProps) {
           setLevel((p) => Math.max(p - 1, 0));
         }
         setRound((p) => p + 1);
+        playNextSound();
         startRound();
       }, 1200);
     }
