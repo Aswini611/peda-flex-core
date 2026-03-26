@@ -260,7 +260,8 @@ const Gamification = () => {
   // Countdown
   useEffect(() => {
     if (phase !== "COUNTDOWN") return;
-    if (countdown <= 0) { setPhase("PLAYING"); return; }
+    if (countdown <= 0) { playGoSound(); setPhase("PLAYING"); return; }
+    playCountdownBeep();
     const t = setTimeout(() => setCountdown(p => p - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, phase]);
@@ -268,6 +269,7 @@ const Gamification = () => {
   // Confetti on post-game
   useEffect(() => {
     if (phase !== "POST_GAME") return;
+    playVictorySound();
     setShowConfetti(true);
     const t = setTimeout(() => setShowConfetti(false), 4000);
     return () => clearTimeout(t);
