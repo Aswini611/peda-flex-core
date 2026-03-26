@@ -53,6 +53,26 @@ export default function AcademicTests() {
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
 
+  // Fetch subjects dynamically based on selected class
+  const { data: subjectOptions, isLoading: loadingSubjects } = useQuery({
+    queryKey: ["class-subjects", studentClass],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("list-subjects", {
+        body: { studentClass },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return (data.subjects as string[]) || [];
+    },
+    enabled: !!studentClass,
+  });
+
+  // Reset subject when class changes
+  const handleClassChange = (val: string) => {
+    setStudentClass(val);
+    setSubject("");
+  };
+
   // Fetch past tests
   const { data: pastTests, refetch: refetchTests } = useQuery({
     queryKey: ["academic-tests", user?.id],
@@ -184,7 +204,7 @@ export default function AcademicTests() {
             <CardContent className="space-y-4 max-w-md mx-auto">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Class <span className="text-red-500">*</span></label>
-                <Select value={studentClass} onValueChange={setStudentClass}>
+                <Select value={studentClass} onValueChange={handleClassChange}>
                   <SelectTrigger><SelectValue placeholder="Select Class" /></SelectTrigger>
                   <SelectContent>
                     {CLASS_OPTIONS.map((c) => (
@@ -206,12 +226,21 @@ export default function AcademicTests() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Subject <span className="text-red-500">*</span></label>
-                <Select value={subject} onValueChange={setSubject}>
-                  <SelectTrigger><SelectValue placeholder="Select Subject" /></SelectTrigger>
+                <Select value={subject} onValueChange={setSubject} disabled={!studentClass || loadingSubjects}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                      !studentClass ? "Select a class first" :
+                      loadingSubjects ? "Loading subjects..." :
+                      "Select Subject"
+                    } />
+                  </SelectTrigger>
                   <SelectContent>
-                    {SUBJECT_OPTIONS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    {(subjectOptions || []).map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
+                    {subjectOptions && subjectOptions.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">No subjects available for this class</div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
