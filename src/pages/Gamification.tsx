@@ -362,49 +362,68 @@ const Gamification = () => {
 
         {/* ─── WELCOME ─── */}
         {phase === "WELCOME" && (
-          <div className="text-center max-w-xl mx-auto space-y-8 welcome-enter">
-            {/* Animated icon ring */}
-            <div className="relative w-28 h-28 mx-auto">
-              <div className="absolute inset-0 rounded-full animate-spin-slow" style={{ background: "conic-gradient(from 0deg, #6366F1, #A855F7, #F472B6, #38BDF8, #84CC16, #F59E0B, #6366F1)", padding: 3 }}>
+          <div className="text-center max-w-2xl mx-auto space-y-8 welcome-enter">
+            {/* Animated hero icon with orbiting elements */}
+            <div className="relative w-40 h-40 mx-auto">
+              {/* Outer rotating gradient ring */}
+              <div className="absolute inset-0 rounded-full animate-spin-slow" style={{ background: "conic-gradient(from 0deg, #6366F1, #A855F7, #F472B6, #38BDF8, #84CC16, #F59E0B, #6366F1)", padding: 4 }}>
                 <div className="w-full h-full rounded-full" style={{ background: "#0F172A" }} />
               </div>
-              <div className="absolute inset-0 flex items-center justify-center text-5xl">🎮</div>
+              {/* Inner pulsing glow */}
+              <div className="absolute inset-3 rounded-full animate-pulse" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%)" }} />
+              {/* Center icon */}
+              <div className="absolute inset-0 flex items-center justify-center text-6xl game-icon-bounce">🎮</div>
+              {/* Orbiting particles */}
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="absolute w-3 h-3 rounded-full orbit-particle" style={{
+                  background: ["#6366F1", "#A855F7", "#38BDF8", "#F59E0B"][i],
+                  boxShadow: `0 0 12px ${["#6366F1", "#A855F7", "#38BDF8", "#F59E0B"][i]}`,
+                  animationDelay: `${i * -1.5}s`,
+                  top: "50%", left: "50%",
+                }} />
+              ))}
             </div>
 
-            <div className="space-y-3">
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight title-glow"
-                style={{ background: "linear-gradient(135deg, #6366F1, #A855F7, #F472B6, #38BDF8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <div className="space-y-4">
+              <h1 className="text-5xl md:text-7xl font-black tracking-tight title-glow"
+                style={{ background: "linear-gradient(135deg, #6366F1 0%, #A855F7 25%, #F472B6 50%, #38BDF8 75%, #84CC16 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 Gamification Round
               </h1>
-              <div className="flex items-center justify-center gap-2">
-                <Sparkles className="h-4 w-4" style={{ color: "#F59E0B" }} />
-                <p className="text-lg" style={{ color: "rgba(241,245,249,0.7)" }}>
-                  Welcome, <span className="font-bold" style={{ color: "#38BDF8" }}>{studentName}</span>
+              <div className="flex items-center justify-center gap-3">
+                <div className="h-px w-12" style={{ background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.5))" }} />
+                <Sparkles className="h-5 w-5 animate-pulse" style={{ color: "#F59E0B" }} />
+                <p className="text-xl font-medium" style={{ color: "rgba(241,245,249,0.7)" }}>
+                  Welcome, <span className="font-black" style={{ background: "linear-gradient(135deg, #38BDF8, #6366F1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{studentName}</span>
                 </p>
-                <Sparkles className="h-4 w-4" style={{ color: "#F59E0B" }} />
+                <Sparkles className="h-5 w-5 animate-pulse" style={{ color: "#F59E0B" }} />
+                <div className="h-px w-12" style={{ background: "linear-gradient(90deg, rgba(99,102,241,0.5), transparent)" }} />
               </div>
             </div>
 
-            {/* Stat cards with hover effects */}
-            <div className="flex justify-center gap-4">
+            {/* Enhanced stat cards with animated icons */}
+            <div className="flex justify-center gap-5">
               {[
-                { icon: <Timer className="h-6 w-6" />, color: "#38BDF8", label: "Timed", value: "Per Game" },
-                { icon: <Brain className="h-6 w-6" />, color: "#A855F7", label: "Games", value: "5" },
-                { icon: <Trophy className="h-6 w-6" />, color: "#F59E0B", label: "Dimensions", value: "5" },
+                { icon: <Timer className="h-7 w-7" />, color: "#38BDF8", glow: "rgba(56,189,248,0.3)", label: "TIMED", value: "Per Game", emoji: "⏱️" },
+                { icon: <Gamepad2 className="h-7 w-7" />, color: "#A855F7", glow: "rgba(168,85,247,0.3)", label: "GAMES", value: "5", emoji: "🎯" },
+                { icon: <Trophy className="h-7 w-7" />, color: "#F59E0B", glow: "rgba(245,158,11,0.3)", label: "DIMENSIONS", value: "5", emoji: "🏆" },
               ].map((s, i) => (
-                <div key={i} className="stat-card px-6 py-4 rounded-2xl cursor-default transition-all duration-300 hover:scale-110 hover:-translate-y-1"
-                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${s.color}30`, animationDelay: `${i * 0.15}s` }}>
-                  <div className="mx-auto mb-2 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${s.color}20`, color: s.color }}>
-                    {s.icon}
+                <div key={i} className="stat-card group relative px-7 py-5 rounded-2xl cursor-default transition-all duration-500 hover:scale-110 hover:-translate-y-2"
+                  style={{ background: `linear-gradient(135deg, ${s.color}10, ${s.color}05)`, border: `1px solid ${s.color}30`, boxShadow: `0 4px 30px ${s.glow}`, animationDelay: `${i * 0.15}s` }}>
+                  {/* Hover glow effect */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at center, ${s.color}15, transparent 70%)` }} />
+                  <div className="relative">
+                    <div className="mx-auto mb-3 w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" style={{ background: `${s.color}20`, color: s.color, boxShadow: `0 0 20px ${s.color}20` }}>
+                      {s.icon}
+                    </div>
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: `${s.color}80` }}>{s.label}</p>
+                    <p className="text-2xl font-black mt-1" style={{ color: "#F1F5F9" }}>{s.value}</p>
                   </div>
-                  <p className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(241,245,249,0.4)" }}>{s.label}</p>
-                  <p className="text-xl font-black" style={{ color: "#F1F5F9" }}>{s.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* How to Play */}
-            <GlassCard>
+            {/* How to Play — enhanced */}
+            <GlassCard className="text-left">
               <Accordion type="single" collapsible>
                 <AccordionItem value="howtoplay" className="border-none">
                   <AccordionTrigger className="text-sm font-bold py-2 hover:no-underline" style={{ color: "#F1F5F9" }}>
@@ -413,9 +432,9 @@ const Gamification = () => {
                   <AccordionContent>
                     <div className="space-y-2.5 pt-2">
                       {GAME_CONFIG.map((g, i) => (
-                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group"
                           style={{ background: `${g.color}08`, border: `1px solid ${g.color}15` }}>
-                          <span className="text-2xl">{g.icon}</span>
+                          <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{g.icon}</span>
                           <div>
                             <p className="text-sm font-bold" style={{ color: g.color }}>{g.name}</p>
                             <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{g.objective}</p>
@@ -424,7 +443,7 @@ const Gamification = () => {
                       ))}
                       <div className="pt-3 space-y-1.5 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)" }}>
                         <p className="text-xs font-bold flex items-center gap-1" style={{ color: "rgba(241,245,249,0.5)" }}><Star className="h-3 w-3" /> Tips</p>
-                        {["Work quickly — speed affects your score", "You cannot go back to previous questions", "Games are adaptive — they get harder", "Results are saved to your APAS profile"].map((tip, i) => (
+                        {["Work quickly — speed affects your score", "You cannot go back to previous questions", "Games are adaptive — they get harder as you improve!", "Results are saved to your APAS profile"].map((tip, i) => (
                           <p key={i} className="text-xs" style={{ color: "rgba(241,245,249,0.4)" }}>• {tip}</p>
                         ))}
                       </div>
@@ -446,24 +465,27 @@ const Gamification = () => {
               </label>
             </div>
 
-            {/* Start button with glow */}
-            <button onClick={startRound} disabled={!termsAccepted}
-              className="group relative px-12 py-5 rounded-2xl text-lg font-black tracking-wide transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
+            {/* Enhanced start button */}
+            <button onClick={() => { playClickSound(); startRound(); }} disabled={!termsAccepted}
+              className="group relative px-14 py-6 rounded-2xl text-xl font-black tracking-wide transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
               style={{
                 background: termsAccepted ? "linear-gradient(135deg, #6366F1, #A855F7, #F472B6)" : "rgba(255,255,255,0.1)",
                 color: "#F1F5F9",
-                boxShadow: termsAccepted ? "0 0 60px rgba(99,102,241,0.5), 0 0 120px rgba(168,85,247,0.2)" : "none",
+                boxShadow: termsAccepted ? "0 0 60px rgba(99,102,241,0.5), 0 0 120px rgba(168,85,247,0.2), 0 8px 32px rgba(0,0,0,0.3)" : "none",
               }}>
               {termsAccepted && <>
                 <span className="absolute inset-0 rounded-2xl opacity-50 blur-xl" style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)" }} />
                 <span className="absolute inset-0 rounded-2xl animate-pulse opacity-20" style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)" }} />
+                {/* Sparkle particles around button */}
+                <span className="absolute -top-2 -right-2 text-lg animate-bounce">✨</span>
+                <span className="absolute -bottom-1 -left-2 text-sm animate-bounce" style={{ animationDelay: "0.3s" }}>⭐</span>
               </>}
               <span className="relative flex items-center gap-3">
-                <Play className="h-6 w-6 group-hover:scale-110 transition-transform" /> START ROUND
+                <Rocket className="h-6 w-6 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" /> START ROUND
               </span>
             </button>
 
-            {/* T&C Modal */}
+            {/* T&C Modal (unchanged) */}
             <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
               <DialogContent className="max-w-lg" style={{ background: "linear-gradient(135deg, #1E1B4B, #0F172A)", border: "1px solid rgba(255,255,255,0.1)", color: "#F1F5F9" }}>
                 <DialogHeader>
