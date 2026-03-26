@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { GameProps, GameResult } from "./types";
+import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "./sounds";
 
 const GRID_SIZE = 4;
 
@@ -94,8 +95,10 @@ export function PatternFlash({ onComplete }: GameProps) {
     if (targetTiles.includes(idx)) {
       setScore((p) => p + 10);
       setTotalCorrect((p) => p + 1);
+      playCorrectSound();
     } else {
       setScore((p) => p - 5);
+      playWrongSound();
     }
 
     const correctSelected = newSelected.filter((t) => targetTiles.includes(t)).length;
@@ -113,6 +116,7 @@ export function PatternFlash({ onComplete }: GameProps) {
           if (newStreak >= 2) {
             setLevel((p) => Math.min(p + 1, LEVELS.length - 1));
             setStreak(0);
+            playLevelUpSound();
           }
         } else {
           // Poor round — decrease difficulty
@@ -120,6 +124,7 @@ export function PatternFlash({ onComplete }: GameProps) {
           setLevel((p) => Math.max(p - 1, 0));
         }
         setRound((p) => p + 1);
+        playNextSound();
         startRound();
       }, 1200);
     }

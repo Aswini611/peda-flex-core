@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { GameProps, GameResult } from "./types";
+import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "./sounds";
 
 interface SequenceQuestion {
   sequence: (string | number)[];
@@ -157,12 +158,15 @@ export function ShapeSequence({ onComplete }: GameProps) {
       if (newStreak >= 2) {
         newDiff = Math.min(difficulty + 1, 5);
         setStreak(0);
+        playLevelUpSound();
       }
       setFeedback("✅ Correct!");
+      playCorrectSound();
     } else {
       setStreak(0);
       newDiff = Math.max(difficulty - 1, 0);
       setFeedback("❌ Wrong!");
+      playWrongSound();
     }
 
     setDifficulty(newDiff);
@@ -173,6 +177,7 @@ export function ShapeSequence({ onComplete }: GameProps) {
       setQuestion(generateSequenceQuestion(newDiff));
       setQTimeLeft(getQuestionTime(newDiff));
       qStart.current = Date.now();
+      playNextSound();
     }, 800);
   };
 

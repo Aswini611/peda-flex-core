@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { GameProps, GameResult } from "./types";
+import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "./sounds";
 
 interface Paragraph {
   words: { text: string; isError: boolean }[];
@@ -181,16 +182,19 @@ export function WordProof({ onComplete }: GameProps) {
     if (para.words[idx].isError) {
       setScore((p) => p + 10);
       setTotalCorrect((p) => p + 1);
+      playCorrectSound();
     } else {
       setScore((p) => p - 8);
       setTotalFalse((p) => p + 1);
+      playWrongSound();
     }
 
     const newFoundErrors = Array.from(newClicked).filter((i) => para.words[i]?.isError).length;
     if (newFoundErrors >= totalErrors) {
-      // Calculate how good this round was (penalize false clicks)
       const falseClicks = Array.from(newClicked).filter((i) => !para.words[i]?.isError).length;
       const wasGoodRound = falseClicks <= 1;
+      if (wasGoodRound && consecutiveGood + 1 >= 2) playLevelUpSound();
+      playNextSound();
       advanceParagraph(wasGoodRound);
     }
   };
