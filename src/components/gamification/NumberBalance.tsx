@@ -127,8 +127,10 @@ export function NumberBalance({ onComplete }: GameProps) {
           setDifficulty(newDifficulty);
           setDiffLabel(LABELS[newDifficulty]);
           setStreak(0);
+          playLevelUpSound();
         }
         setFeedback("✅ Correct!");
+        playCorrectSound();
       } else {
         setScore((p) => p - 5);
         setStreak(0);
@@ -137,11 +139,13 @@ export function NumberBalance({ onComplete }: GameProps) {
         setDifficulty(newDifficulty);
         setDiffLabel(LABELS[newDifficulty]);
         setFeedback("❌ Wrong!");
+        playWrongSound();
       }
     } else {
       setScore((p) => p - 5);
       setStreak(0);
       setFeedback("⏰ Time's up!");
+      playWrongSound();
     }
 
     setQNum((p) => p + 1);
@@ -151,6 +155,7 @@ export function NumberBalance({ onComplete }: GameProps) {
       setQuestion(generateQuestion(newDifficulty));
       setQTimeLeft(getQuestionTime(newDifficulty));
       qStart.current = Date.now();
+      playNextSound();
     }, 800);
   };
 
