@@ -281,8 +281,8 @@ const Gamification = () => {
             <div className="flex justify-center gap-6">
               <div className="px-5 py-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <Timer className="h-5 w-5 mx-auto mb-1" style={{ color: "#38BDF8" }} />
-                <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>Total Time</p>
-                <p className="text-lg font-bold" style={{ color: "#F1F5F9" }}>8 min</p>
+                <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>Timed</p>
+                <p className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Per Game</p>
               </div>
               <div className="px-5 py-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <Brain className="h-5 w-5 mx-auto mb-1" style={{ color: "#A855F7" }} />
@@ -565,7 +565,7 @@ const Gamification = () => {
                 🏆 Final Results
               </h1>
               <p className="text-sm" style={{ color: "rgba(241,245,249,0.5)" }}>
-                Cognitive Assessment Complete
+                Completed in {formatElapsed(elapsedTime)}
               </p>
             </div>
 
