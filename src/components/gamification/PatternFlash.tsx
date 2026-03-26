@@ -95,8 +95,10 @@ export function PatternFlash({ onComplete }: GameProps) {
     if (targetTiles.includes(idx)) {
       setScore((p) => p + 10);
       setTotalCorrect((p) => p + 1);
+      playCorrectSound();
     } else {
       setScore((p) => p - 5);
+      playWrongSound();
     }
 
     const correctSelected = newSelected.filter((t) => targetTiles.includes(t)).length;
