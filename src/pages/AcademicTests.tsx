@@ -26,7 +26,7 @@ const CLASS_OPTIONS = [
 
 const SECTION_OPTIONS = ["A", "B", "C", "D", "E"];
 
-// Subjects are loaded dynamically from storage based on selected class
+// Subjects loaded dynamically from storage based on selected class
 
 interface MCQQuestion {
   id: number;
