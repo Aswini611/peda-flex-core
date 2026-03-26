@@ -36,22 +36,7 @@ const Analytics = () => {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [activeTab, setActiveTab] = useState("class");
 
-  if (profile?.role !== "teacher" && profile?.role !== "admin") {
-    return (
-      <AppLayout>
-        <PageHeader title="Analytics" subtitle="Performance tracking & efficacy measurement" />
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Lock className="h-12 w-12 text-danger mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground max-w-md">
-              Only teachers and administrators can access the Analytics dashboard.
-            </p>
-          </CardContent>
-        </Card>
-      </AppLayout>
-    );
-  }
+  const isAuthorized = profile?.role === "teacher" || profile?.role === "admin";
 
   const getClassLabel = (val: string) => CLASS_OPTIONS.find(c => c.value === val)?.label || val;
 
