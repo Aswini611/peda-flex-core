@@ -27,44 +27,118 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// ─── Confetti ────────────────────────────────────────────
+// ─── Celebration (Confetti + Ribbons + Flowers) ─────────
+const FLOWERS = ["🌸", "🌺", "🌼", "🌻", "🌷", "💐", "🏵️", "🌹"];
+const RIBBONS = ["🎀", "🎗️", "🎊", "🎉", "✨", "⭐", "🎆", "🎇"];
+
 function Confetti({ show }: { show: boolean }) {
   if (!show) return null;
-  const pieces = Array.from({ length: 60 }, (_, i) => {
+
+  const pieces = Array.from({ length: 40 }, (_, i) => {
     const colors = ["#38BDF8", "#A855F7", "#84CC16", "#F59E0B", "#F472B6", "#22C55E", "#6366F1"];
     return {
-      id: i,
+      id: `c-${i}`,
+      type: "confetti" as const,
       color: colors[i % colors.length],
       left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 2}s`,
-      duration: `${2 + Math.random() * 2}s`,
+      delay: Math.random() * 2,
+      duration: 2.5 + Math.random() * 2,
       size: 6 + Math.random() * 8,
+      round: Math.random() > 0.5,
     };
   });
+
+  const flowers = Array.from({ length: 18 }, (_, i) => ({
+    id: `f-${i}`,
+    type: "flower" as const,
+    emoji: FLOWERS[i % FLOWERS.length],
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 2.5,
+    duration: 3 + Math.random() * 2.5,
+    size: 18 + Math.random() * 16,
+    sway: (Math.random() - 0.5) * 120,
+  }));
+
+  const ribbons = Array.from({ length: 14 }, (_, i) => ({
+    id: `r-${i}`,
+    type: "ribbon" as const,
+    emoji: RIBBONS[i % RIBBONS.length],
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 1.5,
+    duration: 2.8 + Math.random() * 2,
+    size: 20 + Math.random() * 14,
+    sway: (Math.random() - 0.5) * 80,
+  }));
+
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {/* Confetti pieces */}
       {pieces.map((p) => (
         <div
           key={p.id}
-          className="absolute animate-confetti-fall"
+          className="absolute celebration-fall"
           style={{
             left: p.left,
             top: "-20px",
             width: p.size,
             height: p.size,
             backgroundColor: p.color,
-            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-            animationDelay: p.delay,
-            animationDuration: p.duration,
+            borderRadius: p.round ? "50%" : "2px",
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
           }}
         />
       ))}
+      {/* Flowers */}
+      {flowers.map((f) => (
+        <div
+          key={f.id}
+          className="absolute celebration-sway-fall"
+          style={{
+            left: f.left,
+            top: "-40px",
+            fontSize: f.size,
+            animationDelay: `${f.delay}s`,
+            animationDuration: `${f.duration}s`,
+            ["--sway" as string]: `${f.sway}px`,
+          }}
+        >
+          {f.emoji}
+        </div>
+      ))}
+      {/* Ribbons */}
+      {ribbons.map((r) => (
+        <div
+          key={r.id}
+          className="absolute celebration-sway-fall"
+          style={{
+            left: r.left,
+            top: "-40px",
+            fontSize: r.size,
+            animationDelay: `${r.delay}s`,
+            animationDuration: `${r.duration}s`,
+            ["--sway" as string]: `${r.sway}px`,
+          }}
+        >
+          {r.emoji}
+        </div>
+      ))}
       <style>{`
-        @keyframes confetti-fall {
+        @keyframes celebration-fall {
           0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          80% { opacity: 1; }
           100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
-        .animate-confetti-fall { animation: confetti-fall linear forwards; }
+        .celebration-fall { animation: celebration-fall linear forwards; }
+
+        @keyframes celebration-sway-fall {
+          0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+          25% { transform: translateY(25vh) translateX(var(--sway, 40px)) rotate(90deg); }
+          50% { transform: translateY(50vh) translateX(calc(var(--sway, 40px) * -0.5)) rotate(180deg); }
+          75% { transform: translateY(75vh) translateX(var(--sway, 40px)) rotate(270deg); opacity: 0.8; }
+          100% { transform: translateY(100vh) translateX(0) rotate(360deg); opacity: 0; }
+        }
+        .celebration-sway-fall { animation: celebration-sway-fall ease-in-out forwards; }
       `}</style>
     </div>
   );
