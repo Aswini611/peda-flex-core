@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_tests: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          questions: Json
+          score: number
+          section: string | null
+          student_class: string
+          student_id: string
+          subject: string
+          total_questions: number
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          questions?: Json
+          score?: number
+          section?: string | null
+          student_class: string
+          student_id: string
+          subject: string
+          total_questions?: number
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          questions?: Json
+          score?: number
+          section?: string | null
+          student_class?: string
+          student_id?: string
+          subject?: string
+          total_questions?: number
+        }
+        Relationships: []
+      }
       achievement_definitions: {
         Row: {
           category: string
