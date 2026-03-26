@@ -17,8 +17,9 @@ import {
 import {
   Brain, Zap, Trophy, Timer, ChevronRight, Play,
   ArrowRight, X, Shield, Eye, BarChart3, Monitor, GraduationCap, AlertTriangle,
-  Sparkles, Star, Target, Flame,
+  Sparkles, Star, Target, Flame, Gamepad2, Award, Rocket, Music,
 } from "lucide-react";
+import { playCountdownBeep, playGoSound, playVictorySound, playClickSound } from "@/components/gamification/sounds";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
