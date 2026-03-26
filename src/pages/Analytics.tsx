@@ -556,7 +556,7 @@ const Analytics = () => {
                   >
                     <SelectTrigger><SelectValue placeholder="All Students (Class View)" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Students (Class View)</SelectItem>
+                      <SelectItem value="__all__">All Students (Class View)</SelectItem>
                       {lessonStudents.map(student => (
                         <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
                       ))}
