@@ -17,6 +17,7 @@ import Alerts from "./pages/Alerts";
 import TeacherPanel from "./pages/TeacherPanel";
 import SettingsPage from "./pages/Settings";
 import Gamification from "./pages/Gamification";
+import AcademicTests from "./pages/AcademicTests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,13 @@ const App = () => (
                 }
               />
               <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />
+              <Route path="/academic-tests" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["student"]}>
+                    <AcademicTests />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
