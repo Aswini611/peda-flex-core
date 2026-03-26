@@ -6,16 +6,21 @@ interface SortRule {
   leftLabel: string;
   rightLabel: string;
   classify: (item: string) => "left" | "right";
+  difficulty: number;
 }
 
 const RULES: SortRule[] = [
+  // Very Easy (0): simple even/odd with small numbers
   {
+    difficulty: 0,
     description: "Even → Left, Odd → Right",
     leftLabel: "EVEN",
     rightLabel: "ODD",
     classify: (item) => (parseInt(item) % 2 === 0 ? "left" : "right"),
   },
+  // Easy (1): living vs non-living
   {
+    difficulty: 1,
     description: "Living → Left, Non-living → Right",
     leftLabel: "LIVING",
     rightLabel: "NON-LIVING",
@@ -24,13 +29,17 @@ const RULES: SortRule[] = [
       return living.includes(item) ? "left" : "right";
     },
   },
+  // Medium (2): vowel/consonant start
   {
+    difficulty: 2,
     description: "Vowel start → Left, Consonant start → Right",
     leftLabel: "VOWEL",
     rightLabel: "CONSONANT",
     classify: (item) => ("AEIOUaeiou".includes(item[0]) ? "left" : "right"),
   },
+  // Hard (3): number comparison
   {
+    difficulty: 3,
     description: "Number < 50 → Left, ≥ 50 → Right",
     leftLabel: "< 50",
     rightLabel: "≥ 50",
@@ -39,29 +48,46 @@ const RULES: SortRule[] = [
 ];
 
 const ITEMS_POOL: Record<number, string[]> = {
-  0: ["2", "7", "14", "33", "8", "15", "22", "41", "6", "19", "30", "55", "12", "9", "44", "27"],
+  0: ["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
   1: ["Cat", "Rock", "Dog", "Chair", "Tree", "Phone", "Fish", "Table", "Bird", "Lamp", "Flower", "Book", "Horse", "Car", "Bee", "Pencil"],
   2: ["Apple", "Banana", "Orange", "Mango", "Kiwi", "Grape", "Peach", "Plum", "Avocado", "Berry", "Cherry", "Date", "Fig", "Ice", "Olive", "Umbrella"],
   3: ["12", "55", "8", "73", "44", "91", "23", "67", "5", "82", "31", "49", "60", "15", "88", "37"],
 };
 
+const LABELS = ["Very Easy", "Easy", "Medium", "Hard"];
+
+function getItemTimeout(difficulty: number): number {
+  if (difficulty <= 0) return 8000;
+  if (difficulty === 1) return 6000;
+  if (difficulty === 2) return 5000;
+  return 4000;
+}
+
+function getRuleTime(difficulty: number): number {
+  if (difficulty <= 1) return 30;
+  return 20;
+}
+
 export function RapidSort({ onComplete }: GameProps) {
+  const [difficulty, setDifficulty] = useState(0);
   const [ruleIndex, setRuleIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState("");
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(90);
-  const [ruleTimeLeft, setRuleTimeLeft] = useState(20);
+  const [ruleTimeLeft, setRuleTimeLeft] = useState(30);
   const [correct, setCorrect] = useState(0);
   const [attempted, setAttempted] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [missed, setMissed] = useState(0);
+  const [diffLabel, setDiffLabel] = useState("Very Easy");
   const responseTimes = useRef<number[]>([]);
   const itemStart = useRef(Date.now());
   const startTime = useRef(Date.now());
   const itemTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const rule = RULES[ruleIndex % RULES.length];
-  const pool = ITEMS_POOL[ruleIndex % Object.keys(ITEMS_POOL).length];
+  // Always use the rule matching current difficulty
+  const rule = RULES[Math.min(difficulty, RULES.length - 1)];
+  const pool = ITEMS_POOL[Math.min(difficulty, Object.keys(ITEMS_POOL).length - 1)];
 
   const spawnItem = useCallback(() => {
     const items = pool;
@@ -71,13 +97,11 @@ export function RapidSort({ onComplete }: GameProps) {
 
     clearTimeout(itemTimer.current);
     itemTimer.current = setTimeout(() => {
-      // Missed
-      setMissed((p) => p + 1);
-      setScore((p) => p - 2);
       setAttempted((p) => p + 1);
+      setScore((p) => p - 2);
       spawnItem();
-    }, 4000);
-  }, [pool]);
+    }, getItemTimeout(difficulty));
+  }, [pool, difficulty]);
 
   useEffect(() => {
     startTime.current = Date.now();
@@ -93,8 +117,9 @@ export function RapidSort({ onComplete }: GameProps) {
 
   useEffect(() => {
     if (ruleTimeLeft <= 0) {
+      // Switch to matching rule for current difficulty
       setRuleIndex((p) => p + 1);
-      setRuleTimeLeft(20);
+      setRuleTimeLeft(getRuleTime(difficulty));
       return;
     }
     const t = setTimeout(() => setRuleTimeLeft((p) => p - 1), 1000);
@@ -132,9 +157,26 @@ export function RapidSort({ onComplete }: GameProps) {
       setScore((p) => p + 8);
       setCorrect((p) => p + 1);
       setFeedback("✅");
+
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak >= 3) {
+        const newDiff = Math.min(difficulty + 1, RULES.length - 1);
+        setDifficulty(newDiff);
+        setDiffLabel(LABELS[newDiff]);
+        setStreak(0);
+        setRuleTimeLeft(getRuleTime(newDiff));
+      }
     } else {
       setScore((p) => p - 4);
       setFeedback("❌");
+      setStreak(0);
+      if (difficulty > 0) {
+        const newDiff = difficulty - 1;
+        setDifficulty(newDiff);
+        setDiffLabel(LABELS[newDiff]);
+        setRuleTimeLeft(getRuleTime(newDiff));
+      }
     }
 
     setTimeout(() => {
@@ -148,7 +190,12 @@ export function RapidSort({ onComplete }: GameProps) {
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
-        <span className="text-sm font-medium" style={{ color: "#F472B6" }}>Sorted: {attempted}</span>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium" style={{ color: "#F472B6" }}>Sorted: {attempted}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full mt-1" style={{ background: "rgba(244,114,182,0.2)", color: "#F472B6" }}>
+            {diffLabel}
+          </span>
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>
@@ -157,13 +204,11 @@ export function RapidSort({ onComplete }: GameProps) {
         </div>
       </div>
 
-      {/* Rule display */}
       <div className="w-full text-center p-3 rounded-xl" style={{ background: "rgba(244,114,182,0.15)", border: "1px solid rgba(244,114,182,0.3)" }}>
         <p className="text-xs mb-1" style={{ color: "rgba(244,114,182,0.7)" }}>CURRENT RULE (changes in {ruleTimeLeft}s)</p>
         <p className="text-sm font-bold" style={{ color: "#F472B6" }}>{rule.description}</p>
       </div>
 
-      {/* Item card */}
       <div className="relative">
         <div
           className="w-40 h-40 flex items-center justify-center rounded-2xl text-3xl font-bold animate-fade-in"
@@ -177,7 +222,6 @@ export function RapidSort({ onComplete }: GameProps) {
         </div>
       </div>
 
-      {/* Sort buttons */}
       <div className="flex gap-4 w-full">
         <button
           onClick={() => handleSort("left")}
