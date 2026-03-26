@@ -26,16 +26,7 @@ const CLASS_OPTIONS = [
 
 const SECTION_OPTIONS = ["A", "B", "C", "D", "E"];
 
-const SUBJECT_OPTIONS = [
-  { value: "Mathematics", label: "Mathematics" },
-  { value: "Science", label: "Science" },
-  { value: "English", label: "English" },
-  { value: "Social Studies", label: "Social Studies" },
-  { value: "Hindi", label: "Hindi" },
-  { value: "Computer Science", label: "Computer Science" },
-  { value: "Environmental Science", label: "EVS" },
-  { value: "General Knowledge", label: "General Knowledge" },
-];
+// Subjects are loaded dynamically from storage based on selected class
 
 interface MCQQuestion {
   id: number;
