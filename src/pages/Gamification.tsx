@@ -134,24 +134,22 @@ const Gamification = () => {
   const [results, setResults] = useState<GameResult[]>([]);
   const [countdown, setCountdown] = useState(3);
   const [bufferCount, setBufferCount] = useState(10);
-  const [globalTime, setGlobalTime] = useState(480);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [quitConfirm, setQuitConfirm] = useState(false);
-  const globalTimerActive = useRef(false);
+  const timerActive = useRef(false);
+  const startTimeRef = useRef<number>(0);
 
-  // Global 8-min timer
+  // Elapsed time tracker
   useEffect(() => {
-    if (!globalTimerActive.current) return;
-    if (globalTime <= 0) {
-      globalTimerActive.current = false;
-      setPhase("RESULTS");
-      return;
-    }
-    const t = setTimeout(() => setGlobalTime((p) => p - 1), 1000);
-    return () => clearTimeout(t);
-  }, [globalTime, phase]);
+    if (!timerActive.current) return;
+    const t = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [phase]);
 
   // Countdown
   useEffect(() => {
@@ -174,7 +172,9 @@ const Gamification = () => {
   }, [phase]);
 
   const startRound = () => {
-    globalTimerActive.current = true;
+    startTimeRef.current = Date.now();
+    timerActive.current = true;
+    setElapsedTime(0);
     setPhase("PRE_GAME");
   };
 
@@ -190,7 +190,7 @@ const Gamification = () => {
 
   const goToNextGame = () => {
     if (currentGame + 1 >= GAME_CONFIG.length) {
-      globalTimerActive.current = false;
+      timerActive.current = false;
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
       setPhase("RESULTS");
@@ -203,10 +203,12 @@ const Gamification = () => {
   };
 
   const handleQuit = () => {
-    globalTimerActive.current = false;
+    timerActive.current = false;
     setPhase("RESULTS");
     setQuitConfirm(false);
   };
+
+  const formatElapsed = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   const totalScore = results.reduce((s, r) => s + r.rawScore, 0);
 
@@ -243,13 +245,13 @@ const Gamification = () => {
     <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #0F172A 0%, #312E81 100%)" }}>
       <Confetti show={showConfetti} />
 
-      {/* Global timer - always visible during play */}
+      {/* Elapsed timer - always visible during play */}
       {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && (
         <div className="fixed top-4 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-xl"
           style={{ background: "rgba(15,23,42,0.8)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <Timer className="h-4 w-4" style={{ color: globalTime > 120 ? "#22C55E" : globalTime > 60 ? "#F59E0B" : "#EF4444" }} />
+          <Timer className="h-4 w-4" style={{ color: "#38BDF8" }} />
           <span className="text-sm font-mono font-bold" style={{ color: "#F1F5F9" }}>
-            {Math.floor(globalTime / 60)}:{String(globalTime % 60).padStart(2, "0")}
+            {formatElapsed(elapsedTime)}
           </span>
         </div>
       )}
@@ -279,8 +281,8 @@ const Gamification = () => {
             <div className="flex justify-center gap-6">
               <div className="px-5 py-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <Timer className="h-5 w-5 mx-auto mb-1" style={{ color: "#38BDF8" }} />
-                <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>Total Time</p>
-                <p className="text-lg font-bold" style={{ color: "#F1F5F9" }}>8 min</p>
+                <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>Timed</p>
+                <p className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Per Game</p>
               </div>
               <div className="px-5 py-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <Brain className="h-5 w-5 mx-auto mb-1" style={{ color: "#A855F7" }} />
@@ -563,7 +565,7 @@ const Gamification = () => {
                 🏆 Final Results
               </h1>
               <p className="text-sm" style={{ color: "rgba(241,245,249,0.5)" }}>
-                Cognitive Assessment Complete
+                Completed in {formatElapsed(elapsedTime)}
               </p>
             </div>
 
@@ -629,7 +631,7 @@ const Gamification = () => {
             </div>
 
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setPhase("WELCOME"); setResults([]); setCurrentGame(0); setGlobalTime(480); setTermsAccepted(false); }}
+              <button onClick={() => { setPhase("WELCOME"); setResults([]); setCurrentGame(0); setElapsedTime(0); setTermsAccepted(false); }}
                 className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105"
                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#F1F5F9" }}>
                 🔄 Retake Round
