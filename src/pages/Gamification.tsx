@@ -134,24 +134,22 @@ const Gamification = () => {
   const [results, setResults] = useState<GameResult[]>([]);
   const [countdown, setCountdown] = useState(3);
   const [bufferCount, setBufferCount] = useState(10);
-  const [globalTime, setGlobalTime] = useState(480);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [quitConfirm, setQuitConfirm] = useState(false);
-  const globalTimerActive = useRef(false);
+  const timerActive = useRef(false);
+  const startTimeRef = useRef<number>(0);
 
-  // Global 8-min timer
+  // Elapsed time tracker
   useEffect(() => {
-    if (!globalTimerActive.current) return;
-    if (globalTime <= 0) {
-      globalTimerActive.current = false;
-      setPhase("RESULTS");
-      return;
-    }
-    const t = setTimeout(() => setGlobalTime((p) => p - 1), 1000);
-    return () => clearTimeout(t);
-  }, [globalTime, phase]);
+    if (!timerActive.current) return;
+    const t = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [phase]);
 
   // Countdown
   useEffect(() => {
@@ -174,7 +172,9 @@ const Gamification = () => {
   }, [phase]);
 
   const startRound = () => {
-    globalTimerActive.current = true;
+    startTimeRef.current = Date.now();
+    timerActive.current = true;
+    setElapsedTime(0);
     setPhase("PRE_GAME");
   };
 
@@ -190,7 +190,7 @@ const Gamification = () => {
 
   const goToNextGame = () => {
     if (currentGame + 1 >= GAME_CONFIG.length) {
-      globalTimerActive.current = false;
+      timerActive.current = false;
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
       setPhase("RESULTS");
@@ -203,10 +203,12 @@ const Gamification = () => {
   };
 
   const handleQuit = () => {
-    globalTimerActive.current = false;
+    timerActive.current = false;
     setPhase("RESULTS");
     setQuitConfirm(false);
   };
+
+  const formatElapsed = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   const totalScore = results.reduce((s, r) => s + r.rawScore, 0);
 
