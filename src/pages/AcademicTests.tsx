@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   BookOpen, CheckCircle2, XCircle, ChevronRight, Trophy, Clock, RotateCcw,
   GraduationCap, Sparkles, ArrowRight, Loader2, History, Target, Award,
+  Timer, Eye, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,20 @@ const CLASS_OPTIONS = [
 
 const SECTION_OPTIONS = ["A", "B", "C", "D", "E"];
 
-// Subjects loaded dynamically from storage based on selected class
+const QUESTION_TYPE_OPTIONS = [
+  { value: "mcq", label: "Multiple Choice (MCQ)" },
+  { value: "true_false", label: "True / False" },
+  { value: "fill_blank", label: "Fill in the Blank" },
+];
+
+const DIFFICULTY_OPTIONS = [
+  { value: "easy", label: "Easy" },
+  { value: "medium", label: "Medium" },
+  { value: "hard", label: "Hard" },
+  { value: "mixed", label: "Mixed" },
+];
+
+const NUM_QUESTIONS_OPTIONS = [5, 10, 15, 20, 25, 30];
 
 interface MCQQuestion {
   id: number;
@@ -36,7 +50,13 @@ interface MCQQuestion {
   explanation: string;
 }
 
-type Phase = "select" | "loading" | "test" | "result";
+type Phase = "select" | "loading" | "test" | "result" | "review";
+
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
 
 export default function AcademicTests() {
   const { user } = useAuth();
@@ -44,14 +64,28 @@ export default function AcademicTests() {
   const [studentClass, setStudentClass] = useState("");
   const [section, setSection] = useState("");
   const [subject, setSubject] = useState("");
+  const [numQuestions, setNumQuestions] = useState(10);
+  const [questionType, setQuestionType] = useState("mcq");
+  const [topic, setTopic] = useState("");
+  const [difficulty, setDifficulty] = useState("medium");
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
-  const [startTime, setStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  const [reviewTest, setReviewTest] = useState<any>(null);
+
+  // Live timer
+  useEffect(() => {
+    if (!timerActive) return;
+    const interval = setInterval(() => {
+      setElapsedTime((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerActive]);
 
   // Fetch subjects dynamically based on selected class
   const { data: subjectOptions, isLoading: loadingSubjects } = useQuery({
@@ -97,7 +131,7 @@ export default function AcademicTests() {
     setPhase("loading");
     try {
       const { data, error } = await supabase.functions.invoke("generate-mcqs", {
-        body: { studentClass, section, subject },
+        body: { studentClass, section, subject, numQuestions, questionType, topic: topic || undefined, difficulty },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -107,7 +141,8 @@ export default function AcademicTests() {
       setSelectedOption(null);
       setShowAnswer(false);
       setScore(0);
-      setStartTime(Date.now());
+      setElapsedTime(0);
+      setTimerActive(true);
       setPhase("test");
     } catch (err: any) {
       toast.error(err.message || "Failed to generate questions");
@@ -134,14 +169,8 @@ export default function AcademicTests() {
       setSelectedOption(null);
       setShowAnswer(false);
     } else {
-      // Test complete - save to DB
-      const elapsed = Math.round((Date.now() - startTime) / 1000);
-      setElapsedTime(elapsed);
-      const finalScore = Object.entries(answers).reduce((acc, [idx, ans]) => {
-        // Include current answer too
-        return acc;
-      }, score);
-      // score already includes current answer via handleConfirm
+      // Test complete
+      setTimerActive(false);
 
       try {
         await supabase.from("academic_tests").insert({
@@ -170,6 +199,14 @@ export default function AcademicTests() {
     setShowAnswer(false);
     setScore(0);
     setCurrentQ(0);
+    setTimerActive(false);
+    setElapsedTime(0);
+    setReviewTest(null);
+  };
+
+  const handleOpenReview = (test: any) => {
+    setReviewTest(test);
+    setPhase("review");
   };
 
   const getOptionStyle = (key: string) => {
@@ -188,7 +225,7 @@ export default function AcademicTests() {
 
   return (
     <AppLayout>
-      <PageHeader title="Academic Tests" subtitle="Test your knowledge with AI-generated MCQs" />
+      <PageHeader title="Academic Tests" subtitle="Test your knowledge with AI-generated questions" />
 
       {/* ─── SELECT PHASE ─── */}
       {phase === "select" && (
@@ -199,9 +236,10 @@ export default function AcademicTests() {
                 <GraduationCap className="h-8 w-8 text-primary-foreground" />
               </div>
               <CardTitle className="text-xl">Start a New Test</CardTitle>
-              <p className="text-sm text-muted-foreground">Select your class, section, and subject to generate questions</p>
+              <p className="text-sm text-muted-foreground">Configure your test settings and begin</p>
             </CardHeader>
             <CardContent className="space-y-4 max-w-md mx-auto">
+              {/* Class */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Class <span className="text-red-500">*</span></label>
                 <Select value={studentClass} onValueChange={handleClassChange}>
@@ -213,6 +251,8 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Section</label>
                 <Select value={section} onValueChange={setSection}>
@@ -224,6 +264,8 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Subject */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Subject <span className="text-red-500">*</span></label>
                 <Select value={subject} onValueChange={setSubject} disabled={!studentClass || loadingSubjects}>
@@ -244,6 +286,56 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Topic */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Topic</label>
+                <Input
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="e.g. Photosynthesis, Fractions (Optional)"
+                />
+              </div>
+
+              {/* Number of Questions */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Number of Questions</label>
+                <Select value={String(numQuestions)} onValueChange={(v) => setNumQuestions(Number(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {NUM_QUESTIONS_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} Questions</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Type of Questions */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Type of Questions</label>
+                <Select value={questionType} onValueChange={setQuestionType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {QUESTION_TYPE_OPTIONS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Difficulty */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Level of Difficulty</label>
+                <Select value={difficulty} onValueChange={setDifficulty}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DIFFICULTY_OPTIONS.map((d) => (
+                      <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button onClick={handleStartTest} className="w-full gap-2 mt-2" size="lg" disabled={!studentClass || !subject}>
                 <Sparkles className="h-4 w-4" /> Generate & Start Test
               </Button>
@@ -258,7 +350,11 @@ export default function AcademicTests() {
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {pastTests.map((test: any) => (
-                  <Card key={test.id} className="hover:shadow-md transition-shadow">
+                  <Card
+                    key={test.id}
+                    className="hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleOpenReview(test)}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="secondary" className="text-xs">{test.subject}</Badge>
@@ -280,6 +376,10 @@ export default function AcademicTests() {
                           </span>
                         </div>
                       </div>
+                      <div className="flex items-center gap-1 mt-2">
+                        <Eye className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Click to review answers</span>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -298,7 +398,10 @@ export default function AcademicTests() {
               <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary animate-pulse" />
             </div>
             <h3 className="text-lg font-semibold mb-1">Generating Your Questions...</h3>
-            <p className="text-sm text-muted-foreground">AI is crafting {subject} questions for {CLASS_OPTIONS.find(c => c.value === studentClass)?.label}</p>
+            <p className="text-sm text-muted-foreground">
+              AI is crafting {numQuestions} {QUESTION_TYPE_OPTIONS.find(t => t.value === questionType)?.label} questions
+              {topic ? ` on "${topic}"` : ""} for {CLASS_OPTIONS.find(c => c.value === studentClass)?.label} - {subject}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -306,7 +409,7 @@ export default function AcademicTests() {
       {/* ─── TEST PHASE ─── */}
       {phase === "test" && questions.length > 0 && (
         <div className="space-y-4 animate-fade-in">
-          {/* Progress bar */}
+          {/* Progress bar + Timer */}
           <div className="flex items-center gap-3">
             <Progress value={progressPercent} className="flex-1 h-3 [&>div]:bg-primary" />
             <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
@@ -314,13 +417,13 @@ export default function AcademicTests() {
             </span>
           </div>
 
-          {/* Score indicator */}
+          {/* Score + Timer indicator */}
           <div className="flex items-center justify-between">
             <Badge variant="outline" className="gap-1">
               <Trophy className="h-3 w-3 text-amber-500" /> Score: {score}
             </Badge>
-            <Badge variant="outline" className="gap-1 text-xs">
-              Q{currentQ + 1} of {questions.length}
+            <Badge variant="outline" className="gap-1.5 font-mono text-sm">
+              <Timer className="h-3.5 w-3.5 text-primary" /> {formatTime(elapsedTime)}
             </Badge>
           </div>
 
@@ -409,19 +512,21 @@ export default function AcademicTests() {
           <Card className="border-2 overflow-hidden">
             <div className={cn(
               "p-8 text-center text-white",
-              score >= 7 ? "bg-gradient-to-br from-emerald-500 to-emerald-700" :
-              score >= 4 ? "bg-gradient-to-br from-amber-500 to-amber-700" :
+              score >= Math.ceil(questions.length * 0.7) ? "bg-gradient-to-br from-emerald-500 to-emerald-700" :
+              score >= Math.ceil(questions.length * 0.4) ? "bg-gradient-to-br from-amber-500 to-amber-700" :
               "bg-gradient-to-br from-red-500 to-red-700"
             )}>
               <Award className="h-16 w-16 mx-auto mb-3 drop-shadow-lg" />
               <h2 className="text-3xl font-bold mb-1">{score}/{questions.length}</h2>
               <p className="text-lg opacity-90">
-                {score >= 8 ? "Outstanding!" : score >= 6 ? "Great Job!" : score >= 4 ? "Good Effort!" : "Keep Practicing!"}
+                {score >= Math.ceil(questions.length * 0.8) ? "Outstanding!" :
+                 score >= Math.ceil(questions.length * 0.6) ? "Great Job!" :
+                 score >= Math.ceil(questions.length * 0.4) ? "Good Effort!" : "Keep Practicing!"}
               </p>
               <p className="text-sm opacity-75 mt-1">{subject} • {CLASS_OPTIONS.find(c => c.value === studentClass)?.label}</p>
             </div>
             <CardContent className="p-6">
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-emerald-600">
                     {Object.entries(answers).filter(([i, a]) => a === questions[Number(i)].correct).length}
@@ -439,6 +544,12 @@ export default function AcademicTests() {
                     {Math.round((score / questions.length) * 100)}%
                   </div>
                   <div className="text-xs text-muted-foreground">Accuracy</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {formatTime(elapsedTime)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Time Taken</div>
                 </div>
               </div>
 
@@ -458,13 +569,18 @@ export default function AcademicTests() {
                         ) : (
                           <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                         )}
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{q.question}</p>
-                          {!isCorrect && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Your answer: {answers[i]} ({q.options[answers[i]]}) •
-                              Correct: {q.correct} ({q.options[q.correct]})
-                            </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Your answer: <span className={isCorrect ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>
+                              {answers[i]} ({q.options[answers[i]]})
+                            </span>
+                            {!isCorrect && (
+                              <> • Correct: <span className="text-emerald-600 font-medium">{q.correct} ({q.options[q.correct]})</span></>
+                            )}
+                          </p>
+                          {q.explanation && (
+                            <p className="text-xs text-muted-foreground mt-1 italic">💡 {q.explanation}</p>
                           )}
                         </div>
                       </div>
@@ -477,8 +593,111 @@ export default function AcademicTests() {
                 <Button onClick={handleReset} variant="outline" className="flex-1 gap-2">
                   <RotateCcw className="h-4 w-4" /> Take Another Test
                 </Button>
-                <Button onClick={() => { setPhase("loading"); handleStartTest(); }} className="flex-1 gap-2">
-                  <Sparkles className="h-4 w-4" /> Retry Same Subject
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ─── REVIEW PHASE (Past Test Detail) ─── */}
+      {phase === "review" && reviewTest && (
+        <div className="space-y-6 animate-fade-in">
+          <Button onClick={handleReset} variant="ghost" className="gap-2 mb-2">
+            <ChevronDown className="h-4 w-4 rotate-90" /> Back to Tests
+          </Button>
+
+          <Card className="border-2 overflow-hidden">
+            <div className={cn(
+              "p-6 text-center text-white",
+              reviewTest.score >= Math.ceil(reviewTest.total_questions * 0.7)
+                ? "bg-gradient-to-br from-emerald-500 to-emerald-700"
+                : reviewTest.score >= Math.ceil(reviewTest.total_questions * 0.4)
+                  ? "bg-gradient-to-br from-amber-500 to-amber-700"
+                  : "bg-gradient-to-br from-red-500 to-red-700"
+            )}>
+              <Award className="h-12 w-12 mx-auto mb-2 drop-shadow-lg" />
+              <h2 className="text-2xl font-bold mb-1">{reviewTest.score}/{reviewTest.total_questions}</h2>
+              <p className="text-sm opacity-90">
+                {reviewTest.subject} • {CLASS_OPTIONS.find((c: any) => c.value === reviewTest.student_class)?.label || reviewTest.student_class}
+                {reviewTest.section ? ` - ${reviewTest.section}` : ""}
+              </p>
+              <p className="text-xs opacity-75 mt-1">
+                {new Date(reviewTest.completed_at).toLocaleString()}
+              </p>
+            </div>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-emerald-600">{reviewTest.score}</div>
+                  <div className="text-xs text-muted-foreground">Correct</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-500">{reviewTest.total_questions - reviewTest.score}</div>
+                  <div className="text-xs text-muted-foreground">Wrong</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {Math.round((reviewTest.score / reviewTest.total_questions) * 100)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">Accuracy</div>
+                </div>
+              </div>
+
+              <h3 className="font-semibold text-sm mb-3">Detailed Answer Review</h3>
+              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                {(reviewTest.questions as MCQQuestion[]).map((q: MCQQuestion, i: number) => {
+                  const studentAnswer = (reviewTest.answers as Record<string, string>)?.[String(i)];
+                  const isCorrect = studentAnswer === q.correct;
+                  return (
+                    <div key={i} className={cn(
+                      "rounded-lg border p-4 text-sm",
+                      isCorrect ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"
+                    )}>
+                      <div className="flex items-start gap-2">
+                        {isCorrect ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <p className="font-medium mb-2">
+                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-muted text-xs font-bold mr-1.5">
+                              {i + 1}
+                            </span>
+                            {q.question}
+                          </p>
+                          {/* Show all options */}
+                          <div className="grid gap-1 ml-1">
+                            {Object.entries(q.options).map(([key, value]) => (
+                              <div
+                                key={key}
+                                className={cn(
+                                  "text-xs px-2 py-1 rounded",
+                                  key === q.correct ? "bg-emerald-100 text-emerald-800 font-medium" :
+                                  key === studentAnswer && key !== q.correct ? "bg-red-100 text-red-800 font-medium" :
+                                  "text-muted-foreground"
+                                )}
+                              >
+                                <span className="font-bold mr-1">{key}.</span> {value}
+                                {key === q.correct && " ✓"}
+                                {key === studentAnswer && key !== q.correct && " ✗ (your answer)"}
+                                {key === studentAnswer && key === q.correct && " (your answer)"}
+                              </div>
+                            ))}
+                          </div>
+                          {q.explanation && (
+                            <p className="text-xs text-muted-foreground mt-2 italic">💡 {q.explanation}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button onClick={handleReset} variant="outline" className="flex-1 gap-2">
+                  <RotateCcw className="h-4 w-4" /> Back to Tests
                 </Button>
               </div>
             </CardContent>
