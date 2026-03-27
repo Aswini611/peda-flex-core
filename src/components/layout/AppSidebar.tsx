@@ -23,9 +23,8 @@ const navItems = [
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
-  { title: "My Child's Progress", icon: Users, path: "/teacher", roles: ["parent"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
-  { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student", "teacher", "admin", "parent"] },
+  { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
