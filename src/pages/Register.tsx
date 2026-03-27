@@ -176,6 +176,39 @@ const Register = () => {
                 required
               />
             </div>
+            {isStudent && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="age" className="text-gray-700 font-medium">Age</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    min={5}
+                    max={25}
+                    placeholder="e.g. 14"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="studentClass" className="text-gray-700 font-medium">Class</Label>
+                  <select
+                    id="studentClass"
+                    value={studentClass}
+                    onChange={(e) => setStudentClass(e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-sm"
+                    required
+                  >
+                    <option value="">Select class</option>
+                    {classes.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="regPassword" className="text-gray-700 font-medium">
                 Password
