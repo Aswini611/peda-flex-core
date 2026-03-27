@@ -14,21 +14,37 @@ serve(async (req) => {
   try {
     const { studentName, ageGroup, strengths, weaknesses, recommendedFramework, learningGoals, cognitivePattern, diagnosticScore } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const DEEPSEEK_API_KEY = Deno.env.get("Deepseek");
+    if (!DEEPSEEK_API_KEY) throw new Error("Deepseek API key is not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "deepseek-chat",
         messages: [
           {
             role: "system",
-            content: "You are an expert educational content designer specialising in personalised pedagogy. You design curative lesson plans tailored to individual student profiles based on their diagnostic assessment data.",
+            content: `You are an expert educational content designer specialising in personalised pedagogy. You design curative lesson plans tailored to individual student profiles based on their diagnostic assessment data.
+
+You MUST respond with ONLY valid JSON matching this exact structure (no markdown, no extra text):
+{
+  "lesson_objectives": ["objective 1", "objective 2", ...],
+  "activity_plan": [
+    {"title": "...", "description": "...", "duration_minutes": 10, "materials": "..."}
+  ],
+  "practice_exercises": [
+    {"title": "...", "description": "...", "type": "..."}
+  ],
+  "assessment_checkpoints": [
+    {"checkpoint": "...", "criteria": "...", "method": "..."}
+  ],
+  "framework_summary": "...",
+  "estimated_duration_minutes": 40
+}`,
           },
           {
             role: "user",
@@ -52,69 +68,6 @@ Create a comprehensive lesson plan that includes:
 The plan should follow the ${recommendedFramework} framework and be appropriate for the ${ageGroup}+ age group.`,
           },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "return_lesson_plan",
-              description: "Return a structured curative lesson plan",
-              parameters: {
-                type: "object",
-                properties: {
-                  lesson_objectives: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  activity_plan: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        description: { type: "string" },
-                        duration_minutes: { type: "integer" },
-                        materials: { type: "string" },
-                      },
-                      required: ["title", "description", "duration_minutes", "materials"],
-                      additionalProperties: false,
-                    },
-                  },
-                  practice_exercises: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        description: { type: "string" },
-                        type: { type: "string" },
-                      },
-                      required: ["title", "description", "type"],
-                      additionalProperties: false,
-                    },
-                  },
-                  assessment_checkpoints: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        checkpoint: { type: "string" },
-                        criteria: { type: "string" },
-                        method: { type: "string" },
-                      },
-                      required: ["checkpoint", "criteria", "method"],
-                      additionalProperties: false,
-                    },
-                  },
-                  framework_summary: { type: "string" },
-                  estimated_duration_minutes: { type: "integer" },
-                },
-                required: ["lesson_objectives", "activity_plan", "practice_exercises", "assessment_checkpoints", "framework_summary", "estimated_duration_minutes"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "return_lesson_plan" } },
       }),
     });
 
@@ -126,29 +79,26 @@ The plan should follow the ${recommendedFramework} framework and be appropriate 
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits in your workspace." }), {
+        return new Response(JSON.stringify({ error: "API credits exhausted. Please add funds." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const text = await response.text();
-      console.error("AI gateway error:", response.status, text);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      console.error("DeepSeek API error:", response.status, text);
+      return new Response(JSON.stringify({ error: `DeepSeek API error: ${response.status}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    let content = data.choices?.[0]?.message?.content || "";
 
-    let lessonPlan;
-    if (toolCall?.function?.arguments) {
-      lessonPlan = JSON.parse(toolCall.function.arguments);
-    } else {
-      const content = data.choices?.[0]?.message?.content || "";
-      lessonPlan = JSON.parse(content);
-    }
+    // Strip markdown code blocks if present
+    content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+
+    const lessonPlan = JSON.parse(content);
 
     return new Response(JSON.stringify({ lessonPlan }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
