@@ -14,17 +14,16 @@ serve(async (req) => {
   try {
     const { studentName, ageGroup, strengths, weaknesses, recommendedFramework, learningGoals, cognitivePattern, diagnosticScore } = await req.json();
 
-    const DEEPSEEK_API_KEY = Deno.env.get("Deepseek");
-    if (!DEEPSEEK_API_KEY) throw new Error("Deepseek API key is not configured");
-
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
