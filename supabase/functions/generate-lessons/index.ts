@@ -14,9 +14,8 @@ serve(async (req) => {
   try {
     const { studentName, ageGroup, strengths, weaknesses, recommendedFramework, learningGoals, cognitivePattern, diagnosticScore } = await req.json();
 
-    const DEEPSEEK_API_KEY = Deno.env.get("Deepseek");
-    if (!DEEPSEEK_API_KEY) throw new Error("Deepseek API key is not configured");
-
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
     const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: {
