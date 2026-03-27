@@ -97,7 +97,11 @@ const Register = () => {
       email,
       password,
       options: {
-        data: { full_name: fullName, role, ...(isStudent ? { student_id: identifier.trim() } : {}) },
+        data: {
+          full_name: fullName,
+          role,
+          ...(isStudent ? { student_id: identifier.trim(), age: parseInt(age), class: studentClass } : {}),
+        },
         emailRedirectTo: window.location.origin,
       },
     });
