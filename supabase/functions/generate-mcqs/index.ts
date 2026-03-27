@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { studentClass, section, subject } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const DEEPSEEK_API_KEY = Deno.env.get("Deepseek");
+    if (!DEEPSEEK_API_KEY) throw new Error("Deepseek API key is not configured");
 
     const systemPrompt = `You are an expert academic question paper generator. Generate exactly 10 multiple-choice questions (MCQs) for a student.
 
@@ -47,14 +47,14 @@ ${section ? `- Section: ${section}` : ""}
 
 Make questions progressively harder from question 1 to 10.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "deepseek-chat",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -69,13 +69,13 @@ Make questions progressively harder from question 1 to 10.`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
+        return new Response(JSON.stringify({ error: "API credits exhausted. Please add funds." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      throw new Error("AI gateway error");
+      console.error("DeepSeek API error:", response.status, t);
+      throw new Error(`DeepSeek API error: ${response.status}`);
     }
 
     const data = await response.json();
