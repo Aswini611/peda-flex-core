@@ -24,7 +24,8 @@ const navItems = [
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Student reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
-  { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
+  { title: "Game Hub", icon: Trophy, path: "/game-hub", roles: ["student", "admin"] },
+  { title: "Cognitive Round", icon: Brain, path: "/gamification", roles: ["student", "admin"] },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
