@@ -9,42 +9,79 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { studentClass, section, subject } = await req.json();
+    const { studentClass, section, subject, numQuestions = 10, questionType = "mcq", topic, difficulty = "medium" } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-    const systemPrompt = `You are an expert academic question paper generator. Generate exactly 10 multiple-choice questions (MCQs) for a student.
 
-RULES:
-- Each question must have exactly 4 options labeled A, B, C, D
-- Only one option should be correct
-- Questions should be age-appropriate for the given class level
-- Questions should cover different topics within the subject
-- Start from easy questions and gradually increase difficulty
-- Use simple, clear language appropriate for the student's class level
-- Return ONLY valid JSON, no markdown, no extra text
+    const count = Math.min(Math.max(Number(numQuestions) || 10, 5), 30);
 
-Return a JSON array of objects with this exact structure:
-[
+    const difficultyInstruction = {
+      easy: "All questions should be simple and straightforward, testing basic recall and understanding.",
+      medium: "Start with easy questions and gradually increase to moderate difficulty.",
+      hard: "Questions should be challenging, testing deep understanding, application, and analysis.",
+      mixed: "Mix easy, medium, and hard questions evenly across the set.",
+    }[difficulty] || "Start from easy questions and gradually increase difficulty.";
+
+    const topicInstruction = topic ? `Focus specifically on the topic: "${topic}".` : "Questions should cover different topics within the subject.";
+
+    let formatInstruction = "";
+    let formatSchema = "";
+
+    if (questionType === "true_false") {
+      formatInstruction = "Each question must be a True/False question with exactly 2 options: A (True) and B (False).";
+      formatSchema = `[
+  {
+    "id": 1,
+    "question": "The Earth revolves around the Sun.",
+    "options": { "A": "True", "B": "False" },
+    "correct": "A",
+    "explanation": "The Earth orbits the Sun."
+  }
+]`;
+    } else if (questionType === "fill_blank") {
+      formatInstruction = "Each question must be a fill-in-the-blank style presented as MCQ with 4 options A, B, C, D. Use '______' in the question to indicate the blank.";
+      formatSchema = `[
+  {
+    "id": 1,
+    "question": "The capital of France is ______.",
+    "options": { "A": "London", "B": "Paris", "C": "Berlin", "D": "Madrid" },
+    "correct": "B",
+    "explanation": "Paris is the capital of France."
+  }
+]`;
+    } else {
+      formatInstruction = "Each question must have exactly 4 options labeled A, B, C, D. Only one option should be correct.";
+      formatSchema = `[
   {
     "id": 1,
     "question": "What is 2 + 3?",
-    "options": {
-      "A": "4",
-      "B": "5",
-      "C": "6",
-      "D": "7"
-    },
+    "options": { "A": "4", "B": "5", "C": "6", "D": "7" },
     "correct": "B",
     "explanation": "2 + 3 equals 5"
   }
 ]`;
+    }
 
-    const userPrompt = `Generate 10 MCQ questions for:
+    const systemPrompt = `You are an expert academic question paper generator. Generate exactly ${count} questions for a student.
+
+RULES:
+- ${formatInstruction}
+- Questions should be age-appropriate for the given class level
+- ${topicInstruction}
+- ${difficultyInstruction}
+- Use simple, clear language appropriate for the student's class level
+- Return ONLY valid JSON, no markdown, no extra text
+
+Return a JSON array of objects with this exact structure:
+${formatSchema}`;
+
+    const userPrompt = `Generate ${count} questions for:
 - Class: ${studentClass}
 ${section ? `- Section: ${section}` : ""}
 - Subject: ${subject}
-
-Make questions progressively harder from question 1 to 10.`;
+${topic ? `- Topic: ${topic}` : ""}
+- Difficulty: ${difficulty}
+- Question Type: ${questionType}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -73,8 +110,8 @@ Make questions progressively harder from question 1 to 10.`;
         });
       }
       const t = await response.text();
-      console.error("DeepSeek API error:", response.status, t);
-      throw new Error(`DeepSeek API error: ${response.status}`);
+      console.error("API error:", response.status, t);
+      throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
