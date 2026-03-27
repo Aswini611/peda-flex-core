@@ -31,12 +31,20 @@ const ValidationItem = ({ met, text }: { met: boolean; text: string }) => (
   </div>
 );
 
+const classes = [
+  "Class 1", "Class 2", "Class 3", "Class 4", "Class 5",
+  "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
+  "Class 11", "Class 12",
+];
+
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<string>("student");
+  const [age, setAge] = useState("");
+  const [studentClass, setStudentClass] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,7 +55,7 @@ const Register = () => {
   const usesEmail = role === "teacher";
   const passwordIsValid = isPasswordValid(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
-  const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim();
+  const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim() && (!isStudent || (age && studentClass));
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
