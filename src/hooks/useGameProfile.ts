@@ -30,7 +30,9 @@ export interface GameSession {
   score: number;
   max_score: number;
   accuracy: number;
+  avg_response_time: number;
   difficulty_reached: number;
+  brain_level_at: string;
   time_used: number;
   completed_at: string;
 }
