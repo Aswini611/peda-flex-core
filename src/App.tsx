@@ -67,7 +67,13 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route path="/gamification" element={<ProtectedRoute><Gamification /></ProtectedRoute>} />
+              <Route path="/gamification" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["student", "admin"]}>
+                    <Gamification />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
               <Route path="/academic-tests" element={
                 <ProtectedRoute>
                   <RoleGuard allowedRoles={["student"]}>
