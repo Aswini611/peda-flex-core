@@ -1549,10 +1549,43 @@ type ContentKey = 'quiz' | 'pairs' | 'sort' | 'words' | 'speedTap' | 'visualMemo
 
 function getSubjectPool(subject: string) {
   const s = subject.toLowerCase().trim();
-  if (['math', 'maths', 'mathematics'].some(m => s.includes(m))) return MATH_CONTENT;
-  if (['science', 'physics', 'chemistry', 'biology', 'evs'].some(m => s.includes(m))) return SCIENCE_CONTENT;
-  if (['hindi'].some(m => s === m || s.includes(m))) return HINDI_CONTENT;
-  if (['english', 'language', 'grammar', 'literature'].some(m => s.includes(m))) return ENGLISH_CONTENT;
+  
+  // Math
+  if (['math', 'maths', 'mathematics', 'गणित', 'arithmetic', 'algebra', 'geometry', 'calculus', 'trigonometry', 'statistics'].some(m => s.includes(m))) return MATH_CONTENT;
+  
+  // Science
+  if (['science', 'physics', 'chemistry', 'biology', 'evs', 'environmental', 'विज्ञान', 'भौतिक', 'रसायन', 'जीव', 'natural science', 'life science', 'physical science', 'general science', 'botany', 'zoology'].some(m => s.includes(m))) return SCIENCE_CONTENT;
+  
+  // Hindi
+  if (['hindi', 'हिंदी', 'हिन्दी'].some(m => s.includes(m))) return HINDI_CONTENT;
+  
+  // Sanskrit
+  if (['sanskrit', 'संस्कृत', 'sanskritam'].some(m => s.includes(m))) return SANSKRIT_CONTENT;
+  
+  // Social Studies / History / Geography / Civics / Economics
+  if (['social', 'sst', 'history', 'geography', 'civics', 'economics', 'political', 'sociology', 'इतिहास', 'भूगोल', 'नागरिक', 'अर्थशास्त्र', 'samajik', 'social studies', 'social science'].some(m => s.includes(m))) return SST_CONTENT;
+  
+  // Computer Science / IT
+  if (['computer', 'computing', 'it', 'information technology', 'programming', 'coding', 'digital', 'cyber', 'कंप्यूटर', 'संगणक', 'ict', 'artificial intelligence', 'ai', 'data science', 'web'].some(m => s.includes(m))) return COMPUTER_CONTENT;
+  
+  // English
+  if (['english', 'language', 'grammar', 'literature', 'अंग्रेज़ी', 'अंग्रेजी', 'reading', 'writing', 'composition', 'creative writing', 'prose', 'poetry'].some(m => s.includes(m))) return ENGLISH_CONTENT;
+  
+  // Regional languages → map to Hindi content style (closest match for Indian languages)
+  if (['telugu', 'tamil', 'kannada', 'malayalam', 'marathi', 'gujarati', 'bengali', 'bangla', 'punjabi', 'odia', 'oriya', 'assamese', 'urdu', 'arabic', 'french', 'german', 'spanish', 'తెలుగు', 'தமிழ்', 'ಕನ್ನಡ', 'മലയാളം', 'मराठी', 'ગુજરાતી', 'বাংলা', 'ਪੰਜਾਬੀ', 'ଓଡ଼ିଆ', 'অসমীয়া', 'اردو'].some(m => s.includes(m))) return ENGLISH_CONTENT;
+  
+  // GK / General Knowledge
+  if (['gk', 'general knowledge', 'current affairs', 'सामान्य ज्ञान', 'quiz'].some(m => s.includes(m))) return GENERAL_CONTENT;
+  
+  // Art / Music / Physical Education → General
+  if (['art', 'music', 'drawing', 'painting', 'physical education', 'pe', 'sports', 'yoga', 'health', 'craft', 'कला', 'संगीत', 'चित्रकला', 'खेल'].some(m => s.includes(m))) return GENERAL_CONTENT;
+  
+  // Business / Commerce / Accounts
+  if (['business', 'commerce', 'accounts', 'accounting', 'finance', 'marketing', 'management', 'व्यापार', 'वाणिज्य', 'लेखा'].some(m => s.includes(m))) return SST_CONTENT;
+  
+  // Home Science / Agriculture
+  if (['home science', 'agriculture', 'farming', 'nutrition', 'गृह विज्ञान', 'कृषि'].some(m => s.includes(m))) return SCIENCE_CONTENT;
+  
   return GENERAL_CONTENT;
 }
 
