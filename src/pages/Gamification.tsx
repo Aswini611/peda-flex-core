@@ -3,13 +3,22 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGamification } from "@/hooks/useGamification";
 import {
-  GamePhase, GameResult, GAME_CONFIG, TIER_BADGES, COGNITIVE_BADGES,
+  GamePhase, GameResult, TIER_BADGES, COGNITIVE_BADGES,
 } from "@/components/gamification/types";
 import { PatternFlash } from "@/components/gamification/PatternFlash";
 import { NumberBalance } from "@/components/gamification/NumberBalance";
 import { WordProof } from "@/components/gamification/WordProof";
 import { ShapeSequence } from "@/components/gamification/ShapeSequence";
 import { RapidSort } from "@/components/gamification/RapidSort";
+import { MatchPairs } from "@/components/gamification/games/MatchPairs";
+import { QuickQuiz } from "@/components/gamification/games/QuickQuiz";
+import { WordScramble } from "@/components/gamification/games/WordScramble";
+import { CategorySort } from "@/components/gamification/games/CategorySort";
+import { SpeedTap } from "@/components/gamification/games/SpeedTap";
+import { VisualMemory } from "@/components/gamification/games/VisualMemory";
+import { GameSetupScreen } from "@/components/gamification/setup/GameSetupScreen";
+import { SelectedGame } from "@/components/gamification/engine/gameSelector";
+import { AgeGroup } from "@/components/gamification/engine/ageGroups";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer,
@@ -45,11 +54,8 @@ function AnimatedBackground() {
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Grid pattern */}
       <div className="absolute inset-0 opacity-[0.03]"
         style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-
-      {/* Floating orbs */}
       {orbs.map(o => (
         <div key={o.id} className="absolute rounded-full orb-float" style={{
           width: o.size, height: o.size,
@@ -60,8 +66,6 @@ function AnimatedBackground() {
           animationDelay: `${o.delay}s`,
         }} />
       ))}
-
-      {/* Shooting stars */}
       <div className="shooting-star" style={{ top: "15%", animationDelay: "0s" }} />
       <div className="shooting-star" style={{ top: "45%", animationDelay: "4s" }} />
       <div className="shooting-star" style={{ top: "75%", animationDelay: "8s" }} />
@@ -69,39 +73,24 @@ function AnimatedBackground() {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   FLOATING PARTICLES — tiny sparkles
-   ═══════════════════════════════════════════════════════════ */
 function FloatingParticles() {
   const particles = useMemo(() => Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    size: 2 + Math.random() * 3,
-    x: Math.random() * 100,
-    delay: Math.random() * 8,
-    duration: 6 + Math.random() * 8,
-    opacity: 0.2 + Math.random() * 0.5,
+    id: i, size: 2 + Math.random() * 3, x: Math.random() * 100,
+    delay: Math.random() * 8, duration: 6 + Math.random() * 8, opacity: 0.2 + Math.random() * 0.5,
   })), []);
-
   return (
     <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
       {particles.map(p => (
         <div key={p.id} className="absolute rounded-full particle-rise" style={{
-          width: p.size, height: p.size,
-          left: `${p.x}%`,
-          bottom: "-10px",
-          background: "#fff",
-          opacity: p.opacity,
-          animationDuration: `${p.duration}s`,
-          animationDelay: `${p.delay}s`,
+          width: p.size, height: p.size, left: `${p.x}%`, bottom: "-10px",
+          background: "#fff", opacity: p.opacity,
+          animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s`,
         }} />
       ))}
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   CELEBRATION — confetti + ribbons + flowers
-   ═══════════════════════════════════════════════════════════ */
 const FLOWERS = ["🌸", "🌺", "🌼", "🌻", "🌷", "💐", "🏵️", "🌹"];
 const RIBBONS = ["🎀", "🎗️", "🎊", "🎉", "✨", "⭐", "🎆", "🎇"];
 
@@ -113,25 +102,15 @@ function Confetti({ show }: { show: boolean }) {
   });
   const flowers = Array.from({ length: 20 }, (_, i) => ({ id: `f-${i}`, emoji: FLOWERS[i % FLOWERS.length], left: `${Math.random() * 100}%`, delay: Math.random() * 2.5, duration: 3 + Math.random() * 2.5, size: 20 + Math.random() * 16, sway: (Math.random() - 0.5) * 120 }));
   const ribbons = Array.from({ length: 16 }, (_, i) => ({ id: `r-${i}`, emoji: RIBBONS[i % RIBBONS.length], left: `${Math.random() * 100}%`, delay: Math.random() * 1.5, duration: 2.8 + Math.random() * 2, size: 22 + Math.random() * 14, sway: (Math.random() - 0.5) * 80 }));
-
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {pieces.map(p => (
-        <div key={p.id} className="absolute celebration-fall" style={{ left: p.left, top: "-20px", width: p.size, height: p.size, backgroundColor: p.color, borderRadius: p.round ? "50%" : "2px", animationDelay: `${p.delay}s`, animationDuration: `${p.duration}s` }} />
-      ))}
-      {flowers.map(f => (
-        <div key={f.id} className="absolute celebration-sway-fall" style={{ left: f.left, top: "-40px", fontSize: f.size, animationDelay: `${f.delay}s`, animationDuration: `${f.duration}s`, ["--sway" as string]: `${f.sway}px` }}>{f.emoji}</div>
-      ))}
-      {ribbons.map(r => (
-        <div key={r.id} className="absolute celebration-sway-fall" style={{ left: r.left, top: "-40px", fontSize: r.size, animationDelay: `${r.delay}s`, animationDuration: `${r.duration}s`, ["--sway" as string]: `${r.sway}px` }}>{r.emoji}</div>
-      ))}
+      {pieces.map(p => (<div key={p.id} className="absolute celebration-fall" style={{ left: p.left, top: "-20px", width: p.size, height: p.size, backgroundColor: p.color, borderRadius: p.round ? "50%" : "2px", animationDelay: `${p.delay}s`, animationDuration: `${p.duration}s` }} />))}
+      {flowers.map(f => (<div key={f.id} className="absolute celebration-sway-fall" style={{ left: f.left, top: "-40px", fontSize: f.size, animationDelay: `${f.delay}s`, animationDuration: `${f.duration}s`, ["--sway" as string]: `${f.sway}px` }}>{f.emoji}</div>))}
+      {ribbons.map(r => (<div key={r.id} className="absolute celebration-sway-fall" style={{ left: r.left, top: "-40px", fontSize: r.size, animationDelay: `${r.delay}s`, animationDuration: `${r.duration}s`, ["--sway" as string]: `${r.sway}px` }}>{r.emoji}</div>))}
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   CIRCULAR TIMER
-   ═══════════════════════════════════════════════════════════ */
 function CircularTimer({ timeLeft, total, size = 80 }: { timeLeft: number; total: number; size?: number }) {
   const r = (size - 8) / 2;
   const c = 2 * Math.PI * r;
@@ -148,9 +127,6 @@ function CircularTimer({ timeLeft, total, size = 80 }: { timeLeft: number; total
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SCORE TICKER — bouncy animated
-   ═══════════════════════════════════════════════════════════ */
 function ScoreTicker({ score }: { score: number }) {
   const [pop, setPop] = useState(false);
   const prevScore = useRef(score);
@@ -169,10 +145,7 @@ function ScoreTicker({ score }: { score: number }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   PROGRESS BAR — gradient animated
-   ═══════════════════════════════════════════════════════════ */
-function GameProgressBar({ current, total }: { current: number; total: number }) {
+function GameProgressBar({ current, total, games }: { current: number; total: number; games: SelectedGame[] }) {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="flex justify-between mb-1.5">
@@ -183,9 +156,8 @@ function GameProgressBar({ current, total }: { current: number; total: number })
         <div className="h-full rounded-full transition-all duration-700 ease-out progress-glow"
           style={{ width: `${(current / total) * 100}%`, background: "linear-gradient(90deg, #6366F1, #A855F7, #F472B6)" }} />
       </div>
-      {/* Game dots */}
       <div className="flex justify-between mt-2 px-1">
-        {GAME_CONFIG.map((g, i) => (
+        {games.map((g, i) => (
           <div key={i} className={`w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all duration-500 ${i < current ? "scale-100" : i === current ? "scale-110 ring-2 ring-white/30" : "scale-90 opacity-40"}`}
             style={{ background: i < current ? g.color : i === current ? `${g.color}90` : "rgba(255,255,255,0.1)", color: i <= current ? "#0F172A" : "rgba(241,245,249,0.3)", fontWeight: 700 }}>
             {i < current ? "✓" : g.icon}
@@ -196,9 +168,6 @@ function GameProgressBar({ current, total }: { current: number; total: number })
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   GLASS CARD wrapper
-   ═══════════════════════════════════════════════════════════ */
 function GlassCard({ children, className = "", glow = "" }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
     <div className={`rounded-2xl p-6 relative overflow-hidden ${className}`}
@@ -208,13 +177,9 @@ function GlassCard({ children, className = "", glow = "" }: { children: React.Re
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ANIMATED COUNTER
-   ═══════════════════════════════════════════════════════════ */
 function AnimatedCounter({ value, duration = 1500 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
-    let start = 0;
     const startTime = Date.now();
     const tick = () => {
       const elapsed = Date.now() - startTime;
@@ -228,6 +193,20 @@ function AnimatedCounter({ value, duration = 1500 }: { value: number; duration?:
   return <>{display}</>;
 }
 
+function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <h3 className="text-sm font-bold" style={{ color: "#F1F5F9" }}>{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+type AdaptivePhase = "SETUP" | GamePhase;
+
 /* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════ */
@@ -236,7 +215,13 @@ const Gamification = () => {
   const { awardXp } = useGamification();
   const studentName = profile?.full_name || "Student";
 
-  const [phase, setPhase] = useState<GamePhase>("WELCOME");
+  // Adaptive state
+  const [selectedGames, setSelectedGames] = useState<SelectedGame[]>([]);
+  const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
+  const [subject, setSubject] = useState('');
+  const [studentClass, setStudentClass] = useState('');
+
+  const [phase, setPhase] = useState<AdaptivePhase>("SETUP");
   const [currentGame, setCurrentGame] = useState(0);
   const [results, setResults] = useState<GameResult[]>([]);
   const [countdown, setCountdown] = useState(3);
@@ -248,7 +233,6 @@ const Gamification = () => {
   const timerActive = useRef(false);
   const startTimeRef = useRef<number>(0);
 
-  // Elapsed time tracker
   useEffect(() => {
     if (!timerActive.current) return;
     const t = setInterval(() => {
@@ -257,7 +241,6 @@ const Gamification = () => {
     return () => clearInterval(t);
   }, [phase]);
 
-  // Countdown
   useEffect(() => {
     if (phase !== "COUNTDOWN") return;
     if (countdown <= 0) { playGoSound(); setPhase("PLAYING"); return; }
@@ -266,7 +249,6 @@ const Gamification = () => {
     return () => clearTimeout(t);
   }, [countdown, phase]);
 
-  // Confetti on post-game
   useEffect(() => {
     if (phase !== "POST_GAME") return;
     playVictorySound();
@@ -274,6 +256,14 @@ const Gamification = () => {
     const t = setTimeout(() => setShowConfetti(false), 4000);
     return () => clearTimeout(t);
   }, [phase]);
+
+  const handleSetupComplete = (games: SelectedGame[], ag: AgeGroup, sub: string, cls: string) => {
+    setSelectedGames(games);
+    setAgeGroup(ag);
+    setSubject(sub);
+    setStudentClass(cls);
+    setPhase("WELCOME");
+  };
 
   const startRound = () => {
     startTimeRef.current = Date.now();
@@ -290,12 +280,12 @@ const Gamification = () => {
   };
 
   const goToNextGame = () => {
-    if (currentGame + 1 >= GAME_CONFIG.length) {
+    if (currentGame + 1 >= selectedGames.length) {
       timerActive.current = false;
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 6000);
       setPhase("RESULTS");
-      awardXp("complete_assessment", "Completed Gamification Round");
+      awardXp("complete_assessment", "Completed Adaptive Gamification Round");
     } else {
       setCurrentGame(p => p + 1);
       setPhase("PRE_GAME");
@@ -310,7 +300,8 @@ const Gamification = () => {
     if (results.length === 0) return 0;
     let weighted = 0, totalWeight = 0;
     results.forEach(r => {
-      const config = GAME_CONFIG[r.gameIndex];
+      const config = selectedGames[r.gameIndex];
+      if (!config) return;
       const pct = r.maxScore > 0 ? (r.rawScore / r.maxScore) * 100 : 0;
       weighted += pct * config.weight;
       totalWeight += config.weight;
@@ -321,15 +312,32 @@ const Gamification = () => {
   const cognitiveScore = computeFinalScore();
   const tier = TIER_BADGES.find(t => cognitiveScore >= t.min && cognitiveScore <= t.max) || TIER_BADGES[0];
 
+  const currentGameConfig = selectedGames[currentGame];
+
   const renderGame = () => {
-    const props = { onComplete: handleGameComplete, studentName };
-    switch (currentGame) {
-      case 0: return <PatternFlash {...props} />;
-      case 1: return <NumberBalance {...props} />;
-      case 2: return <WordProof {...props} />;
-      case 3: return <ShapeSequence {...props} />;
-      case 4: return <RapidSort {...props} />;
-      default: return null;
+    if (!currentGameConfig || !ageGroup) return null;
+    const commonProps = {
+      onComplete: handleGameComplete,
+      studentName,
+      ageGroup: ageGroup.id,
+      subject,
+      gameIndex: currentGame,
+      timeLimit: currentGameConfig.timeLimit[ageGroup.id],
+    };
+
+    switch (currentGameConfig.id) {
+      case 'pattern-flash': return <PatternFlash onComplete={handleGameComplete} studentName={studentName} />;
+      case 'number-balance': return <NumberBalance onComplete={handleGameComplete} studentName={studentName} />;
+      case 'word-proof': return <WordProof onComplete={handleGameComplete} studentName={studentName} />;
+      case 'shape-sequence': return <ShapeSequence onComplete={handleGameComplete} studentName={studentName} />;
+      case 'rapid-sort': return <RapidSort onComplete={handleGameComplete} studentName={studentName} />;
+      case 'match-pairs': return <MatchPairs {...commonProps} />;
+      case 'quick-quiz': return <QuickQuiz {...commonProps} />;
+      case 'word-scramble': return <WordScramble {...commonProps} />;
+      case 'category-sort': return <CategorySort {...commonProps} />;
+      case 'speed-tap': return <SpeedTap {...commonProps} />;
+      case 'visual-memory': return <VisualMemory {...commonProps} />;
+      default: return <QuickQuiz {...commonProps} />;
     }
   };
 
@@ -339,7 +347,6 @@ const Gamification = () => {
       <FloatingParticles />
       <Confetti show={showConfetti} />
 
-      {/* Elapsed timer */}
       {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && (
         <div className="fixed top-4 left-4 z-40 flex items-center gap-2 px-4 py-2 rounded-2xl timer-glow"
           style={{ background: "rgba(15,23,42,0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(56,189,248,0.2)" }}>
@@ -352,34 +359,33 @@ const Gamification = () => {
 
       {phase === "PLAYING" && <ScoreTicker score={totalScore} />}
 
-      {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && (
+      {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && selectedGames.length > 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-72">
-          <GameProgressBar current={currentGame} total={GAME_CONFIG.length} />
+          <GameProgressBar current={currentGame} total={selectedGames.length} games={selectedGames} />
         </div>
       )}
 
       <div className="flex items-center justify-center min-h-screen p-4 pt-24 relative z-10">
 
+        {/* ─── SETUP ─── */}
+        {phase === "SETUP" && (
+          <GameSetupScreen onStart={handleSetupComplete} />
+        )}
+
         {/* ─── WELCOME ─── */}
-        {phase === "WELCOME" && (
+        {phase === "WELCOME" && ageGroup && (
           <div className="text-center max-w-2xl mx-auto space-y-8 welcome-enter">
-            {/* Animated hero icon with orbiting elements */}
             <div className="relative w-40 h-40 mx-auto">
-              {/* Outer rotating gradient ring */}
               <div className="absolute inset-0 rounded-full animate-spin-slow" style={{ background: "conic-gradient(from 0deg, #6366F1, #A855F7, #F472B6, #38BDF8, #84CC16, #F59E0B, #6366F1)", padding: 4 }}>
                 <div className="w-full h-full rounded-full" style={{ background: "#0F172A" }} />
               </div>
-              {/* Inner pulsing glow */}
               <div className="absolute inset-3 rounded-full animate-pulse" style={{ background: "radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%)" }} />
-              {/* Center icon */}
               <div className="absolute inset-0 flex items-center justify-center text-6xl game-icon-bounce">🎮</div>
-              {/* Orbiting particles */}
               {[0, 1, 2, 3].map(i => (
                 <div key={i} className="absolute w-3 h-3 rounded-full orbit-particle" style={{
                   background: ["#6366F1", "#A855F7", "#38BDF8", "#F59E0B"][i],
                   boxShadow: `0 0 12px ${["#6366F1", "#A855F7", "#38BDF8", "#F59E0B"][i]}`,
-                  animationDelay: `${i * -1.5}s`,
-                  top: "50%", left: "50%",
+                  animationDelay: `${i * -1.5}s`, top: "50%", left: "50%",
                 }} />
               ))}
             </div>
@@ -387,105 +393,106 @@ const Gamification = () => {
             <div className="space-y-4">
               <h1 className="text-5xl md:text-7xl font-black tracking-tight title-glow"
                 style={{ background: "linear-gradient(135deg, #6366F1 0%, #A855F7 25%, #F472B6 50%, #38BDF8 75%, #84CC16 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Gamification Round
+                Adaptive Round
               </h1>
               <div className="flex items-center justify-center gap-3">
-                <div className="h-px w-12" style={{ background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.5))" }} />
                 <Sparkles className="h-5 w-5 animate-pulse" style={{ color: "#F59E0B" }} />
                 <p className="text-xl font-medium" style={{ color: "rgba(241,245,249,0.7)" }}>
                   Welcome, <span className="font-black" style={{ background: "linear-gradient(135deg, #38BDF8, #6366F1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{studentName}</span>
                 </p>
                 <Sparkles className="h-5 w-5 animate-pulse" style={{ color: "#F59E0B" }} />
-                <div className="h-px w-12" style={{ background: "linear-gradient(90deg, rgba(99,102,241,0.5), transparent)" }} />
               </div>
             </div>
 
-            {/* Enhanced stat cards with animated icons */}
+            {/* Age group & subject badge */}
+            <div className="flex justify-center gap-4 flex-wrap">
+              <div className="px-5 py-3 rounded-2xl flex items-center gap-2" style={{ background: `${ageGroup.color}15`, border: `1px solid ${ageGroup.color}30` }}>
+                <span className="text-xl">{ageGroup.emoji}</span>
+                <div>
+                  <p className="text-xs font-bold" style={{ color: ageGroup.color }}>{ageGroup.label}</p>
+                  <p className="text-[10px]" style={{ color: "rgba(241,245,249,0.4)" }}>Age {ageGroup.ageRange[0]}-{ageGroup.ageRange[1]}</p>
+                </div>
+              </div>
+              <div className="px-5 py-3 rounded-2xl flex items-center gap-2" style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.3)" }}>
+                <span className="text-xl">📘</span>
+                <div>
+                  <p className="text-xs font-bold" style={{ color: "#A855F7" }}>{subject}</p>
+                  <p className="text-[10px]" style={{ color: "rgba(241,245,249,0.4)" }}>Class {studentClass}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
             <div className="flex justify-center gap-5">
               {[
-                { icon: <Timer className="h-7 w-7" />, color: "#38BDF8", glow: "rgba(56,189,248,0.3)", label: "TIMED", value: "Per Game", emoji: "⏱️" },
-                { icon: <Gamepad2 className="h-7 w-7" />, color: "#A855F7", glow: "rgba(168,85,247,0.3)", label: "GAMES", value: "5", emoji: "🎯" },
-                { icon: <Trophy className="h-7 w-7" />, color: "#F59E0B", glow: "rgba(245,158,11,0.3)", label: "DIMENSIONS", value: "5", emoji: "🏆" },
+                { icon: <Timer className="h-7 w-7" />, color: "#38BDF8", label: "TIMED", value: "Per Game" },
+                { icon: <Gamepad2 className="h-7 w-7" />, color: "#A855F7", label: "GAMES", value: "5" },
+                { icon: <Brain className="h-7 w-7" />, color: "#F59E0B", label: "ADAPTIVE", value: ageGroup.label.split(' ')[0] },
               ].map((s, i) => (
-                <div key={i} className="stat-card group relative px-7 py-5 rounded-2xl cursor-default transition-all duration-500 hover:scale-110 hover:-translate-y-2"
-                  style={{ background: `linear-gradient(135deg, ${s.color}10, ${s.color}05)`, border: `1px solid ${s.color}30`, boxShadow: `0 4px 30px ${s.glow}`, animationDelay: `${i * 0.15}s` }}>
-                  {/* Hover glow effect */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at center, ${s.color}15, transparent 70%)` }} />
-                  <div className="relative">
-                    <div className="mx-auto mb-3 w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" style={{ background: `${s.color}20`, color: s.color, boxShadow: `0 0 20px ${s.color}20` }}>
-                      {s.icon}
-                    </div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: `${s.color}80` }}>{s.label}</p>
-                    <p className="text-2xl font-black mt-1" style={{ color: "#F1F5F9" }}>{s.value}</p>
+                <div key={i} className="stat-card group relative px-7 py-5 rounded-2xl cursor-default transition-all duration-500 hover:scale-110"
+                  style={{ background: `${s.color}10`, border: `1px solid ${s.color}30`, animationDelay: `${i * 0.15}s` }}>
+                  <div className="mx-auto mb-3 w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${s.color}20`, color: s.color }}>
+                    {s.icon}
                   </div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: `${s.color}80` }}>{s.label}</p>
+                  <p className="text-2xl font-black mt-1" style={{ color: "#F1F5F9" }}>{s.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* How to Play — enhanced */}
+            {/* Selected Games Preview */}
             <GlassCard className="text-left">
               <Accordion type="single" collapsible>
-                <AccordionItem value="howtoplay" className="border-none">
+                <AccordionItem value="games" className="border-none">
                   <AccordionTrigger className="text-sm font-bold py-2 hover:no-underline" style={{ color: "#F1F5F9" }}>
-                    <span className="flex items-center gap-2"><Target className="h-4 w-4" style={{ color: "#38BDF8" }} /> How to Play</span>
+                    <span className="flex items-center gap-2"><Target className="h-4 w-4" style={{ color: "#38BDF8" }} /> Your 5 Games</span>
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2.5 pt-2">
-                      {GAME_CONFIG.map((g, i) => (
-                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group"
-                          style={{ background: `${g.color}08`, border: `1px solid ${g.color}15` }}>
-                          <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{g.icon}</span>
+                      {selectedGames.map((g, i) => (
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: `${g.color}08`, border: `1px solid ${g.color}15` }}>
+                          <span className="text-2xl">{g.icon}</span>
                           <div>
                             <p className="text-sm font-bold" style={{ color: g.color }}>{g.name}</p>
                             <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{g.objective}</p>
+                            <p className="text-[10px] mt-1" style={{ color: "rgba(241,245,249,0.3)" }}>
+                              {g.dimension} · {g.timeLimit[ageGroup.id]}s
+                            </p>
                           </div>
                         </div>
                       ))}
-                      <div className="pt-3 space-y-1.5 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)" }}>
-                        <p className="text-xs font-bold flex items-center gap-1" style={{ color: "rgba(241,245,249,0.5)" }}><Star className="h-3 w-3" /> Tips</p>
-                        {["Work quickly — speed affects your score", "You cannot go back to previous questions", "Games are adaptive — they get harder as you improve!", "Results are saved to your APAS profile"].map((tip, i) => (
-                          <p key={i} className="text-xs" style={{ color: "rgba(241,245,249,0.4)" }}>• {tip}</p>
-                        ))}
-                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
             </GlassCard>
 
-            {/* T&C checkbox */}
+            {/* T&C */}
             <div className="flex items-center justify-center gap-3">
               <Checkbox id="terms" checked={termsAccepted} onCheckedChange={c => setTermsAccepted(!!c)}
                 className="border-white/30 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500" />
               <label htmlFor="terms" className="text-sm cursor-pointer" style={{ color: "rgba(241,245,249,0.6)" }}>
                 I agree to the{" "}
-                <button onClick={() => setTermsOpen(true)} className="underline font-semibold hover:brightness-125 transition-all" style={{ color: "#38BDF8" }}>
+                <button onClick={() => setTermsOpen(true)} className="underline font-semibold" style={{ color: "#38BDF8" }}>
                   Terms & Conditions
                 </button>
               </label>
             </div>
 
-            {/* Enhanced start button */}
             <button onClick={() => { playClickSound(); startRound(); }} disabled={!termsAccepted}
               className="group relative px-14 py-6 rounded-2xl text-xl font-black tracking-wide transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed hover:scale-110 active:scale-95"
               style={{
                 background: termsAccepted ? "linear-gradient(135deg, #6366F1, #A855F7, #F472B6)" : "rgba(255,255,255,0.1)",
                 color: "#F1F5F9",
-                boxShadow: termsAccepted ? "0 0 60px rgba(99,102,241,0.5), 0 0 120px rgba(168,85,247,0.2), 0 8px 32px rgba(0,0,0,0.3)" : "none",
+                boxShadow: termsAccepted ? "0 0 60px rgba(99,102,241,0.5), 0 8px 32px rgba(0,0,0,0.3)" : "none",
               }}>
-              {termsAccepted && <>
-                <span className="absolute inset-0 rounded-2xl opacity-50 blur-xl" style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)" }} />
-                <span className="absolute inset-0 rounded-2xl animate-pulse opacity-20" style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)" }} />
-                {/* Sparkle particles around button */}
-                <span className="absolute -top-2 -right-2 text-lg animate-bounce">✨</span>
-                <span className="absolute -bottom-1 -left-2 text-sm animate-bounce" style={{ animationDelay: "0.3s" }}>⭐</span>
-              </>}
+              {termsAccepted && <span className="absolute -top-2 -right-2 text-lg animate-bounce">✨</span>}
               <span className="relative flex items-center gap-3">
-                <Rocket className="h-6 w-6 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" /> START ROUND
+                <Rocket className="h-6 w-6" /> START ROUND
               </span>
             </button>
 
-            {/* T&C Modal (unchanged) */}
+            {/* T&C Modal */}
             <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
               <DialogContent className="max-w-lg" style={{ background: "linear-gradient(135deg, #1E1B4B, #0F172A)", border: "1px solid rgba(255,255,255,0.1)", color: "#F1F5F9" }}>
                 <DialogHeader>
@@ -496,54 +503,22 @@ const Gamification = () => {
                 <ScrollArea className="max-h-96 pr-4">
                   <div className="space-y-5 text-sm" style={{ color: "rgba(241,245,249,0.7)" }}>
                     <Section icon={<Shield className="h-4 w-4" style={{ color: "#38BDF8" }} />} title="Fair Play Policy">
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Complete the assessment independently without external help.</li>
-                        <li>Use of calculators, reference materials, or assistance is prohibited.</li>
-                        <li>Screen sharing, recording, or distribution of game content is not allowed.</li>
-                      </ul>
+                      <ul className="list-disc pl-4 space-y-1"><li>Complete independently.</li><li>No external help or calculators.</li></ul>
                     </Section>
                     <Section icon={<Eye className="h-4 w-4" style={{ color: "#A855F7" }} />} title="Data & Privacy">
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Performance data is collected and stored securely to generate your cognitive profile.</li>
-                        <li>Data is used only for educational analytics and personalized learning.</li>
-                        <li>Data will not be shared with third parties without your consent.</li>
-                      </ul>
+                      <ul className="list-disc pl-4 space-y-1"><li>Data stored securely for learning analytics.</li><li>Not shared with third parties.</li></ul>
                     </Section>
                     <Section icon={<BarChart3 className="h-4 w-4" style={{ color: "#84CC16" }} />} title="Scoring & Results">
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Scores are calculated algorithmically and are final.</li>
-                        <li>Results are available immediately on your dashboard.</li>
-                        <li>You may retake the round once every 7 days.</li>
-                      </ul>
-                    </Section>
-                    <Section icon={<Monitor className="h-4 w-4" style={{ color: "#F59E0B" }} />} title="Technical Requirements">
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>A stable internet connection is required.</li>
-                        <li>Do not refresh or close the browser during the round.</li>
-                        <li>APAS is not responsible for technical failures on the student's end.</li>
-                      </ul>
-                    </Section>
-                    <Section icon={<GraduationCap className="h-4 w-4" style={{ color: "#F472B6" }} />} title="Academic Use">
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Results may be shared with your institution's educators for learning support.</li>
-                        <li>Results do not constitute official academic grades unless specified.</li>
-                      </ul>
-                    </Section>
-                    <Section icon={<AlertTriangle className="h-4 w-4" style={{ color: "#EF4444" }} />} title="Conduct">
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Any attempt to exploit bugs, manipulate scores, or tamper with the system will result in disqualification and possible account suspension.</li>
-                      </ul>
+                      <ul className="list-disc pl-4 space-y-1"><li>Scores are final.</li><li>Results available immediately.</li></ul>
                     </Section>
                   </div>
                 </ScrollArea>
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => { setTermsAccepted(true); setTermsOpen(false); }}
-                    className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
-                    style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)", color: "#F1F5F9" }}>
-                    Accept & Continue
+                    className="flex-1 py-3 rounded-xl font-bold text-sm" style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)", color: "#F1F5F9" }}>
+                    Accept
                   </button>
-                  <button onClick={() => setTermsOpen(false)}
-                    className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
+                  <button onClick={() => setTermsOpen(false)} className="flex-1 py-3 rounded-xl font-bold text-sm"
                     style={{ background: "rgba(255,255,255,0.08)", color: "rgba(241,245,249,0.6)" }}>
                     Decline
                   </button>
@@ -554,68 +529,62 @@ const Gamification = () => {
         )}
 
         {/* ─── PRE_GAME ─── */}
-        {phase === "PRE_GAME" && (
+        {phase === "PRE_GAME" && currentGameConfig && ageGroup && (
           <div className="text-center max-w-md mx-auto space-y-6 pregame-enter">
-            {/* Animated game icon */}
             <div className="relative w-24 h-24 mx-auto">
-              <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: GAME_CONFIG[currentGame].color }} />
-              <div className="absolute inset-0 rounded-full animate-pulse" style={{ background: `${GAME_CONFIG[currentGame].color}20`, border: `2px solid ${GAME_CONFIG[currentGame].color}40` }} />
-              <div className="absolute inset-0 flex items-center justify-center text-5xl game-icon-bounce">{GAME_CONFIG[currentGame].icon}</div>
+              <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: currentGameConfig.color }} />
+              <div className="absolute inset-0 rounded-full animate-pulse" style={{ background: `${currentGameConfig.color}20`, border: `2px solid ${currentGameConfig.color}40` }} />
+              <div className="absolute inset-0 flex items-center justify-center text-5xl game-icon-bounce">{currentGameConfig.icon}</div>
             </div>
 
             <div>
-              <h2 className="text-3xl font-black" style={{ color: GAME_CONFIG[currentGame].color }}>
-                {GAME_CONFIG[currentGame].name}
-              </h2>
-              <p className="text-sm mt-1 font-medium" style={{ color: "rgba(241,245,249,0.5)" }}>
-                {GAME_CONFIG[currentGame].dimension}
-              </p>
+              <h2 className="text-3xl font-black" style={{ color: currentGameConfig.color }}>{currentGameConfig.name}</h2>
+              <p className="text-sm mt-1 font-medium" style={{ color: "rgba(241,245,249,0.5)" }}>{currentGameConfig.dimension}</p>
             </div>
 
-            <p className="text-base font-medium" style={{ color: "#F1F5F9" }}>{GAME_CONFIG[currentGame].objective}</p>
+            <p className="text-base font-medium" style={{ color: "#F1F5F9" }}>{currentGameConfig.objective}</p>
 
-            <GlassCard glow={GAME_CONFIG[currentGame].color}>
+            <GlassCard glow={currentGameConfig.color}>
               <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: "rgba(241,245,249,0.4)" }}>HOW TO PLAY</p>
-              {GAME_CONFIG[currentGame].rules.map((r, i) => (
-                <div key={i} className="flex items-start gap-2 mb-2" style={{ animationDelay: `${i * 0.1}s` }}>
-                  <ChevronRight className="h-4 w-4 mt-0.5 shrink-0" style={{ color: GAME_CONFIG[currentGame].color }} />
+              {currentGameConfig.rules[ageGroup.id].map((r, i) => (
+                <div key={i} className="flex items-start gap-2 mb-2">
+                  <ChevronRight className="h-4 w-4 mt-0.5 shrink-0" style={{ color: currentGameConfig.color }} />
                   <span className="text-sm text-left" style={{ color: "rgba(241,245,249,0.7)" }}>{r}</span>
                 </div>
               ))}
             </GlassCard>
 
             <div className="flex justify-center gap-4">
-              {[
-                { emoji: "⏱", value: `${GAME_CONFIG[currentGame].timeLimit}s`, label: "Time" },
-                { emoji: "📊", value: GAME_CONFIG[currentGame].scoring, label: "Scoring" },
-              ].map((b, i) => (
-                <div key={i} className="px-5 py-3 rounded-xl text-center" style={{ background: `${GAME_CONFIG[currentGame].color}10`, border: `1px solid ${GAME_CONFIG[currentGame].color}20` }}>
-                  <span className="text-lg">{b.emoji}</span>
-                  <p className="text-sm font-bold mt-1" style={{ color: "#F1F5F9" }}>{b.value}</p>
-                  <p className="text-[10px] uppercase" style={{ color: "rgba(241,245,249,0.4)" }}>{b.label}</p>
-                </div>
-              ))}
+              <div className="px-5 py-3 rounded-xl text-center" style={{ background: `${currentGameConfig.color}10`, border: `1px solid ${currentGameConfig.color}20` }}>
+                <span className="text-lg">⏱</span>
+                <p className="text-sm font-bold mt-1" style={{ color: "#F1F5F9" }}>{currentGameConfig.timeLimit[ageGroup.id]}s</p>
+                <p className="text-[10px] uppercase" style={{ color: "rgba(241,245,249,0.4)" }}>Time</p>
+              </div>
+              <div className="px-5 py-3 rounded-xl text-center" style={{ background: `${currentGameConfig.color}10`, border: `1px solid ${currentGameConfig.color}20` }}>
+                <span className="text-lg">📊</span>
+                <p className="text-sm font-bold mt-1" style={{ color: "#F1F5F9" }}>{currentGameConfig.scoring}</p>
+                <p className="text-[10px] uppercase" style={{ color: "rgba(241,245,249,0.4)" }}>Scoring</p>
+              </div>
             </div>
 
             <button onClick={startCountdown}
               className="group px-10 py-4 rounded-2xl font-black text-lg transition-all duration-300 hover:scale-110 active:scale-95"
-              style={{ background: GAME_CONFIG[currentGame].color, color: "#0F172A", boxShadow: `0 0 40px ${GAME_CONFIG[currentGame].color}50` }}>
-              <span className="flex items-center gap-2">Ready? Let's Go! <Zap className="h-5 w-5 group-hover:rotate-12 transition-transform" /></span>
+              style={{ background: currentGameConfig.color, color: "#0F172A", boxShadow: `0 0 40px ${currentGameConfig.color}50` }}>
+              <span className="flex items-center gap-2">Ready? Let's Go! <Zap className="h-5 w-5" /></span>
             </button>
           </div>
         )}
 
         {/* ─── COUNTDOWN ─── */}
-        {phase === "COUNTDOWN" && (
+        {phase === "COUNTDOWN" && currentGameConfig && (
           <div className="text-center countdown-pop">
             <div className="relative">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 rounded-full animate-ping opacity-10" style={{ background: GAME_CONFIG[currentGame].color }} />
+                <div className="w-48 h-48 rounded-full animate-ping opacity-10" style={{ background: currentGameConfig.color }} />
               </div>
               <div className="text-[10rem] font-black leading-none" style={{
-                color: countdown > 0 ? GAME_CONFIG[currentGame].color : "#22C55E",
-                textShadow: `0 0 80px ${countdown > 0 ? GAME_CONFIG[currentGame].color : "#22C55E"}80, 0 0 160px ${countdown > 0 ? GAME_CONFIG[currentGame].color : "#22C55E"}30`,
-                filter: "drop-shadow(0 0 30px currentColor)",
+                color: countdown > 0 ? currentGameConfig.color : "#22C55E",
+                textShadow: `0 0 80px ${countdown > 0 ? currentGameConfig.color : "#22C55E"}80`,
               }}>
                 {countdown > 0 ? countdown : "GO!"}
               </div>
@@ -639,18 +608,12 @@ const Gamification = () => {
                     <AlertTriangle className="h-5 w-5" style={{ color: "#EF4444" }} /> Quit Game?
                   </DialogTitle>
                 </DialogHeader>
-                <p className="text-sm" style={{ color: "rgba(241,245,249,0.6)" }}>
-                  Are you sure? Your progress will be saved with partial results.
-                </p>
+                <p className="text-sm" style={{ color: "rgba(241,245,249,0.6)" }}>Your progress will be saved with partial results.</p>
                 <div className="flex gap-3 pt-2">
-                  <button onClick={handleQuit} className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105"
-                    style={{ background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)", color: "#EF4444" }}>
-                    Yes, Quit
-                  </button>
-                  <button onClick={() => setQuitConfirm(false)} className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105"
-                    style={{ background: "rgba(255,255,255,0.08)", color: "#F1F5F9" }}>
-                    Continue Playing
-                  </button>
+                  <button onClick={handleQuit} className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                    style={{ background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)", color: "#EF4444" }}>Yes, Quit</button>
+                  <button onClick={() => setQuitConfirm(false)} className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                    style={{ background: "rgba(255,255,255,0.08)", color: "#F1F5F9" }}>Continue</button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -658,26 +621,21 @@ const Gamification = () => {
         )}
 
         {/* ─── POST_GAME ─── */}
-        {phase === "POST_GAME" && results.length > 0 && (
+        {phase === "POST_GAME" && results.length > 0 && currentGameConfig && (
           <div className="text-center max-w-md mx-auto space-y-6 postgame-enter">
             {(() => {
               const r = results[results.length - 1];
               const speedRating = r.avgResponseTime < 1500 ? "Fast ⚡" : r.avgResponseTime < 3000 ? "Average 🏃" : "Slow 🐢";
               return (
                 <>
-                  {/* Trophy animation */}
                   <div className="relative w-20 h-20 mx-auto">
-                    <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: GAME_CONFIG[r.gameIndex].color }} />
+                    <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: currentGameConfig.color }} />
                     <div className="absolute inset-0 flex items-center justify-center text-5xl trophy-bounce">🏆</div>
                   </div>
-
                   <div>
-                    <h2 className="text-2xl font-black" style={{ color: GAME_CONFIG[r.gameIndex].color }}>
-                      {r.gameName}
-                    </h2>
+                    <h2 className="text-2xl font-black" style={{ color: currentGameConfig.color }}>{r.gameName}</h2>
                     <p className="text-lg font-bold mt-1" style={{ color: "#22C55E" }}>Complete! ✨</p>
                   </div>
-
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { label: "Score", value: String(r.rawScore), color: "#6366F1" },
@@ -690,27 +648,13 @@ const Gamification = () => {
                       </GlassCard>
                     ))}
                   </div>
-
-                  <GlassCard glow={GAME_CONFIG[r.gameIndex].color}>
-                    <div className="flex items-center justify-center gap-3">
-                      <Sparkles className="h-5 w-5" style={{ color: GAME_CONFIG[r.gameIndex].color }} />
-                      <div>
-                        <p className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(241,245,249,0.4)" }}>Badge Unlocked</p>
-                        <p className="text-lg font-black" style={{ color: GAME_CONFIG[r.gameIndex].color }}>
-                          {COGNITIVE_BADGES[r.gameIndex]}
-                        </p>
-                      </div>
-                      <Sparkles className="h-5 w-5" style={{ color: GAME_CONFIG[r.gameIndex].color }} />
-                    </div>
-                  </GlassCard>
-
                   <button onClick={goToNextGame}
                     className="group px-10 py-4 rounded-2xl font-black text-base transition-all duration-300 hover:scale-110 active:scale-95 flex items-center gap-3 mx-auto"
                     style={{ background: "linear-gradient(135deg, #6366F1, #A855F7)", color: "#F1F5F9", boxShadow: "0 0 40px rgba(99,102,241,0.4)" }}>
-                    {currentGame + 1 >= GAME_CONFIG.length ? (
-                      <>View Results <BarChart3 className="h-5 w-5 group-hover:scale-110 transition-transform" /></>
+                    {currentGame + 1 >= selectedGames.length ? (
+                      <>View Results <BarChart3 className="h-5 w-5" /></>
                     ) : (
-                      <>Next Game <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
+                      <>Next Game <ArrowRight className="h-5 w-5" /></>
                     )}
                   </button>
                 </>
@@ -729,11 +673,10 @@ const Gamification = () => {
                 Final Results
               </h1>
               <p className="text-sm font-medium" style={{ color: "rgba(241,245,249,0.5)" }}>
-                Completed in {formatElapsed(elapsedTime)}
+                Completed in {formatElapsed(elapsedTime)} · {ageGroup?.label} · {subject}
               </p>
             </div>
 
-            {/* Overall Score */}
             <GlassCard className="text-center" glow="#6366F1">
               <div className="relative inline-block">
                 <CircularTimer timeLeft={cognitiveScore} total={100} size={180} />
@@ -751,7 +694,7 @@ const Gamification = () => {
             <GlassCard>
               <p className="text-[10px] uppercase tracking-widest font-bold text-center mb-3" style={{ color: "rgba(241,245,249,0.4)" }}>COGNITIVE PROFILE</p>
               <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={GAME_CONFIG.map((g, i) => {
+                <RadarChart data={selectedGames.map((g, i) => {
                   const r = results.find(r => r.gameIndex === i);
                   return { dimension: g.dimension.split(" ")[0], score: r ? Math.round((r.rawScore / Math.max(r.maxScore, 1)) * 100) : 0, fullMark: 100 };
                 })}>
@@ -781,146 +724,68 @@ const Gamification = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r, i) => (
-                    <tr key={i} className="transition-colors hover:bg-white/[0.03]" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                      <td className="p-4 font-bold" style={{ color: GAME_CONFIG[r.gameIndex].color }}>
-                        <span className="mr-2">{GAME_CONFIG[r.gameIndex].icon}</span>{r.gameName}
-                      </td>
-                      <td className="text-center p-4 font-black" style={{ color: "#F1F5F9" }}>{r.rawScore}</td>
-                      <td className="text-center p-4 font-bold" style={{ color: r.accuracy >= 70 ? "#22C55E" : r.accuracy >= 40 ? "#F59E0B" : "#EF4444" }}>
-                        {r.accuracy}%
-                      </td>
-                      <td className="text-center p-4" style={{ color: "rgba(241,245,249,0.6)" }}>{r.timeUsed}s</td>
-                    </tr>
-                  ))}
+                  {results.map((r, i) => {
+                    const gameConf = selectedGames[r.gameIndex];
+                    return (
+                      <tr key={i} className="transition-colors hover:bg-white/[0.03]" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                        <td className="p-4 font-bold" style={{ color: gameConf?.color || "#F1F5F9" }}>
+                          <span className="mr-2">{gameConf?.icon}</span>{r.gameName}
+                        </td>
+                        <td className="text-center p-4 font-black" style={{ color: "#F1F5F9" }}>{r.rawScore}</td>
+                        <td className="text-center p-4 font-bold" style={{ color: r.accuracy >= 70 ? "#22C55E" : r.accuracy >= 40 ? "#F59E0B" : "#EF4444" }}>
+                          {r.accuracy}%
+                        </td>
+                        <td className="text-center p-4" style={{ color: "rgba(241,245,249,0.6)" }}>{r.timeUsed}s</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </GlassCard>
 
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setPhase("WELCOME"); setResults([]); setCurrentGame(0); setElapsedTime(0); setTermsAccepted(false); }}
+              <button onClick={() => { setPhase("SETUP"); setResults([]); setCurrentGame(0); setElapsedTime(0); setTermsAccepted(false); setSelectedGames([]); }}
                 className="group px-8 py-4 rounded-2xl font-black text-sm transition-all duration-300 hover:scale-105"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#F1F5F9" }}>
-                <span className="flex items-center gap-2">🔄 Retake Round</span>
+                <span className="flex items-center gap-2">🔄 New Round</span>
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Global animation styles */}
       <style>{`
-        @keyframes celebration-fall {
-          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-          80% { opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
+        @keyframes celebration-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
         .celebration-fall { animation: celebration-fall linear forwards; }
-
-        @keyframes celebration-sway-fall {
-          0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
-          25% { transform: translateY(25vh) translateX(var(--sway, 40px)) rotate(90deg); }
-          50% { transform: translateY(50vh) translateX(calc(var(--sway, 40px) * -0.5)) rotate(180deg); }
-          75% { transform: translateY(75vh) translateX(var(--sway, 40px)) rotate(270deg); opacity: 0.8; }
-          100% { transform: translateY(100vh) translateX(0) rotate(360deg); opacity: 0; }
-        }
+        @keyframes celebration-sway-fall { 0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; } 25% { transform: translateY(25vh) translateX(var(--sway, 40px)) rotate(90deg); } 50% { transform: translateY(50vh) translateX(calc(var(--sway, 40px) * -0.5)) rotate(180deg); } 75% { transform: translateY(75vh) translateX(var(--sway, 40px)) rotate(270deg); opacity: 0.8; } 100% { transform: translateY(100vh) translateX(0) rotate(360deg); opacity: 0; } }
         .celebration-sway-fall { animation: celebration-sway-fall ease-in-out forwards; }
-
-        @keyframes orb-float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(30px, -50px) scale(1.1); }
-          50% { transform: translate(-20px, 30px) scale(0.9); }
-          75% { transform: translate(40px, 20px) scale(1.05); }
-        }
+        @keyframes orb-float { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(30px, -50px) scale(1.1); } 50% { transform: translate(-20px, 30px) scale(0.9); } 75% { transform: translate(40px, 20px) scale(1.05); } }
         .orb-float { animation: orb-float ease-in-out infinite; }
-
-        @keyframes particle-rise {
-          0% { transform: translateY(0) translateX(0); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 0.5; }
-          100% { transform: translateY(-100vh) translateX(${Math.random() > 0.5 ? '' : '-'}40px); opacity: 0; }
-        }
+        @keyframes particle-rise { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 0.5; } 100% { transform: translateY(-100vh); opacity: 0; } }
         .particle-rise { animation: particle-rise linear infinite; }
-
-        @keyframes shooting-star {
-          0% { transform: translateX(-100px) translateY(0); opacity: 0; width: 0; }
-          5% { opacity: 1; }
-          30% { opacity: 0; width: 200px; }
-          100% { transform: translateX(100vw) translateY(200px); opacity: 0; width: 0; }
-        }
-        .shooting-star {
-          position: absolute;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, #38BDF8, transparent);
-          animation: shooting-star 12s linear infinite;
-        }
-
-        @keyframes welcome-enter {
-          0% { opacity: 0; transform: translateY(40px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes shooting-star { 0% { transform: translateX(-100px); opacity: 0; width: 0; } 5% { opacity: 1; } 30% { opacity: 0; width: 200px; } 100% { transform: translateX(100vw); opacity: 0; width: 0; } }
+        .shooting-star { position: absolute; height: 1px; background: linear-gradient(90deg, transparent, #38BDF8, transparent); animation: shooting-star 12s linear infinite; }
+        @keyframes welcome-enter { 0% { opacity: 0; transform: translateY(40px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         .welcome-enter { animation: welcome-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        @keyframes pregame-enter {
-          0% { opacity: 0; transform: scale(0.8) rotate(-2deg); }
-          100% { opacity: 1; transform: scale(1) rotate(0deg); }
-        }
+        @keyframes pregame-enter { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
         .pregame-enter { animation: pregame-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-        @keyframes game-enter {
-          0% { opacity: 0; transform: translateX(60px); }
-          100% { opacity: 1; transform: translateX(0); }
-        }
+        @keyframes game-enter { 0% { opacity: 0; transform: translateX(60px); } 100% { opacity: 1; transform: translateX(0); } }
         .game-enter { animation: game-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        @keyframes postgame-enter {
-          0% { opacity: 0; transform: scale(0.9) translateY(30px); }
-          60% { transform: scale(1.02) translateY(-5px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
+        @keyframes postgame-enter { 0% { opacity: 0; transform: scale(0.9) translateY(30px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
         .postgame-enter { animation: postgame-enter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-        @keyframes results-enter {
-          0% { opacity: 0; transform: translateY(60px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes results-enter { 0% { opacity: 0; transform: translateY(60px); } 100% { opacity: 1; transform: translateY(0); } }
         .results-enter { animation: results-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        @keyframes countdown-pop {
-          0% { opacity: 0; transform: scale(3); }
-          50% { opacity: 1; transform: scale(0.9); }
-          100% { opacity: 1; transform: scale(1); }
-        }
+        @keyframes countdown-pop { 0% { opacity: 0; transform: scale(3); } 50% { opacity: 1; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
         .countdown-pop { animation: countdown-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-        @keyframes trophy-bounce {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-12px) rotate(-5deg); }
-          50% { transform: translateY(0) rotate(0deg); }
-          75% { transform: translateY(-6px) rotate(5deg); }
-        }
+        @keyframes trophy-bounce { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-12px) rotate(-5deg); } 75% { transform: translateY(-6px) rotate(5deg); } }
         .trophy-bounce { animation: trophy-bounce 2s ease-in-out infinite; }
-
-        @keyframes game-icon-bounce {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.15) rotate(-5deg); }
-          50% { transform: scale(1) rotate(0deg); }
-          75% { transform: scale(1.1) rotate(5deg); }
-        }
+        @keyframes game-icon-bounce { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.15) rotate(-5deg); } 75% { transform: scale(1.1) rotate(5deg); } }
         .game-icon-bounce { animation: game-icon-bounce 2.5s ease-in-out infinite; }
-
         .title-glow { filter: drop-shadow(0 0 30px rgba(99,102,241,0.4)); }
-
-        .timer-glow { box-shadow: 0 0 20px rgba(56,189,248,0.15), inset 0 1px 0 rgba(255,255,255,0.1); }
-
+        .timer-glow { box-shadow: 0 0 20px rgba(56,189,248,0.15); }
         .progress-glow { box-shadow: 0 0 12px rgba(99,102,241,0.4); }
-
         .stat-card { animation: welcome-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-        @keyframes orbit {
-          0% { transform: translate(-50%, -50%) rotate(0deg) translateX(80px) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(360deg) translateX(80px) rotate(-360deg); }
-        }
+        @keyframes orbit { 0% { transform: translate(-50%, -50%) rotate(0deg) translateX(80px) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg) translateX(80px) rotate(-360deg); } }
         .orbit-particle { animation: orbit 6s linear infinite; }
       `}</style>
     </div>
@@ -928,26 +793,5 @@ const Gamification = () => {
 
   return <AppLayout>{gameWrapper}</AppLayout>;
 };
-
-function StatBox({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="p-4 rounded-xl text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-      <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: "rgba(241,245,249,0.4)" }}>{label}</p>
-      <p className="text-xl font-black" style={{ color }}>{value}</p>
-    </div>
-  );
-}
-
-function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        {icon}
-        <h3 className="text-sm font-bold" style={{ color: "#F1F5F9" }}>{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-}
 
 export default Gamification;
