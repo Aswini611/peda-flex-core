@@ -76,7 +76,7 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
   };
 
   const handleAnswer = (selectedIndex: number) => {
-    const q = questions.current[qIndex % questions.current.length];
+    const q = qIndex < questions.current.length ? questions.current[qIndex] : null;
     if (!q) return;
     
     responseTimes.current.push(Date.now() - qStart.current);
@@ -111,11 +111,11 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
     }, 1000);
   };
 
-  const q = questions.current[qIndex % Math.max(questions.current.length, 1)];
+  const q = qIndex < questions.current.length ? questions.current[qIndex] : null;
   const timerColor = timeLeft > timeLimit * 0.5 ? "#22C55E" : timeLeft > timeLimit * 0.2 ? "#F59E0B" : "#EF4444";
   const qTimerMax = getQTime();
 
-  if (!q) return <div className="text-center" style={{ color: "#F1F5F9" }}>Loading questions...</div>;
+  if (!q) { if (qIndex > 0 && !feedback) { finishGame(); } return <div className="text-center" style={{ color: "#F1F5F9" }}>Loading questions...</div>; }
 
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">

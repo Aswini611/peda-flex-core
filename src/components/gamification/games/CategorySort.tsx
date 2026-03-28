@@ -52,7 +52,7 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
     return () => clearTimeout(t);
   }, [timeLeft, attempted]);
 
-  const cat = categories.current[catIndex % Math.max(categories.current.length, 1)];
+  const cat = catIndex < categories.current.length ? categories.current[catIndex] : categories.current[0];
 
   const finishGame = () => {
     const timeUsed = Math.round((Date.now() - startTime.current) / 1000);
