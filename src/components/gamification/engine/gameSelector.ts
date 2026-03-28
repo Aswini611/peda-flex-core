@@ -22,8 +22,17 @@ export function selectGamesForStudent(
 ): SelectedGame[] {
   const normalizedSubject = subject.toLowerCase().trim();
 
-  // Get all eligible games for this age group
-  const eligible = GAME_REGISTRY.filter(g => g.ageGroups.includes(ageGroupId));
+  // Get all eligible games for this age group AND subject
+  const eligible = GAME_REGISTRY.filter(g => {
+    if (!g.ageGroups.includes(ageGroupId)) return false;
+    // Only include games that are subject-compatible
+    if (g.subjects === 'all') return true;
+    return g.subjects.some(s => 
+      s.toLowerCase() === normalizedSubject || 
+      normalizedSubject.includes(s.toLowerCase()) ||
+      s.toLowerCase().includes(normalizedSubject)
+    );
+  });
 
   // Separate by category
   const byCategory: Record<GameCategory, GameDefinition[]> = {
