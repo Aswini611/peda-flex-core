@@ -49,7 +49,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
     return () => clearTimeout(t);
   }, [timeLeft, totalQ]);
 
-  const currentSet = sets.current[setIndex % Math.max(sets.current.length, 1)];
+  const currentSet = setIndex < sets.current.length ? sets.current[setIndex] : sets.current[0];
 
   const finishGame = () => {
     const timeUsed = Math.round((Date.now() - startTime.current) / 1000);

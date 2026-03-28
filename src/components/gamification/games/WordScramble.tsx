@@ -59,7 +59,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
     return () => clearTimeout(t);
   }, [timeLeft, wordIndex]);
 
-  const currentWord = words.current[wordIndex % Math.max(words.current.length, 1)];
+  const currentWord = wordIndex < words.current.length ? words.current[wordIndex] : null;
 
   const finishGame = () => {
     const timeUsed = Math.round((Date.now() - startTime.current) / 1000);
@@ -111,8 +111,8 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
           return;
         }
         setWordIndex(nextIdx);
-        if (words.current[nextIdx % words.current.length]) {
-          setScrambled(shuffleWord(words.current[nextIdx % words.current.length].word));
+        if (nextIdx < words.current.length && words.current[nextIdx]) {
+          setScrambled(shuffleWord(words.current[nextIdx].word));
         }
         wordStart.current = Date.now();
         playNextSound();

@@ -38,7 +38,7 @@ export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit }
   const getSpawnRate = () => ageGroup === 'early_learners' ? 2000 : ageGroup === 'explorers' ? 1500 : 1200;
 
   const spawnItem = useCallback(() => {
-    const rule = rules.current[ruleIndex % Math.max(rules.current.length, 1)];
+    const rule = ruleIndex < rules.current.length ? rules.current[ruleIndex] : rules.current[0];
     if (!rule) return;
     const allPool = [...rule.targets, ...rule.distractors];
     const text = allPool[Math.floor(Math.random() * allPool.length)];
@@ -117,7 +117,7 @@ export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit }
     }
   };
 
-  const rule = rules.current[ruleIndex % Math.max(rules.current.length, 1)];
+  const rule = ruleIndex < rules.current.length ? rules.current[ruleIndex] : rules.current[0];
   const timerColor = timeLeft > timeLimit * 0.5 ? "#22C55E" : timeLeft > timeLimit * 0.2 ? "#F59E0B" : "#EF4444";
 
   return (
