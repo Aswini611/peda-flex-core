@@ -18,6 +18,7 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   const [catIndex, setCatIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState('');
   const [correctSide, setCorrectSide] = useState<'left' | 'right'>('left');
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [attempted, setAttempted] = useState(0);
@@ -46,10 +47,10 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || attempted >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, attempted]);
 
   const cat = categories.current[catIndex % Math.max(categories.current.length, 1)];
 
@@ -90,6 +91,11 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
 
     setTimeout(() => {
       setFeedback(null);
+      // Check if we've reached max after state update
+      const nextAttempted = attempted + 1;
+      if (nextAttempted >= MAX_QUESTIONS) {
+        return; // useEffect will trigger finishGame
+      }
       playNextSound();
       spawnItem(cat);
     }, 500);
@@ -102,7 +108,7 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
-        <span className="text-sm font-medium" style={{ color: "#22C55E" }}>Sorted: {attempted}</span>
+        <span className="text-sm font-medium" style={{ color: "#22C55E" }}>Sorted: {attempted}/{MAX_QUESTIONS}</span>
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>

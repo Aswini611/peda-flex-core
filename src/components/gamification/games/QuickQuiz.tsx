@@ -28,6 +28,8 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
 
   const getQTime = () => ageGroup === 'early_learners' ? 20 : ageGroup === 'explorers' ? 15 : ageGroup === 'thinkers' ? 12 : 10;
 
+  const MAX_QUESTIONS = 10;
+
   useEffect(() => {
     const q = getQuizQuestions(subject, ageGroup);
     // Shuffle
@@ -42,10 +44,10 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || qIndex >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, qIndex]);
 
   useEffect(() => {
     if (feedback) return;
@@ -97,7 +99,12 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
 
     setTimeout(() => {
       setFeedback(null);
-      setQIndex(p => p + 1);
+      const nextQ = qIndex + 1;
+      if (nextQ >= MAX_QUESTIONS) {
+        finishGame();
+        return;
+      }
+      setQIndex(nextQ);
       setQTimeLeft(getQTime());
       qStart.current = Date.now();
       playNextSound();
@@ -114,7 +121,7 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
         <div className="flex flex-col">
-          <span className="text-sm font-medium" style={{ color: "#6366F1" }}>Q{qIndex + 1}</span>
+          <span className="text-sm font-medium" style={{ color: "#6366F1" }}>Q{qIndex + 1}/{MAX_QUESTIONS}</span>
           {streak >= 2 && <span className="text-xs" style={{ color: "#F59E0B" }}>🔥 Streak: {streak}</span>}
         </div>
         <div className="flex items-center gap-3">

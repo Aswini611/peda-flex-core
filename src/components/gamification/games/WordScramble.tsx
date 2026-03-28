@@ -31,6 +31,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   const [wordIndex, setWordIndex] = useState(0);
   const [scrambled, setScrambled] = useState<string[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
@@ -53,10 +54,10 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || wordIndex >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, wordIndex]);
 
   const currentWord = words.current[wordIndex % Math.max(words.current.length, 1)];
 
@@ -105,6 +106,10 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
         setSelected([]);
         setShowHint(false);
         const nextIdx = wordIndex + 1;
+        if (nextIdx >= MAX_QUESTIONS) {
+          finishGame();
+          return;
+        }
         setWordIndex(nextIdx);
         if (words.current[nextIdx % words.current.length]) {
           setScrambled(shuffleWord(words.current[nextIdx % words.current.length].word));
@@ -126,7 +131,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
-        <span className="text-sm font-medium" style={{ color: "#EC4899" }}>Word {wordIndex + 1}</span>
+        <span className="text-sm font-medium" style={{ color: "#EC4899" }}>Word {wordIndex + 1}/{MAX_QUESTIONS}</span>
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>

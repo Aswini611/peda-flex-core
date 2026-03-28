@@ -18,6 +18,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
   const [setIndex, setSetIndex] = useState(0);
   const [phase, setPhase] = useState<'memorize' | 'question' | 'feedback'>('memorize');
   const [qIndex, setQIndex] = useState(0);
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [totalQ, setTotalQ] = useState(0);
@@ -43,10 +44,10 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || totalQ >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, totalQ]);
 
   const currentSet = sets.current[setIndex % Math.max(sets.current.length, 1)];
 
@@ -119,7 +120,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
-        <span className="text-sm font-medium" style={{ color: "#FF6B6B" }}>Round {setIndex + 1}</span>
+        <span className="text-sm font-medium" style={{ color: "#FF6B6B" }}>Round {setIndex + 1} · Q {totalQ}/{MAX_QUESTIONS}</span>
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>
