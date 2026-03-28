@@ -131,7 +131,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
-        <span className="text-sm font-medium" style={{ color: "#EC4899" }}>Word {wordIndex + 1}</span>
+        <span className="text-sm font-medium" style={{ color: "#EC4899" }}>Word {wordIndex + 1}/{MAX_QUESTIONS}</span>
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>
