@@ -18,6 +18,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
   const [setIndex, setSetIndex] = useState(0);
   const [phase, setPhase] = useState<'memorize' | 'question' | 'feedback'>('memorize');
   const [qIndex, setQIndex] = useState(0);
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [totalQ, setTotalQ] = useState(0);
@@ -43,10 +44,10 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || totalQ >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, totalQ]);
 
   const currentSet = sets.current[setIndex % Math.max(sets.current.length, 1)];
 

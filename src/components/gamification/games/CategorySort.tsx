@@ -18,6 +18,7 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   const [catIndex, setCatIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState('');
   const [correctSide, setCorrectSide] = useState<'left' | 'right'>('left');
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [attempted, setAttempted] = useState(0);
@@ -46,10 +47,10 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || attempted >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, attempted]);
 
   const cat = categories.current[catIndex % Math.max(categories.current.length, 1)];
 

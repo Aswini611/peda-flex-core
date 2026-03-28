@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AgeGroup, getAgeGroupByClass, AGE_GROUPS } from "../engine/ageGroups";
+import { AgeGroup, getAgeGroupByAge, AGE_GROUPS } from "../engine/ageGroups";
 import { selectGamesForStudent, SelectedGame } from "../engine/gameSelector";
-import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, Loader2 } from "lucide-react";
+import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, Loader2, User } from "lucide-react";
 
 interface Props {
   studentAge?: number;
@@ -17,24 +17,31 @@ const CLASS_OPTIONS = [
 ];
 
 export function GameSetupScreen({ studentAge, onStart }: Props) {
+  const [age, setAge] = useState<string>(studentAge ? String(studentAge) : '');
   const [selectedClass, setSelectedClass] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
 
+  // Update age group whenever age changes
+  useEffect(() => {
+    const numAge = parseInt(age);
+    if (numAge >= 4 && numAge <= 18) {
+      setAgeGroup(getAgeGroupByAge(numAge));
+    } else {
+      setAgeGroup(null);
+    }
+  }, [age]);
+
+  // Load subjects when class changes
   useEffect(() => {
     if (!selectedClass) { setSubjects([]); setSelectedSubject(''); return; }
-    const ag = getAgeGroupByClass(selectedClass);
-    setAgeGroup(ag);
-
-    // Load subjects from DB
     setLoadingSubjects(true);
     setSelectedSubject('');
     supabase.functions.invoke('list-subjects', { body: { studentClass: selectedClass } })
       .then(({ data }) => {
         const subs = data?.subjects || [];
-        // Fallback subjects if none found
         if (subs.length === 0) {
           setSubjects(['Maths', 'Science', 'English', 'Social Science', 'Hindi', 'General Knowledge']);
         } else {
@@ -53,7 +60,8 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
     onStart(games, ageGroup, selectedSubject, selectedClass);
   };
 
-  const canStart = selectedClass && selectedSubject && ageGroup;
+  const validAge = parseInt(age) >= 4 && parseInt(age) <= 18;
+  const canStart = validAge && selectedClass && selectedSubject && ageGroup;
 
   return (
     <div className="text-center max-w-xl mx-auto space-y-8 welcome-enter">
@@ -71,44 +79,78 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
           Adaptive Game Round
         </h1>
         <p className="text-sm mt-2" style={{ color: "rgba(241,245,249,0.5)" }}>
-          Games are personalized based on your class & subject
+          Games are personalized based on your age, class & subject
         </p>
       </div>
 
-      {/* Class Selection */}
+      {/* Age Input */}
       <div className="space-y-3">
         <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
-          <GraduationCap className="h-4 w-4" /> Select Your Class
+          <User className="h-4 w-4" /> Enter Your Age
         </label>
-        <div className="flex flex-wrap gap-2 justify-center">
-          {CLASS_OPTIONS.map(cls => (
-            <button key={cls.value} onClick={() => setSelectedClass(cls.value)}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 ${selectedClass === cls.value ? 'scale-105' : ''}`}
+        <div className="flex items-center justify-center gap-3">
+          <div className="relative">
+            <input
+              type="number"
+              min={4}
+              max={18}
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder="e.g. 13"
+              className="w-32 text-center text-2xl font-black py-3 px-4 rounded-2xl outline-none transition-all duration-200 focus:scale-105"
               style={{
-                background: selectedClass === cls.value ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.05)",
-                border: `1px solid ${selectedClass === cls.value ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`,
-                color: selectedClass === cls.value ? "#818CF8" : "rgba(241,245,249,0.6)",
-              }}>
-              {cls.label}
-            </button>
-          ))}
+                background: "rgba(255,255,255,0.08)",
+                border: `2px solid ${validAge ? "rgba(99,102,241,0.6)" : age ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.15)"}`,
+                color: "#F1F5F9",
+                caretColor: "#6366F1",
+              }}
+            />
+          </div>
+          <span className="text-sm font-medium" style={{ color: "rgba(241,245,249,0.4)" }}>years</span>
         </div>
+        {age && !validAge && (
+          <p className="text-xs animate-fade-in" style={{ color: "#EF4444" }}>
+            Please enter an age between 4 and 18
+          </p>
+        )}
       </div>
 
       {/* Age Group Badge */}
-      {ageGroup && (
+      {ageGroup && validAge && (
         <div className="flex items-center justify-center gap-3 py-3 px-6 rounded-2xl mx-auto w-fit animate-fade-in"
           style={{ background: `${ageGroup.color}15`, border: `1px solid ${ageGroup.color}30` }}>
           <span className="text-2xl">{ageGroup.emoji}</span>
           <div className="text-left">
             <p className="text-sm font-bold" style={{ color: ageGroup.color }}>{ageGroup.label}</p>
-            <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{ageGroup.description}</p>
+            <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{ageGroup.description} · Age {ageGroup.ageRange[0]}-{ageGroup.ageRange[1]}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Class Selection */}
+      {validAge && (
+        <div className="space-y-3 animate-fade-in">
+          <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
+            <GraduationCap className="h-4 w-4" /> Select Your Class
+          </label>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {CLASS_OPTIONS.map(cls => (
+              <button key={cls.value} onClick={() => setSelectedClass(cls.value)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 ${selectedClass === cls.value ? 'scale-105' : ''}`}
+                style={{
+                  background: selectedClass === cls.value ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${selectedClass === cls.value ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`,
+                  color: selectedClass === cls.value ? "#818CF8" : "rgba(241,245,249,0.6)",
+                }}>
+                {cls.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
       {/* Subject Selection */}
-      {selectedClass && (
+      {validAge && selectedClass && (
         <div className="space-y-3 animate-fade-in">
           <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
             <BookOpen className="h-4 w-4" /> Select Subject

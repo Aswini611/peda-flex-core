@@ -31,6 +31,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   const [wordIndex, setWordIndex] = useState(0);
   const [scrambled, setScrambled] = useState<string[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
@@ -53,10 +54,10 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) { finishGame(); return; }
+    if (timeLeft <= 0 || wordIndex >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft]);
+  }, [timeLeft, wordIndex]);
 
   const currentWord = words.current[wordIndex % Math.max(words.current.length, 1)];
 
@@ -105,6 +106,10 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
         setSelected([]);
         setShowHint(false);
         const nextIdx = wordIndex + 1;
+        if (nextIdx >= MAX_QUESTIONS) {
+          finishGame();
+          return;
+        }
         setWordIndex(nextIdx);
         if (words.current[nextIdx % words.current.length]) {
           setScrambled(shuffleWord(words.current[nextIdx % words.current.length].word));
