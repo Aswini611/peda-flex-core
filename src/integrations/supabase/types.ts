@@ -168,6 +168,54 @@ export type Database = {
           },
         ]
       }
+      game_sessions: {
+        Row: {
+          accuracy: number
+          avg_response_time: number
+          brain_level_at: string
+          completed_at: string
+          difficulty_reached: number
+          game_category: string
+          game_type: string
+          id: string
+          max_score: number
+          score: number
+          student_id: string
+          subject: string | null
+          time_used: number
+        }
+        Insert: {
+          accuracy?: number
+          avg_response_time?: number
+          brain_level_at?: string
+          completed_at?: string
+          difficulty_reached?: number
+          game_category: string
+          game_type: string
+          id?: string
+          max_score?: number
+          score?: number
+          student_id: string
+          subject?: string | null
+          time_used?: number
+        }
+        Update: {
+          accuracy?: number
+          avg_response_time?: number
+          brain_level_at?: string
+          completed_at?: string
+          difficulty_reached?: number
+          game_category?: string
+          game_type?: string
+          id?: string
+          max_score?: number
+          score?: number
+          student_id?: string
+          subject?: string | null
+          time_used?: number
+        }
+        Relationships: []
+      }
       lesson_assignments: {
         Row: {
           assigned_at: string
@@ -426,8 +474,69 @@ export type Database = {
           },
         ]
       }
+      student_game_profiles: {
+        Row: {
+          age_stage: string
+          avg_accuracy: number | null
+          brain_level: string
+          brain_xp: number
+          created_at: string
+          daily_goal: number
+          games_today: number
+          games_today_date: string | null
+          id: string
+          last_played_at: string | null
+          preferred_subjects: string[] | null
+          student_age: number | null
+          student_id: string
+          surprise_reward_available: boolean
+          total_games_played: number
+          total_time_played: number
+          updated_at: string
+        }
+        Insert: {
+          age_stage?: string
+          avg_accuracy?: number | null
+          brain_level?: string
+          brain_xp?: number
+          created_at?: string
+          daily_goal?: number
+          games_today?: number
+          games_today_date?: string | null
+          id?: string
+          last_played_at?: string | null
+          preferred_subjects?: string[] | null
+          student_age?: number | null
+          student_id: string
+          surprise_reward_available?: boolean
+          total_games_played?: number
+          total_time_played?: number
+          updated_at?: string
+        }
+        Update: {
+          age_stage?: string
+          avg_accuracy?: number | null
+          brain_level?: string
+          brain_xp?: number
+          created_at?: string
+          daily_goal?: number
+          games_today?: number
+          games_today_date?: string | null
+          id?: string
+          last_played_at?: string | null
+          preferred_subjects?: string[] | null
+          student_age?: number | null
+          student_id?: string
+          surprise_reward_available?: boolean
+          total_games_played?: number
+          total_time_played?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
+          age: number | null
           created_at: string
           curriculum: string | null
           dominant_intelligence: string | null
@@ -438,6 +547,7 @@ export type Database = {
           zpd_score: number | null
         }
         Insert: {
+          age?: number | null
           created_at?: string
           curriculum?: string | null
           dominant_intelligence?: string | null
@@ -448,6 +558,7 @@ export type Database = {
           zpd_score?: number | null
         }
         Update: {
+          age?: number | null
           created_at?: string
           curriculum?: string | null
           dominant_intelligence?: string | null
