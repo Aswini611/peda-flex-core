@@ -536,7 +536,6 @@ export type Database = {
       }
       students: {
         Row: {
-          age: number | null
           created_at: string
           curriculum: string | null
           dominant_intelligence: string | null
@@ -547,7 +546,6 @@ export type Database = {
           zpd_score: number | null
         }
         Insert: {
-          age?: number | null
           created_at?: string
           curriculum?: string | null
           dominant_intelligence?: string | null
@@ -558,7 +556,6 @@ export type Database = {
           zpd_score?: number | null
         }
         Update: {
-          age?: number | null
           created_at?: string
           curriculum?: string | null
           dominant_intelligence?: string | null

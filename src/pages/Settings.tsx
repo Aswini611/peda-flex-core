@@ -87,18 +87,6 @@ const SettingsPage = () => {
               <Label>Role</Label>
               <Input value={profile?.role ?? ""} disabled className="capitalize" />
             </div>
-            {profile?.role === "student" && profile?.age && (
-              <div className="space-y-2">
-                <Label>Age</Label>
-                <Input value={`${profile.age} years`} disabled />
-              </div>
-            )}
-            {profile?.role === "student" && profile?.grade && (
-              <div className="space-y-2">
-                <Label>Class</Label>
-                <Input value={profile.grade} disabled />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
               <Input

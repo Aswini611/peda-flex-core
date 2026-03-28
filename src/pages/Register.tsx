@@ -31,21 +31,12 @@ const ValidationItem = ({ met, text }: { met: boolean; text: string }) => (
   </div>
 );
 
-const classes = [
-  "Nursery", "LKG", "UKG",
-  "Class 1", "Class 2", "Class 3", "Class 4", "Class 5",
-  "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
-  "Class 11", "Class 12",
-];
-
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<string>("student");
-  const [age, setAge] = useState("");
-  const [studentClass, setStudentClass] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,7 +47,7 @@ const Register = () => {
   const usesEmail = role === "teacher";
   const passwordIsValid = isPasswordValid(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
-  const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim() && (!isStudent || (age && studentClass));
+  const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,11 +89,7 @@ const Register = () => {
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          role,
-          ...(isStudent ? { student_id: identifier.trim(), age: parseInt(age), class: studentClass } : {}),
-        },
+        data: { full_name: fullName, role, ...(isStudent ? { student_id: identifier.trim() } : {}) },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -177,39 +164,6 @@ const Register = () => {
                 required
               />
             </div>
-            {isStudent && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="age" className="text-gray-700 font-medium">Age</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    min={5}
-                    max={25}
-                    placeholder="e.g. 14"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="studentClass" className="text-gray-700 font-medium">Class</Label>
-                  <select
-                    id="studentClass"
-                    value={studentClass}
-                    onChange={(e) => setStudentClass(e.target.value)}
-                    className="w-full rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-sm"
-                    required
-                  >
-                    <option value="">Select class</option>
-                    {classes.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="regPassword" className="text-gray-700 font-medium">
                 Password

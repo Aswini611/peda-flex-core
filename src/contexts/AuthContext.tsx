@@ -6,8 +6,6 @@ interface Profile {
   id: string;
   full_name: string | null;
   role: string;
-  age?: number | null;
-  grade?: string | null;
 }
 
 interface AuthContextType {
@@ -37,22 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("id, full_name, role")
       .eq("id", userId)
       .single();
-    
-    if (data) {
-      // Fetch student details (age, grade) if student
-      if (data.role === "student") {
-        const { data: student } = await supabase
-          .from("students")
-          .select("age, grade")
-          .eq("profile_id", userId)
-          .single();
-        setProfile({ ...data, age: student?.age, grade: student?.grade });
-      } else {
-        setProfile(data);
-      }
-    } else {
-      setProfile(null);
-    }
+    setProfile(data);
   };
 
   useEffect(() => {
