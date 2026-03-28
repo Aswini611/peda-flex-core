@@ -17,7 +17,6 @@ import Alerts from "./pages/Alerts";
 import TeacherPanel from "./pages/TeacherPanel";
 import SettingsPage from "./pages/Settings";
 import Gamification from "./pages/Gamification";
-import GameHub from "./pages/GameHub";
 import AcademicTests from "./pages/AcademicTests";
 import NotFound from "./pages/NotFound";
 
@@ -68,13 +67,6 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route path="/game-hub" element={
-                <ProtectedRoute>
-                  <RoleGuard allowedRoles={["student", "admin"]}>
-                    <GameHub />
-                  </RoleGuard>
-                </ProtectedRoute>
-              } />
               <Route path="/gamification" element={
                 <ProtectedRoute>
                   <RoleGuard allowedRoles={["student", "admin"]}>
