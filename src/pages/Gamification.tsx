@@ -5,11 +5,6 @@ import { useGamification } from "@/hooks/useGamification";
 import {
   GamePhase, GameResult, TIER_BADGES, COGNITIVE_BADGES,
 } from "@/components/gamification/types";
-import { PatternFlash } from "@/components/gamification/PatternFlash";
-import { NumberBalance } from "@/components/gamification/NumberBalance";
-import { WordProof } from "@/components/gamification/WordProof";
-import { ShapeSequence } from "@/components/gamification/ShapeSequence";
-import { RapidSort } from "@/components/gamification/RapidSort";
 import { MatchPairs } from "@/components/gamification/games/MatchPairs";
 import { QuickQuiz } from "@/components/gamification/games/QuickQuiz";
 import { WordScramble } from "@/components/gamification/games/WordScramble";
@@ -326,11 +321,6 @@ const Gamification = () => {
     };
 
     switch (currentGameConfig.id) {
-      case 'pattern-flash': return <PatternFlash onComplete={handleGameComplete} studentName={studentName} />;
-      case 'number-balance': return <NumberBalance onComplete={handleGameComplete} studentName={studentName} />;
-      case 'word-proof': return <WordProof onComplete={handleGameComplete} studentName={studentName} />;
-      case 'shape-sequence': return <ShapeSequence onComplete={handleGameComplete} studentName={studentName} />;
-      case 'rapid-sort': return <RapidSort onComplete={handleGameComplete} studentName={studentName} />;
       case 'match-pairs': return <MatchPairs {...commonProps} />;
       case 'quick-quiz': return <QuickQuiz {...commonProps} />;
       case 'word-scramble': return <WordScramble {...commonProps} />;
