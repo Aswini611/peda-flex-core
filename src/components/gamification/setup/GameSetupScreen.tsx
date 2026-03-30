@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AgeGroup, getAgeGroupByAge, AGE_GROUPS } from "../engine/ageGroups";
 import { selectGamesForStudent, SelectedGame } from "../engine/gameSelector";
 import { getSubjectsForClass } from "../engine/classSubjects";
+import { resetQuestionTracker } from "../engine/contentPools";
 import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, Loader2, User } from "lucide-react";
 
 interface Props {
@@ -42,6 +43,7 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
 
   const handleStart = () => {
     if (!ageGroup || !selectedSubject || !selectedClass) return;
+    resetQuestionTracker(); // Clear dedup tracker for new round
     const games = selectGamesForStudent(ageGroup.id, selectedSubject);
     onStart(games, ageGroup, selectedSubject, selectedClass);
   };
