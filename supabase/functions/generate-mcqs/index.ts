@@ -26,8 +26,29 @@ serve(async (req) => {
 
     let formatInstruction = "";
     let formatSchema = "";
+    let cognitiveInstruction = "";
 
-    if (questionType === "true_false") {
+    const cognitiveTypes: Record<string, string> = {
+      recall: "Generate RECALL questions that test the student's ability to remember and retrieve facts, definitions, dates, formulas, and key terms directly from what they have studied in ${subject}. Questions should ask 'What is...', 'Define...', 'Name the...', 'List the...'.",
+      critical_thinking: "Generate CRITICAL THINKING questions that require the student to analyze, evaluate, compare, contrast, and form judgments about concepts in ${subject}. Questions should challenge assumptions, ask for pros/cons, require weighing evidence, or ask 'Why do you think...', 'What would happen if...', 'Compare and contrast...'.",
+      understanding: "Generate CHECK FOR UNDERSTANDING questions that verify whether the student truly grasps the core concepts of ${subject}. Questions should ask students to explain in their own words, identify correct/incorrect statements, distinguish between similar concepts, or interpret diagrams/data related to the subject.",
+      application: "Generate APPLICATION-BASED questions where the student must apply learned concepts of ${subject} to real-world scenarios, word problems, or new situations they haven't seen before. Questions should present a scenario and ask the student to solve, predict, or decide using subject knowledge.",
+      reasoning: "Generate REASONING questions that test the student's logical thinking and ability to deduce, infer, or draw conclusions based on given information related to ${subject}. Questions should require step-by-step thinking, pattern recognition, cause-effect analysis, or logical deduction.",
+    };
+
+    if (cognitiveTypes[questionType]) {
+      cognitiveInstruction = cognitiveTypes[questionType].replace(/\$\{subject\}/g, subject);
+      formatInstruction = "Each question must have exactly 4 options labeled A, B, C, D. Only one option should be correct. " + cognitiveInstruction;
+      formatSchema = `[
+  {
+    "id": 1,
+    "question": "Your subject-specific question here?",
+    "options": { "A": "Option 1", "B": "Option 2", "C": "Option 3", "D": "Option 4" },
+    "correct": "B",
+    "explanation": "Detailed explanation of why this is correct"
+  }
+]`;
+    } else if (questionType === "true_false") {
       formatInstruction = "Each question must be a True/False question with exactly 2 options: A (True) and B (False).";
       formatSchema = `[
   {
