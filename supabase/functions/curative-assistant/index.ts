@@ -207,6 +207,8 @@ You have access to the following context:
 
 ${assessmentContext}
 
+${academicContext}
+
 ${textbookContext}
 
 ═══════════════════════════════════════════════════════════════
