@@ -31,6 +31,11 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "mcq", label: "Multiple Choice (MCQ)" },
   { value: "true_false", label: "True / False" },
   { value: "fill_blank", label: "Fill in the Blank" },
+  { value: "recall", label: "Recall Questions" },
+  { value: "critical_thinking", label: "Critical Thinking Questions" },
+  { value: "understanding", label: "Check for Understanding" },
+  { value: "application", label: "Application Based Questions" },
+  { value: "reasoning", label: "Reasoning Questions" },
 ];
 
 const DIFFICULTY_OPTIONS = [
