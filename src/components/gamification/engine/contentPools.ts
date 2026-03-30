@@ -1628,35 +1628,35 @@ export function getContent<T extends ContentKey>(
 /** Returns shuffled, unique quiz questions (no repeats across round) */
 export function getQuizQuestions(subject: string, ageGroup: AgeGroupId): QuizQuestion[] {
   const q: QuizQuestion[] = getContent('quiz', subject, ageGroup) || [];
-  return dedup<QuizQuestion>(shuffle(q), (item) => item.question);
+  return dedup<QuizQuestion>(shuffle(q), (item) => `quiz:${item.question}`);
 }
 
 /** Returns shuffled, unique match pairs (no repeats across round) */
 export function getMatchPairs(subject: string, ageGroup: AgeGroupId): MatchPair[] {
   const p: MatchPair[] = getContent('pairs', subject, ageGroup) || [];
-  return dedup<MatchPair>(shuffle(p), (item) => `${item.a}=${item.b}`);
+  return dedup<MatchPair>(shuffle(p), (item) => `pairs:${item.a}=${item.b}`);
 }
 
 /** Returns shuffled sort categories (no repeats across round) */
 export function getSortCategories(subject: string, ageGroup: AgeGroupId): SortCategory[] {
   const s: SortCategory[] = getContent('sort', subject, ageGroup) || [];
-  return dedup<SortCategory>(shuffle(s), (item) => item.rule);
+  return dedup<SortCategory>(shuffle(s), (item) => `sort:${item.rule}`);
 }
 
 /** Returns shuffled, unique word entries (no repeats across round) */
 export function getWordEntries(subject: string, ageGroup: AgeGroupId): WordEntry[] {
   const w: WordEntry[] = getContent('words', subject, ageGroup) || [];
-  return dedup<WordEntry>(shuffle(w), (item) => item.word);
+  return dedup<WordEntry>(shuffle(w), (item) => `words:${item.word}`);
 }
 
 /** Returns shuffled speed tap rules (no repeats across round) */
 export function getSpeedTapRules(subject: string, ageGroup: AgeGroupId): SpeedTapRule[] {
   const r: SpeedTapRule[] = getContent('speedTap', subject, ageGroup) || [];
-  return dedup<SpeedTapRule>(shuffle(r), (item) => item.instruction);
+  return dedup<SpeedTapRule>(shuffle(r), (item) => `speedTap:${item.instruction}`);
 }
 
 /** Returns shuffled visual memory sets (no repeats across round) */
 export function getVisualMemorySets(subject: string, ageGroup: AgeGroupId): VisualMemorySet[] {
   const v: VisualMemorySet[] = getContent('visualMemory', subject, ageGroup) || [];
-  return dedup<VisualMemorySet>(shuffle(v), (item) => item.items.join(','));
+  return dedup<VisualMemorySet>(shuffle(v), (item) => `visualMemory:${item.items.join(',')}`);
 }
