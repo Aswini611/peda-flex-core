@@ -22,9 +22,9 @@ interface Card {
 }
 
 export function MatchPairs({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
-  const pairs = getMatchPairs(subject, ageGroup);
+  const pairsRef = useRef(getMatchPairs(subject, ageGroup));
   const gridSize = ageGroup === 'early_learners' ? 3 : ageGroup === 'explorers' ? 4 : 5;
-  const numPairs = Math.min(pairs.length, Math.floor((gridSize * (gridSize <= 3 ? 4 : gridSize)) / 2));
+  const numPairs = Math.min(pairsRef.current.length, Math.floor((gridSize * (gridSize <= 3 ? 4 : gridSize)) / 2));
   
   const [cards, setCards] = useState<Card[]>([]);
   const [flippedIds, setFlippedIds] = useState<number[]>([]);
@@ -38,7 +38,7 @@ export function MatchPairs({ onComplete, ageGroup, subject, gameIndex, timeLimit
   const lastFlip = useRef(Date.now());
 
   useEffect(() => {
-    const selectedPairs = pairs.slice(0, numPairs);
+    const selectedPairs = pairsRef.current.slice(0, numPairs);
     const cardSet: Card[] = [];
     selectedPairs.forEach((pair, idx) => {
       cardSet.push({ id: idx * 2, content: pair.a, pairId: idx, flipped: false, matched: false });

@@ -40,6 +40,46 @@ serve(async (req) => {
 
     const { data: assessments } = await query;
 
+    // 1b. Fetch academic test results for matching class & subject
+    let academicContext = "";
+    {
+      let academicQuery = supabase
+        .from("academic_tests")
+        .select("student_id, subject, score, total_questions, completed_at, student_class")
+        .or(`student_class.eq.${normalizedClass},student_class.eq.${selectedClass}`)
+        .order("completed_at", { ascending: false })
+        .limit(100);
+
+      const { data: academicTests } = await academicQuery;
+
+      if (academicTests && academicTests.length > 0) {
+        // Filter by subject if provided
+        const subjectLower = (subject || "").toLowerCase().replace(/\.pdf$/i, "").trim();
+        const relevantTests = subjectLower
+          ? academicTests.filter((t: any) => t.subject.toLowerCase().includes(subjectLower) || subjectLower.includes(t.subject.toLowerCase()))
+          : academicTests;
+
+        if (relevantTests.length > 0) {
+          const avgScore = (relevantTests.reduce((sum: number, t: any) => sum + (t.total_questions > 0 ? (t.score / t.total_questions) * 100 : 0), 0) / relevantTests.length).toFixed(1);
+          const subjectBreakdown: Record<string, { total: number; count: number }> = {};
+          for (const t of relevantTests) {
+            const s = t.subject;
+            if (!subjectBreakdown[s]) subjectBreakdown[s] = { total: 0, count: 0 };
+            subjectBreakdown[s].total += t.total_questions > 0 ? (t.score / t.total_questions) * 100 : 0;
+            subjectBreakdown[s].count++;
+          }
+
+          academicContext = `\n\nACADEMIC TEST RESULTS for ${selectedClass} (${relevantTests.length} tests):
+- Average Score: ${avgScore}%
+- Subject Performance:
+${Object.entries(subjectBreakdown).map(([subj, data]) => `  ${subj}: ${(data.total / data.count).toFixed(1)}% avg (${data.count} tests)`).join("\n")}
+- Recent Tests: ${relevantTests.slice(0, 5).map((t: any) => `${t.subject}: ${t.score}/${t.total_questions} (${((t.score / t.total_questions) * 100).toFixed(0)}%)`).join(", ")}
+
+IMPORTANT: Use these academic test results to identify specific topics where students are struggling. Focus the lesson plan on reinforcing weak areas revealed by test scores. If a subject average is below 60%, prioritize foundational concepts. If above 80%, introduce extension activities.`;
+        }
+      }
+    }
+
     if (assessments && assessments.length > 0) {
       const studentSummaries = assessments.map((a: any) => {
         const responses = a.responses as Record<string, number>;
