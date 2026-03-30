@@ -1592,6 +1592,28 @@ function getSubjectPool(subject: string) {
   return GENERAL_CONTENT;
 }
 
+/**
+ * Global question tracker to prevent duplicate questions across all games in a round.
+ * Call resetQuestionTracker() at the start of each new round.
+ */
+const usedQuestionKeys = new Set<string>();
+
+export function resetQuestionTracker() {
+  usedQuestionKeys.clear();
+}
+
+function dedup<T>(items: T[], keyFn: (item: T) => string): T[] {
+  const result: T[] = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (!usedQuestionKeys.has(key)) {
+      usedQuestionKeys.add(key);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
 export function getContent<T extends ContentKey>(
   contentType: T,
   subject: string,
@@ -1603,38 +1625,44 @@ export function getContent<T extends ContentKey>(
   return content[ageGroup] || content['explorers'] || null;
 }
 
-/** Returns shuffled, unique quiz questions (no repeats) */
+/** Returns shuffled, unique quiz questions (no repeats across round) */
 export function getQuizQuestions(subject: string, ageGroup: AgeGroupId): QuizQuestion[] {
   const q = getContent('quiz', subject, ageGroup) || [];
-  return shuffle(q);
+  const unique = dedup(shuffle(q), (item: QuizQuestion) => item.question);
+  return unique;
 }
 
-/** Returns shuffled, unique match pairs */
+/** Returns shuffled, unique match pairs (no repeats across round) */
 export function getMatchPairs(subject: string, ageGroup: AgeGroupId): MatchPair[] {
   const p = getContent('pairs', subject, ageGroup) || [];
-  return shuffle(p);
+  const unique = dedup(shuffle(p), (item: MatchPair) => `${item.a}=${item.b}`);
+  return unique;
 }
 
-/** Returns shuffled sort categories */
+/** Returns shuffled sort categories (no repeats across round) */
 export function getSortCategories(subject: string, ageGroup: AgeGroupId): SortCategory[] {
   const s = getContent('sort', subject, ageGroup) || [];
-  return shuffle(s);
+  const unique = dedup(shuffle(s), (item: SortCategory) => item.rule);
+  return unique;
 }
 
-/** Returns shuffled, unique word entries */
+/** Returns shuffled, unique word entries (no repeats across round) */
 export function getWordEntries(subject: string, ageGroup: AgeGroupId): WordEntry[] {
   const w = getContent('words', subject, ageGroup) || [];
-  return shuffle(w);
+  const unique = dedup(shuffle(w), (item: WordEntry) => item.word);
+  return unique;
 }
 
-/** Returns shuffled speed tap rules */
+/** Returns shuffled speed tap rules (no repeats across round) */
 export function getSpeedTapRules(subject: string, ageGroup: AgeGroupId): SpeedTapRule[] {
   const r = getContent('speedTap', subject, ageGroup) || [];
-  return shuffle(r);
+  const unique = dedup(shuffle(r), (item: SpeedTapRule) => item.instruction);
+  return unique;
 }
 
-/** Returns shuffled visual memory sets */
+/** Returns shuffled visual memory sets (no repeats across round) */
 export function getVisualMemorySets(subject: string, ageGroup: AgeGroupId): VisualMemorySet[] {
   const v = getContent('visualMemory', subject, ageGroup) || [];
-  return shuffle(v);
+  const unique = dedup(shuffle(v), (item: VisualMemorySet) => item.items.join(','));
+  return unique;
 }
