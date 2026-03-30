@@ -1550,8 +1550,8 @@ type ContentKey = 'quiz' | 'pairs' | 'sort' | 'words' | 'speedTap' | 'visualMemo
 function getSubjectPool(subject: string) {
   const s = subject.toLowerCase().trim();
   
-  // Math
-  if (['math', 'maths', 'mathematics', 'गणित', 'arithmetic', 'algebra', 'geometry', 'calculus', 'trigonometry', 'statistics'].some(m => s.includes(m))) return MATH_CONTENT;
+  // Math (including "Maths Part 1", "Maths Part 2")
+  if (['math', 'maths', 'mathematics', 'गणित', 'arithmetic', 'algebra', 'geometry', 'calculus', 'trigonometry', 'statistics', 'maths part 1', 'maths part 2'].some(m => s.includes(m) || s === m)) return MATH_CONTENT;
   
   // Science
   if (['science', 'physics', 'chemistry', 'biology', 'evs', 'environmental', 'विज्ञान', 'भौतिक', 'रसायन', 'जीव', 'natural science', 'life science', 'physical science', 'general science', 'botany', 'zoology'].some(m => s.includes(m))) return SCIENCE_CONTENT;
@@ -1560,25 +1560,28 @@ function getSubjectPool(subject: string) {
   if (['hindi', 'हिंदी', 'हिन्दी'].some(m => s.includes(m))) return HINDI_CONTENT;
   
   // Sanskrit
-  if (['sanskrit', 'संस्कृत', 'sanskritam'].some(m => s.includes(m))) return SANSKRIT_CONTENT;
+  if (['sanskrit', 'संस्कृत', 'sanskritam', 'sankrit'].some(m => s.includes(m))) return SANSKRIT_CONTENT;
   
-  // Social Studies / History / Geography / Civics / Economics
-  if (['social', 'sst', 'history', 'geography', 'civics', 'economics', 'political', 'sociology', 'इतिहास', 'भूगोल', 'नागरिक', 'अर्थशास्त्र', 'samajik', 'social studies', 'social science'].some(m => s.includes(m))) return SST_CONTENT;
+  // Social Studies / History / Geography / Civics / Economics / Contemporary India / Democratic Politics
+  if (['social', 'sst', 'history', 'geography', 'civics', 'economics', 'political', 'sociology', 'इतिहास', 'भूगोल', 'नागरिक', 'अर्थशास्त्र', 'samajik', 'social studies', 'social science', 'social part 1', 'social part 2', 'social contemporary india', 'social contemporary india 2', 'social democratic politics', 'contemporary india', 'democratic politics', 'world around us', 'wonders of world', 'our wonders of world'].some(m => s.includes(m) || s === m)) return SST_CONTENT;
   
   // Computer Science / IT
-  if (['computer', 'computing', 'it', 'information technology', 'programming', 'coding', 'digital', 'cyber', 'कंप्यूटर', 'संगणक', 'ict', 'artificial intelligence', 'ai', 'data science', 'web'].some(m => s.includes(m))) return COMPUTER_CONTENT;
+  if (['computer', 'computing', 'it', 'information technology', 'programming', 'coding', 'digital', 'cyber', 'कंप्यूटर', 'संगणक', 'ict', 'artificial intelligence', 'ai', 'data science', 'web', 'computer and information technology'].some(m => s.includes(m) || s === m)) return COMPUTER_CONTENT;
   
   // English
   if (['english', 'language', 'grammar', 'literature', 'अंग्रेज़ी', 'अंग्रेजी', 'reading', 'writing', 'composition', 'creative writing', 'prose', 'poetry'].some(m => s.includes(m))) return ENGLISH_CONTENT;
   
-  // Regional languages → map to Hindi content style (closest match for Indian languages)
-  if (['telugu', 'tamil', 'kannada', 'malayalam', 'marathi', 'gujarati', 'bengali', 'bangla', 'punjabi', 'odia', 'oriya', 'assamese', 'urdu', 'arabic', 'french', 'german', 'spanish', 'తెలుగు', 'தமிழ்', 'ಕನ್ನಡ', 'മലയാളം', 'मराठी', 'ગુજરાતી', 'বাংলা', 'ਪੰਜਾਬੀ', 'ଓଡ଼ିଆ', 'অসমীয়া', 'اردو'].some(m => s.includes(m))) return ENGLISH_CONTENT;
+  // Urdu - map to English content (language-type games)
+  if (['urdu', 'اردو'].some(m => s.includes(m))) return ENGLISH_CONTENT;
+  
+  // Regional languages → map to English content style
+  if (['telugu', 'tamil', 'kannada', 'malayalam', 'marathi', 'gujarati', 'bengali', 'bangla', 'punjabi', 'odia', 'oriya', 'assamese', 'arabic', 'french', 'german', 'spanish', 'తెలుగు', 'தமிழ்', 'ಕನ್ನಡ', 'മലയാളം', 'मराठी', 'ગુજરાતી', 'বাংলা', 'ਪੰਜਾਬੀ', 'ଓଡ଼ିଆ', 'অসমীয়া'].some(m => s.includes(m))) return ENGLISH_CONTENT;
   
   // GK / General Knowledge
   if (['gk', 'general knowledge', 'current affairs', 'सामान्य ज्ञान', 'quiz'].some(m => s.includes(m))) return GENERAL_CONTENT;
   
-  // Art / Music / Physical Education → General
-  if (['art', 'music', 'drawing', 'painting', 'physical education', 'pe', 'sports', 'yoga', 'health', 'craft', 'कला', 'संगीत', 'चित्रकला', 'खेल'].some(m => s.includes(m))) return GENERAL_CONTENT;
+  // Art / Music / Physical Education / Health / Vocational
+  if (['art', 'arts', 'music', 'drawing', 'painting', 'physical education', 'pe', 'sports', 'yoga', 'health', 'craft', 'कला', 'संगीत', 'चित्रकला', 'खेल', 'physical education and well being', 'health and physical education', 'vocational education', 'vocational'].some(m => s.includes(m) || s === m)) return GENERAL_CONTENT;
   
   // Business / Commerce / Accounts
   if (['business', 'commerce', 'accounts', 'accounting', 'finance', 'marketing', 'management', 'व्यापार', 'वाणिज्य', 'लेखा'].some(m => s.includes(m))) return SST_CONTENT;
@@ -1587,6 +1590,28 @@ function getSubjectPool(subject: string) {
   if (['home science', 'agriculture', 'farming', 'nutrition', 'गृह विज्ञान', 'कृषि'].some(m => s.includes(m))) return SCIENCE_CONTENT;
   
   return GENERAL_CONTENT;
+}
+
+/**
+ * Global question tracker to prevent duplicate questions across all games in a round.
+ * Call resetQuestionTracker() at the start of each new round.
+ */
+const usedQuestionKeys = new Set<string>();
+
+export function resetQuestionTracker() {
+  usedQuestionKeys.clear();
+}
+
+function dedup<T>(items: T[], keyFn: (item: T) => string): T[] {
+  const result: T[] = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (!usedQuestionKeys.has(key)) {
+      usedQuestionKeys.add(key);
+      result.push(item);
+    }
+  }
+  return result;
 }
 
 export function getContent<T extends ContentKey>(
@@ -1600,38 +1625,38 @@ export function getContent<T extends ContentKey>(
   return content[ageGroup] || content['explorers'] || null;
 }
 
-/** Returns shuffled, unique quiz questions (no repeats) */
+/** Returns shuffled, unique quiz questions (no repeats across round) */
 export function getQuizQuestions(subject: string, ageGroup: AgeGroupId): QuizQuestion[] {
-  const q = getContent('quiz', subject, ageGroup) || [];
-  return shuffle(q);
+  const q: QuizQuestion[] = getContent('quiz', subject, ageGroup) || [];
+  return dedup<QuizQuestion>(shuffle(q), (item) => item.question);
 }
 
-/** Returns shuffled, unique match pairs */
+/** Returns shuffled, unique match pairs (no repeats across round) */
 export function getMatchPairs(subject: string, ageGroup: AgeGroupId): MatchPair[] {
-  const p = getContent('pairs', subject, ageGroup) || [];
-  return shuffle(p);
+  const p: MatchPair[] = getContent('pairs', subject, ageGroup) || [];
+  return dedup<MatchPair>(shuffle(p), (item) => `${item.a}=${item.b}`);
 }
 
-/** Returns shuffled sort categories */
+/** Returns shuffled sort categories (no repeats across round) */
 export function getSortCategories(subject: string, ageGroup: AgeGroupId): SortCategory[] {
-  const s = getContent('sort', subject, ageGroup) || [];
-  return shuffle(s);
+  const s: SortCategory[] = getContent('sort', subject, ageGroup) || [];
+  return dedup<SortCategory>(shuffle(s), (item) => item.rule);
 }
 
-/** Returns shuffled, unique word entries */
+/** Returns shuffled, unique word entries (no repeats across round) */
 export function getWordEntries(subject: string, ageGroup: AgeGroupId): WordEntry[] {
-  const w = getContent('words', subject, ageGroup) || [];
-  return shuffle(w);
+  const w: WordEntry[] = getContent('words', subject, ageGroup) || [];
+  return dedup<WordEntry>(shuffle(w), (item) => item.word);
 }
 
-/** Returns shuffled speed tap rules */
+/** Returns shuffled speed tap rules (no repeats across round) */
 export function getSpeedTapRules(subject: string, ageGroup: AgeGroupId): SpeedTapRule[] {
-  const r = getContent('speedTap', subject, ageGroup) || [];
-  return shuffle(r);
+  const r: SpeedTapRule[] = getContent('speedTap', subject, ageGroup) || [];
+  return dedup<SpeedTapRule>(shuffle(r), (item) => item.instruction);
 }
 
-/** Returns shuffled visual memory sets */
+/** Returns shuffled visual memory sets (no repeats across round) */
 export function getVisualMemorySets(subject: string, ageGroup: AgeGroupId): VisualMemorySet[] {
-  const v = getContent('visualMemory', subject, ageGroup) || [];
-  return shuffle(v);
+  const v: VisualMemorySet[] = getContent('visualMemory', subject, ageGroup) || [];
+  return dedup<VisualMemorySet>(shuffle(v), (item) => item.items.join(','));
 }

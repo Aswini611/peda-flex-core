@@ -89,7 +89,7 @@ export const GAME_REGISTRY: GameDefinition[] = [
     color: '#A855F7',
     category: 'logic',
     ageGroups: ['explorers', 'thinkers', 'advanced'],
-    subjects: ['Maths', 'Mathematics', 'Math'],
+    subjects: ['Maths', 'Mathematics', 'Math', 'Maths Part 1', 'Maths Part 2'],
     timeLimit: { early_learners: 120, explorers: 90, thinkers: 90, advanced: 75 },
     objective: 'Judge which side of the scale is heavier.',
     rules: {
@@ -150,7 +150,7 @@ export const GAME_REGISTRY: GameDefinition[] = [
     color: '#84CC16',
     category: 'verbal',
     ageGroups: ['explorers', 'thinkers', 'advanced'],
-    subjects: ['English', 'Hindi', 'Language'],
+    subjects: ['English', 'Hindi', 'Language', 'Urdu', 'Sanskrit'],
     timeLimit: { early_learners: 120, explorers: 120, thinkers: 90, advanced: 75 },
     objective: 'Spot spelling and grammar mistakes.',
     rules: {

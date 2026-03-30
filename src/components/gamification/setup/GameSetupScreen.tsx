@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { AgeGroup, getAgeGroupByAge, AGE_GROUPS } from "../engine/ageGroups";
 import { selectGamesForStudent, SelectedGame } from "../engine/gameSelector";
+import { getSubjectsForClass } from "../engine/classSubjects";
+import { resetQuestionTracker } from "../engine/contentPools";
 import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, Loader2, User } from "lucide-react";
 
 interface Props {
@@ -21,7 +22,6 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
   const [selectedClass, setSelectedClass] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
 
   // Update age group whenever age changes
@@ -34,28 +34,16 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
     }
   }, [age]);
 
-  // Load subjects when class changes
+  // Load subjects when class changes (hardcoded per class)
   useEffect(() => {
     if (!selectedClass) { setSubjects([]); setSelectedSubject(''); return; }
-    setLoadingSubjects(true);
     setSelectedSubject('');
-    supabase.functions.invoke('list-subjects', { body: { studentClass: selectedClass } })
-      .then(({ data }) => {
-        const subs = data?.subjects || [];
-        if (subs.length === 0) {
-          setSubjects(['Maths', 'Science', 'English', 'Social Science', 'Hindi', 'General Knowledge']);
-        } else {
-          setSubjects(subs);
-        }
-      })
-      .catch(() => {
-        setSubjects(['Maths', 'Science', 'English', 'Social Science', 'Hindi', 'General Knowledge']);
-      })
-      .finally(() => setLoadingSubjects(false));
+    setSubjects(getSubjectsForClass(selectedClass));
   }, [selectedClass]);
 
   const handleStart = () => {
     if (!ageGroup || !selectedSubject || !selectedClass) return;
+    resetQuestionTracker(); // Clear dedup tracker for new round
     const games = selectGamesForStudent(ageGroup.id, selectedSubject);
     onStart(games, ageGroup, selectedSubject, selectedClass);
   };
@@ -155,12 +143,7 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
           <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
             <BookOpen className="h-4 w-4" /> Select Subject
           </label>
-          {loadingSubjects ? (
-            <div className="flex items-center justify-center gap-2 py-4" style={{ color: "rgba(241,245,249,0.4)" }}>
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading subjects...
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center">
               {subjects.map(sub => (
                 <button key={sub} onClick={() => setSelectedSubject(sub)}
                   className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 ${selectedSubject === sub ? 'scale-105' : ''}`}
@@ -173,7 +156,6 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
                 </button>
               ))}
             </div>
-          )}
         </div>
       )}
 
