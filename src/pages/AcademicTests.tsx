@@ -17,6 +17,7 @@ import {
   Timer, Eye, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TestAnalysis } from "@/components/TestAnalysis";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -611,6 +612,15 @@ export default function AcademicTests() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Performance Analysis */}
+          <TestAnalysis
+            subject={subject}
+            studentClass={studentClass}
+            topic={topic || undefined}
+            questions={questions}
+            answers={answers}
+          />
         </div>
       )}
 
@@ -717,6 +727,14 @@ export default function AcademicTests() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Performance Analysis for past test */}
+          <TestAnalysis
+            subject={reviewTest.subject}
+            studentClass={reviewTest.student_class}
+            questions={reviewTest.questions as any[]}
+            answers={reviewTest.answers as Record<string, string>}
+          />
         </div>
       )}
     </AppLayout>
