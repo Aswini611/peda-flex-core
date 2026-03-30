@@ -17,6 +17,7 @@ import {
   Timer, Eye, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TestAnalysis } from "@/components/TestAnalysis";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
