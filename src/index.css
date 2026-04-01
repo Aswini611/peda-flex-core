@@ -143,3 +143,50 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+
+/* ── Auth page animated background ── */
+.auth-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    hsl(220 60% 97%) 0%,
+    hsl(226 70% 94%) 25%,
+    hsl(230 65% 96%) 50%,
+    hsl(240 60% 95%) 75%,
+    hsl(220 60% 97%) 100%
+  );
+  background-size: 400% 400%;
+  animation: authGradientShift 12s ease-in-out infinite;
+}
+
+@keyframes authGradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.auth-float-slow {
+  animation: authFloat 8s ease-in-out infinite;
+}
+.auth-float-slow-reverse {
+  animation: authFloat 10s ease-in-out infinite reverse;
+}
+.auth-float-medium {
+  animation: authFloat 6s ease-in-out infinite;
+}
+
+@keyframes authFloat {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-12px) translateX(6px); }
+  66% { transform: translateY(8px) translateX(-4px); }
+}
+
+.auth-wave {
+  animation: authWaveMove 8s ease-in-out infinite;
+}
+.auth-wave-2 {
+  animation: authWaveMove 10s ease-in-out infinite reverse;
+}
+
+@keyframes authWaveMove {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-20px); }
+}

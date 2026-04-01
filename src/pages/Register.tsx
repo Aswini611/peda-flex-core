@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import AuthBackground from "@/components/AuthBackground";
 
 const roles = [
   { value: "student", label: "Student", desc: "Track your learning" },
   { value: "teacher", label: "Teacher", desc: "Manage courses" },
 ] as const;
 
-// Password validation functions
 const hasUpperCase = (str: string) => /[A-Z]/.test(str);
 const hasSpecialChar = (str: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(str);
 const hasDigit = (str: string) => /[0-9]/.test(str);
@@ -22,11 +22,7 @@ const isPasswordValid = (pwd: string) =>
 
 const ValidationItem = ({ met, text }: { met: boolean; text: string }) => (
   <div className={cn("flex items-center gap-2 text-xs", met ? "text-emerald-600" : "text-muted-foreground")}>
-    {met ? (
-      <Check className="h-3.5 w-3.5" />
-    ) : (
-      <X className="h-3.5 w-3.5" />
-    )}
+    {met ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
     <span>{text}</span>
   </div>
 );
@@ -51,36 +47,7 @@ const Register = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!fullName.trim()) {
-      toast({ title: "Full name is required", variant: "destructive" });
-      return;
-    }
-
-    if (isStudent && !identifier.trim()) {
-      toast({ title: "Student ID is required", variant: "destructive" });
-      return;
-    }
-
-    if (!isStudent && !identifier.trim()) {
-      toast({ title: "Email is required", variant: "destructive" });
-      return;
-    }
-
-    if (!passwordIsValid) {
-      toast({
-        title: "Password doesn't meet requirements",
-        description: "Must contain at least one uppercase letter, one special character, and one digit.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
-      return;
-    }
-
+    if (!canSubmit) return;
     setLoading(true);
 
     const email = isStudent ? `${identifier.trim().toLowerCase()}@student.apas.local` : identifier;
@@ -88,10 +55,7 @@ const Register = () => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { full_name: fullName, role, ...(isStudent ? { student_id: identifier.trim() } : {}) },
-        emailRedirectTo: window.location.origin,
-      },
+      options: { data: { full_name: fullName.trim(), role } },
     });
 
     if (error) {
@@ -105,53 +69,38 @@ const Register = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-100 to-teal-100" />
-      
-      {/* Decorative circles - top right */}
-      <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-gradient-to-bl from-emerald-400/20 to-green-400/10 blur-3xl" />
-      
-      {/* Decorative circles - bottom left */}
-      <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-tr from-teal-400/20 to-cyan-400/10 blur-3xl" />
-      
-      {/* Decorative circles - center */}
-      <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-emerald-300/10 to-green-300/5 blur-3xl" />
-
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(16,185,129,0.04)_1px,transparent_1px)] bg-[length:40px_40px]" />
+      <AuthBackground />
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-indigo-500/25">
             <GraduationCap className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">APAS</h1>
-          <p className="text-sm text-gray-600">Adaptive Pedagogy & Analytics System</p>
+          <h1 className="text-2xl font-bold text-foreground">APAS</h1>
+          <p className="text-sm text-muted-foreground">Adaptive Pedagogy & Analytics System</p>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl bg-white/80 backdrop-blur-md p-8 shadow-2xl border border-white/40">
-          <h2 className="mb-1 text-lg font-semibold text-gray-900">Create account</h2>
-          <p className="mb-6 text-sm text-gray-600">Join as a student or teacher</p>
+        {/* Card – glassmorphism */}
+        <div className="rounded-2xl bg-white/60 backdrop-blur-xl p-8 shadow-2xl shadow-indigo-500/10 border border-white/50 ring-1 ring-black/[0.03]">
+          <h2 className="mb-1 text-lg font-semibold text-foreground">Create account</h2>
+          <p className="mb-6 text-sm text-muted-foreground">Join as a student or teacher</p>
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-gray-700 font-medium">
-                Full name
-              </Label>
+              <Label htmlFor="fullName" className="text-foreground font-medium">Full name</Label>
               <Input
                 id="fullName"
                 placeholder="Jane Doe"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="regIdentifier" className="text-gray-700 font-medium">
+              <Label htmlFor="regIdentifier" className="text-foreground font-medium">
                 {isStudent ? "Student ID" : "Email"}
               </Label>
               <Input
@@ -160,14 +109,12 @@ const Register = () => {
                 placeholder={isStudent ? "e.g. STU2024001" : "you@example.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="regPassword" className="text-gray-700 font-medium">
-                Password
-              </Label>
+              <Label htmlFor="regPassword" className="text-foreground font-medium">Password</Label>
               <div className="relative">
                 <Input
                   id="regPassword"
@@ -175,24 +122,20 @@ const Register = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 pr-10 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                  className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 pr-10 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {password && (
-                <div className="mt-2 space-y-1.5 rounded-lg bg-emerald-50 border border-emerald-100 p-2.5">
-                  <p className="text-xs font-medium text-gray-600">Password requirements:</p>
+                <div className="mt-2 space-y-1.5 rounded-xl bg-indigo-50/80 border border-indigo-100 p-2.5">
+                  <p className="text-xs font-medium text-muted-foreground">Password requirements:</p>
                   <ValidationItem met={password.length >= 6} text="At least 6 characters" />
                   <ValidationItem met={hasUpperCase(password)} text="One uppercase letter (A-Z)" />
                   <ValidationItem met={hasSpecialChar(password)} text="One special character (!@#$%...)" />
@@ -201,9 +144,7 @@ const Register = () => {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
-                Confirm password
-              </Label>
+              <Label htmlFor="confirmPassword" className="text-foreground font-medium">Confirm password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -211,23 +152,19 @@ const Register = () => {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 pr-10 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                  className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 pr-10 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {confirmPassword && (
-                <div className={cn("mt-1.5 text-xs font-medium", passwordsMatch ? "text-emerald-600" : "text-red-600")}>
+                <div className={cn("mt-1.5 text-xs font-medium", passwordsMatch ? "text-emerald-600" : "text-destructive")}>
                   {passwordsMatch ? "✓ Passwords match" : "✗ Passwords don't match"}
                 </div>
               )}
@@ -235,22 +172,22 @@ const Register = () => {
 
             {/* Role selector */}
             <div className="space-y-2">
-              <Label className="text-gray-700 font-medium">Role</Label>
-            <div className="grid grid-cols-2 gap-2">
+              <Label className="text-foreground font-medium">Role</Label>
+              <div className="grid grid-cols-2 gap-2">
                 {roles.map((r) => (
                   <button
                     key={r.value}
                     type="button"
                     onClick={() => { setRole(r.value); setIdentifier(""); }}
                     className={cn(
-                      "flex flex-col items-center rounded-lg border-2 p-3 text-center transition-all duration-200",
+                      "flex flex-col items-center rounded-xl border-2 p-3 text-center transition-all duration-200",
                       role === r.value
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:bg-emerald-50/30"
+                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md shadow-indigo-500/10"
+                        : "border-border bg-white/70 text-muted-foreground hover:border-indigo-300 hover:bg-indigo-50/30"
                     )}
                   >
                     <span className="text-xs font-semibold">{r.label}</span>
-                    <span className="mt-0.5 text-[10px] text-gray-500">{r.desc}</span>
+                    <span className="mt-0.5 text-[10px] text-muted-foreground">{r.desc}</span>
                   </button>
                 ))}
               </div>
@@ -259,16 +196,16 @@ const Register = () => {
             <Button
               type="submit"
               disabled={loading || !canSubmit}
-              className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium py-2.5 hover:from-emerald-600 hover:to-teal-700 shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 text-white font-medium py-2.5 hover:from-blue-600 hover:via-indigo-600 hover:to-indigo-700 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Creating…" : "Create Account"}
             </Button>
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+          <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
             Sign in
           </Link>
         </p>
