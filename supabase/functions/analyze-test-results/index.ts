@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { subject, studentClass, topic, questions, answers } = await req.json();
-    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_API_KEY) throw new Error("GROK_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROK_API_KEY");
+    if (!GROQ_API_KEY) throw new Error("GROK_API_KEY is not configured");
 
     // Build question analysis
     const correctQs: string[] = [];
