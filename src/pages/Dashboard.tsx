@@ -5,7 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { GettingStartedBanner } from "@/components/GettingStartedBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText } from "lucide-react";
+import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText, BarChart3, ArrowRight, Sparkles, GraduationCap, Lightbulb, LineChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentReport } from "@/components/StudentReport";
@@ -25,43 +25,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { Json } from "@/integrations/supabase/types";
 import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
 import { Progress } from "@/components/ui/progress";
-
-const varkData = [
-  { name: "Visual", value: 38, color: "#2563EB" },
-  { name: "Auditory", value: 22, color: "#7C3AED" },
-  { name: "Kinaesthetic", value: 28, color: "#059669" },
-  { name: "Reading/Writing", value: 12, color: "#D97706" },
-];
-
-const gainData = [
-  { subject: "Math", gain: 0.72 },
-  { subject: "Science", gain: 0.65 },
-  { subject: "English", gain: 0.58 },
-  { subject: "History", gain: 0.61 },
-  { subject: "Geography", gain: 0.49 },
-];
-
-const getBarColor = (val: number) =>
-  val >= 0.7 ? "#059669" : val >= 0.5 ? "#2563EB" : "#D97706";
-
-const alerts = [
-  { group: "Kinaesthetic 8C", lesson: "Visual Lecture", mismatch: "80% fail rate", status: "Flagged" as const },
-  { group: "Visual 8B", lesson: "Text Case Study", mismatch: "75% fail rate", status: "Flagged" as const },
-  { group: "Auditory 8A", lesson: "Silent Reading", mismatch: "70% fail rate", status: "Resolved" as const },
-  { group: "R/W Group 8C", lesson: "Video-only", mismatch: "65% fail rate", status: "Flagged" as const },
-  { group: "Kinaesthetic 8B", lesson: "Flashcard drill", mismatch: "60% fail rate", status: "Resolved" as const },
-];
-
-const varkChartConfig = {
-  visual: { label: "Visual", color: "#2563EB" },
-  auditory: { label: "Auditory", color: "#7C3AED" },
-  kinaesthetic: { label: "Kinaesthetic", color: "#059669" },
-  reading: { label: "Reading/Writing", color: "#D97706" },
-};
-
-const gainChartConfig = {
-  gain: { label: "Normalised Gain" },
-};
+import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 
 interface LessonContent {
   lesson_objectives?: string[];
@@ -92,6 +56,8 @@ const getProgressColor = (percentage: number) => {
   if (percentage >= 40) return "[&>div]:bg-amber-500";
   return "[&>div]:bg-red-400";
 };
+
+/* ───────────────────────────── STUDENT DASHBOARD ───────────────────────────── */
 
 const StudentDashboard = () => {
   const { profile, user } = useAuth();
@@ -173,7 +139,6 @@ const StudentDashboard = () => {
         subtitle={today}
       />
 
-      {/* Assessment Results Section */}
       {assessmentLoading ? (
         <LoadingSpinner className="mb-6" />
       ) : myAssessment && reportConfig && scores ? (
@@ -190,7 +155,6 @@ const StudentDashboard = () => {
             </div>
           </div>
 
-          {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <Card className="bg-emerald-50 border-emerald-200">
               <CardContent className="p-3 text-center">
@@ -221,7 +185,6 @@ const StudentDashboard = () => {
             </Card>
           </div>
 
-          {/* Full Report Details */}
           {showReport && (
             <div className="space-y-3 animate-fade-in">
               <div className="flex flex-wrap gap-1.5 mb-3">
@@ -410,16 +373,67 @@ const StudentDashboard = () => {
   );
 };
 
-const Dashboard = () => {
+/* ───────────────────────────── TEACHER HOME ───────────────────────────── */
+
+const featureCards = [
+  {
+    icon: Users,
+    title: "Student Reports",
+    description: "View detailed diagnostic reports for every student — learning styles, multiple intelligences, and cognitive profiles all in one place.",
+    path: "/teacher",
+    color: "from-blue-500/20 to-blue-600/10",
+    iconColor: "text-blue-600",
+  },
+  {
+    icon: BookOpen,
+    title: "AI Lesson Plan Generator",
+    description: "Generate personalised, curriculum-aligned lesson plans powered by AI. Tailored to each student's VARK type and learning needs.",
+    path: "/curative",
+    color: "from-emerald-500/20 to-emerald-600/10",
+    iconColor: "text-emerald-600",
+  },
+  {
+    icon: BarChart3,
+    title: "Analytics & Insights",
+    description: "Track normalised learning gains, class-wide performance trends, and identify mismatch alerts before they become problems.",
+    path: "/analytics",
+    color: "from-violet-500/20 to-violet-600/10",
+    iconColor: "text-violet-600",
+  },
+];
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Assess Students",
+    description: "Run diagnostic assessments to map each student's learning style, intelligence type, and cognitive profile.",
+    icon: Brain,
+  },
+  {
+    step: "02",
+    title: "Review Reports",
+    description: "Analyse detailed reports with VARK profiles, MI scores, and ZPD levels for every student.",
+    icon: FileText,
+  },
+  {
+    step: "03",
+    title: "Generate Lesson Plans",
+    description: "Use AI to create personalised lesson plans matched to each student's unique learning profile.",
+    icon: Sparkles,
+  },
+  {
+    step: "04",
+    title: "Track Progress",
+    description: "Monitor normalised gains and learning outcomes to continuously refine your teaching approach.",
+    icon: LineChart,
+  },
+];
+
+const TeacherHome = () => {
   const { profile, user } = useAuth();
-  const isStudent = profile?.role === "student";
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
-
-  if (isStudent) {
-    return <StudentDashboard />;
-  }
 
   const { data: assessmentCount, isLoading: countLoading } = useQuery({
     queryKey: ["student-assessments-count", user?.id],
@@ -434,29 +448,152 @@ const Dashboard = () => {
     enabled: !!user?.id,
   });
 
+  const { data: lessonCount } = useQuery({
+    queryKey: ["teacher-lesson-count", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("id");
+      if (error) throw error;
+      return data?.length || 0;
+    },
+    enabled: !!user?.id,
+  });
+
   return (
     <AppLayout>
-      <GettingStartedBanner />
-      <PageHeader
-        title={`Welcome back, ${profile?.full_name || "User"}`}
-        subtitle={today}
-      />
-
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-        <CardContent className="pt-8 pb-8">
-          <div className="text-center space-y-4">
-            <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-            <div>
-              <div className="text-5xl font-bold text-foreground">
-                {countLoading ? <LoadingSpinner /> : assessmentCount}
-              </div>
-              <p className="text-lg text-muted-foreground mt-2">Students Completed Assessment</p>
+      {/* Hero Section */}
+      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-2xl">
+        <div
+          className="relative px-8 py-12 md:py-16"
+          style={{
+            backgroundImage: `url(${teacherHeroBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--sidebar-primary))]/90 to-[hsl(var(--sidebar-primary))]/70" />
+          <div className="relative z-10 max-w-2xl">
+            <div className="flex items-center gap-2 mb-3">
+              <GraduationCap className="h-6 w-6 text-white/80" />
+              <span className="text-sm font-medium text-white/70 uppercase tracking-wider">APAS Teacher Portal</span>
             </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              Welcome back, {profile?.full_name || "Teacher"}
+            </h1>
+            <p className="text-base text-white/70 mb-1">{today}</p>
+            <p className="text-sm text-white/60 max-w-lg mt-3 leading-relaxed">
+              Adaptive Personalised Assessment System — empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        <Card className="border-border/60">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
+              <CheckCircle className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">
+                {countLoading ? "—" : assessmentCount}
+              </p>
+              <p className="text-sm text-muted-foreground">Assessments Completed</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+              <BookOpen className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{lessonCount ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">Lesson Plans Created</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10">
+              <Lightbulb className="h-6 w-6 text-violet-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">AI-Powered</p>
+              <p className="text-sm text-muted-foreground">Personalised Learning</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* What You Can Do */}
+      <div className="mb-10">
+        <h2 className="text-xl font-bold text-foreground mb-1">What You Can Do</h2>
+        <p className="text-sm text-muted-foreground mb-6">Explore the core tools designed to enhance your teaching effectiveness.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {featureCards.map((feature) => (
+            <Link key={feature.path} to={feature.path} className="group">
+              <Card className="h-full border-border/60 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
+                <CardContent className="p-6">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
+                    <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    {feature.description}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    Explore <ArrowRight className="h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* How It Works */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-1">How APAS Works</h2>
+        <p className="text-sm text-muted-foreground mb-6">A simple four-step workflow to personalise every student's learning journey.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {workflowSteps.map((step, i) => (
+            <div key={i} className="relative">
+              <Card className="h-full border-border/60">
+                <CardContent className="p-5">
+                  <span className="text-3xl font-black text-primary/15 absolute top-3 right-4">{step.step}</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">
+                    <step.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{step.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+      </div>
     </AppLayout>
   );
+};
+
+/* ───────────────────────────── ROUTER ───────────────────────────── */
+
+const Dashboard = () => {
+  const { profile } = useAuth();
+  const isStudent = profile?.role === "student";
+
+  if (isStudent) {
+    return <StudentDashboard />;
+  }
+
+  return <TeacherHome />;
 };
 
 export default Dashboard;

@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Student Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student", "admin"] },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },

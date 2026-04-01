@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { formatDistanceToNow } from "date-fns";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
+  "/dashboard": "Home",
   "/diagnostic": "Diagnostic Phase",
   "/curative": "Curative Phase",
   "/analytics": "Analytics Phase",
