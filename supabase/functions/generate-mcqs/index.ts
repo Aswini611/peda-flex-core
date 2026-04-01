@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { studentClass, section, subject, numQuestions = 10, questionType = "mcq", topic, difficulty = "medium" } = await req.json();
-    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_API_KEY) throw new Error("GROK_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROK_API_KEY");
+    if (!GROQ_API_KEY) throw new Error("GROK_API_KEY is not configured");
 
     const count = Math.min(Math.max(Number(numQuestions) || 10, 5), 30);
 
