@@ -825,8 +825,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg animate-bounce-slow">
-                  <Bot className="h-6 w-6 text-white" />
+                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg animate-bounce-slow border-2 border-white/30">
+                  <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white/30 animate-pulse" />
               </div>
