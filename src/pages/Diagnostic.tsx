@@ -287,7 +287,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
     return (
       <AppLayout>
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           {/* Top exam bar */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -305,12 +305,12 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
           </div>
 
           {/* Two-column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          <div className="flex gap-6">
             {/* Left: Question area */}
-            <div>
+            <div className="flex-1 min-w-0">
               {/* Dimension indicator */}
               {dimInfo && (
-                <div className="mb-3 flex items-center gap-2">
+                <div className="mb-3 flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                     {dimInfo.dimension.name}
                   </span>
@@ -322,15 +322,17 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
               {/* Question Card */}
               <Card className="mb-5 shadow-sm">
-                <CardContent className="p-8">
+                <CardContent className="p-6 sm:p-8">
                   <div className="animate-fade-in" key={currentQ}>
-                    <p className="text-lg font-medium text-foreground mb-8 leading-relaxed">
-                      <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold mr-3">
+                    <div className="flex gap-3 mb-8">
+                      <span className="inline-flex items-center justify-center h-8 w-8 min-w-[2rem] rounded-full bg-accent text-accent-foreground text-sm font-bold">
                         {displayNum}
                       </span>
-                      {question.text}
-                    </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                      <p className="text-base sm:text-lg font-medium text-foreground leading-relaxed pt-0.5">
+                        {question.text}
+                      </p>
+                    </div>
+                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                       {config.options.map((opt) => {
                         const selected = answers[question.id] === opt.value;
                         return (
@@ -342,14 +344,14 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                                 setTimeout(() => setCurrentQ((q) => q + 1), 350);
                               }
                             }}
-                            className={`flex items-center gap-3 rounded-lg border p-4 text-left text-sm font-medium transition-all ${
+                            className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all ${
                               selected
                                 ? "border-accent bg-accent/10 text-accent shadow-sm"
                                 : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-muted/50"
                             }`}
                           >
-                            <span className="text-2xl">{opt.emoji}</span>
-                            <span>{opt.label}</span>
+                            <span className="text-xl shrink-0">{opt.emoji}</span>
+                            <span className="truncate">{opt.label}</span>
                           </button>
                         );
                       })}
@@ -399,40 +401,42 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
             </div>
 
             {/* Right: Question Navigator Panel */}
-            <Card className="h-fit sticky top-4 overflow-auto max-h-[calc(100vh-120px)]">
-              <CardContent className="p-5 space-y-5">
-                {config.dimensions.map((dim, dimIdx) => {
-                  const startIdx = getDimensionStartIndex(config, dimIdx);
-                  return (
-                    <div key={dim.name}>
-                      <p className="text-sm font-bold text-foreground mb-2">{dim.name}</p>
-                      <div className="grid grid-cols-10 gap-1.5">
-                        {dim.questions.map((q, qIdx) => {
-                          const flatIdx = startIdx + qIdx;
-                          const answered = answers[q.id] !== undefined;
-                          const isCurrent = flatIdx === currentQ;
-                          return (
-                            <button
-                              key={q.id}
-                              onClick={() => setCurrentQ(flatIdx)}
-                              className={`h-8 w-8 rounded-full text-xs font-medium transition-all flex items-center justify-center ${
-                                isCurrent
-                                  ? "ring-2 ring-accent ring-offset-2 ring-offset-card bg-card text-foreground font-bold"
-                                  : answered
-                                  ? "bg-muted-foreground text-card"
-                                  : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
-                              }`}
-                            >
-                              {q.id}
-                            </button>
-                          );
-                        })}
+            <div className="hidden lg:block w-[280px] shrink-0">
+              <Card className="sticky top-4 overflow-auto max-h-[calc(100vh-120px)]">
+                <CardContent className="p-4 space-y-4">
+                  {config.dimensions.map((dim, dimIdx) => {
+                    const startIdx = getDimensionStartIndex(config, dimIdx);
+                    return (
+                      <div key={dim.name}>
+                        <p className="text-xs font-bold text-foreground mb-2 leading-tight">{dim.name}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {dim.questions.map((q, qIdx) => {
+                            const flatIdx = startIdx + qIdx;
+                            const answered = answers[q.id] !== undefined;
+                            const isCurrent = flatIdx === currentQ;
+                            return (
+                              <button
+                                key={q.id}
+                                onClick={() => setCurrentQ(flatIdx)}
+                                className={`h-7 w-7 rounded-full text-[11px] font-medium transition-all flex items-center justify-center ${
+                                  isCurrent
+                                    ? "ring-2 ring-accent ring-offset-1 ring-offset-card bg-card text-foreground font-bold"
+                                    : answered
+                                    ? "bg-accent text-accent-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
+                                }`}
+                              >
+                                {q.id}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </AppLayout>
