@@ -600,17 +600,16 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       openaiMessages.push({ role: "user", content: prompt });
     }
 
-    // 5. Call OpenRouter API (streaming)
-    console.log("Calling Groq API with model: llama-3.3-70b-versatile, messages count:", openaiMessages.length);
+    console.log("Calling Lovable AI Gateway with model: google/gemini-2.5-flash, messages count:", openaiMessages.length);
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "google/gemini-2.5-flash",
         messages: openaiMessages,
         temperature: 0.7,
         stream: true,
