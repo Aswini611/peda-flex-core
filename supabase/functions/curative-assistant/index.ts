@@ -634,7 +634,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       });
     }
 
-    console.log("Grok API response successful, streaming started");
+    console.log("Groq API response successful, streaming started");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
