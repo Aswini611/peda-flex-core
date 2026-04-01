@@ -187,12 +187,12 @@ FOUNDATIONAL PRINCIPLES — APPLY TO EVERY LESSON PLAN
 
 1. **Primacy Effect:** Place the MOST IMPORTANT concept in the FIRST 10 minutes of the lesson. The brain remembers what it encounters first.
 2. **Recency Effect:** End EVERY lesson with a revision/recap activity in the LAST 5 minutes. The brain remembers what it encounters last.
-3. **10-2-10 Chunking Rule (for 40-minute lessons):** Break teaching into TWO cycles of:
-   - 10 minutes of INPUT (teacher explains)
-   - 2 minutes of PROCESSING (students talk, reflect, or write)
-   - 10 minutes of APPLICATION (students practice or solve)
-   Total: 2 cycles × 12 min = 24 min for main teaching. Remaining time: 5 min hook + 5 min assessment + 6 min closure = 40 min total.
-   IMPORTANT: ALL lesson plans MUST be exactly 40 minutes.
+3. **10-2-10 Chunking Rule:** Break teaching into cycles of:
+   - INPUT phase (teacher explains)
+   - PROCESSING phase (students talk, reflect, or write)
+   - APPLICATION phase (students practice or solve)
+   Scale the number of chunks and their durations proportionally to the TOTAL lesson duration requested. For a 40-min lesson use 2 chunks; for 20-min use 1 chunk; for 60-min use 3 chunks. NEVER skip any section — compress them proportionally instead.
+   IMPORTANT: The lesson plan MUST fit the EXACT duration specified by the teacher. Distribute time across ALL sections (Hook, Main Teaching, Group Activity, Assessment, Closure) proportionally. Do NOT skip any section regardless of duration.
 4. **Cognitive Load Management:** Keep information load LOW. Never introduce more than 3 new concepts in one chunk. Use visual aids when verbal information is complex (Sweller's Cognitive Load Theory).
 5. **Emotional Safety (Amygdala Filter):** Start with a warm, non-threatening hook. If the class emotional state is stressed or post-lunch, begin with a brain break or movement activity.
 6. **Patterning & Meaning:** The brain seeks patterns. Always connect NEW concepts to KNOWN real-life examples, cultural references, or previously learned material.
