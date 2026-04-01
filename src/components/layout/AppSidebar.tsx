@@ -100,14 +100,19 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors",
+                  "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                   isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1 hover:shadow-sm"
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{isStudent && item.studentTitle ? item.studentTitle : item.title}</span>}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full animate-[scale-in_0.2s_ease-out]" />
+                )}
+                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
+                {!collapsed && (
+                  <span className="transition-all duration-200">{isStudent && item.studentTitle ? item.studentTitle : item.title}</span>
+                )}
               </NavLink>
             );
           })}
@@ -172,13 +177,16 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                 to={item.path}
                 onClick={onMobileClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-colors",
+                  "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                   isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full" />
+                )}
+                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
                 <span>{isStudent && item.studentTitle ? item.studentTitle : item.title}</span>
               </NavLink>
             );
@@ -195,11 +203,14 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-colors",
-                isActive ? "text-accent" : "text-muted-foreground"
+                "relative flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-all duration-300",
+                isActive ? "text-accent scale-110" : "text-muted-foreground hover:text-accent/70 active:scale-95"
               )}
             >
-              <item.icon className="h-5 w-5" />
+              {isActive && (
+                <span className="absolute -top-1 w-6 h-[3px] bg-accent rounded-b-full" />
+              )}
+              <item.icon className={cn("h-5 w-5 transition-transform duration-300", isActive && "animate-[fade-in_0.3s_ease-out]")} />
               <span>{item.title}</span>
             </NavLink>
           );
