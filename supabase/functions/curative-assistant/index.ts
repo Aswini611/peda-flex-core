@@ -601,18 +601,16 @@ Make the plan specific, actionable, and based on actual assessment data.`,
     }
 
     // 5. Call OpenRouter API (streaming)
-    console.log("Calling OpenRouter API with model: gpt-oss-120b, messages count:", openaiMessages.length);
+    console.log("Calling Lovable AI Gateway with model: google/gemini-2.5-flash, messages count:", openaiMessages.length);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("https://ai.lovable.dev/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://peda-flex-core.lovable.app",
-        "X-Title": "APAS Curative Assistant",
       },
       body: JSON.stringify({
-        model: "gpt-oss-120b",
+        model: "google/gemini-2.5-flash",
         messages: openaiMessages,
         temperature: 0.7,
         max_tokens: 8192,
