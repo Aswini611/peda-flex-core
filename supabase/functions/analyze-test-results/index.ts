@@ -74,14 +74,14 @@ ${wrongQs.length > 0 ? wrongQs.map((w, i) => `${i + 1}. Question: ${w.question}\
 
 Analyze the student's performance and provide strengths, weaknesses, and improvement suggestions.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GROK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "grok-3-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
