@@ -281,7 +281,13 @@ IMPORTANT: Do NOT use "By the end of this lesson, students will be able to" — 
 
 ---
 
-## 🎯 4. Activities — Differentiated Group Work (20 minutes)
+## 🎯 4. Activities — Differentiated Group Work (MANDATORY FOR ALL DURATIONS)
+
+**⚠️ CRITICAL: EVERY lesson plan MUST include a group activity, regardless of duration.**
+- For short lessons (15-25 min): Include a **Quick Group Activity** (3-5 minutes) — e.g., Think-Pair-Share, quick peer quiz, 2-minute group discussion, or rapid sorting game.
+- For medium lessons (26-40 min): Include a **Standard Group Activity** (10-20 minutes) — full VARK-based group work with differentiated tasks.
+- For long lessons (41-60+ min): Include **Extended Group Activities** (20-30 minutes) — multiple rounds, rotations, or project-based group tasks.
+- NEVER skip group activities. If time is tight, compress them but ALWAYS include at least one collaborative activity.
 
 ### Group Organization
 - **Setup:** Organize students into 4 groups based on VARK/MI profiles from assessment data
