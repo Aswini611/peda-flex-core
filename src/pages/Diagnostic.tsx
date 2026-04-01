@@ -274,7 +274,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     );
   }
 
-  // ─── Unified Quiz Phase ───
+  // ─── Unified Quiz Phase (Exam-style) ───
   if (phase === "quiz") {
     if (!config) return null;
     const question = allQuestions[currentQ];
@@ -287,18 +287,17 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
     return (
       <AppLayout>
-        <PageHeader
-          title="Student Assessment"
-          subtitle={`${config.label} — ${config.model}`}
-        />
-
-        {/* Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Question {displayNum} of {totalQuestions}</span>
-            <span>{totalAnswered} answered</span>
+        {/* Top exam bar */}
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-foreground">Student Assessment</h1>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {totalAnswered}/{totalQuestions} answered
+            </span>
+            <div className="w-32">
+              <Progress value={progress} className="h-2" />
+            </div>
           </div>
-          <Progress value={progress} className="h-2" />
         </div>
 
         {/* Dimension Header */}
@@ -312,11 +311,11 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         )}
 
         {/* Question Card */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
+        <Card className="mb-6 shadow-sm">
+          <CardContent className="p-8">
             <div className="animate-fade-in" key={currentQ}>
-              <p className="text-lg font-medium text-foreground mb-6">
-                <span className="text-primary font-bold mr-2">{displayNum}.</span>
+              <p className="text-lg font-medium text-foreground mb-8">
+                <span className="font-bold mr-2">{displayNum}.</span>
                 {question.text}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -331,7 +330,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                           setTimeout(() => setCurrentQ((q) => q + 1), 350);
                         }
                       }}
-                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
+                      className={`flex items-center gap-3 rounded-lg border p-4 text-left text-sm font-medium transition-all ${
                         selected
                           ? "border-primary bg-primary/10 text-primary shadow-sm"
                           : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
@@ -348,7 +347,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         </Card>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-8">
           <Button
             variant="outline"
             onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
@@ -388,12 +387,12 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         </div>
 
         {/* Dimension-grouped dot navigation */}
-        <div className="mt-6 space-y-3">
+        <div className="space-y-3">
           {config.dimensions.map((dim, dimIdx) => {
             const startIdx = getDimensionStartIndex(config, dimIdx);
             return (
               <div key={dim.name}>
-                <p className="text-xs font-medium text-muted-foreground mb-1.5 truncate">{dim.name}</p>
+                <p className="text-xs font-semibold text-primary mb-1.5">{dim.name}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {dim.questions.map((q, qIdx) => {
                     const flatIdx = startIdx + qIdx;
@@ -406,7 +405,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                           flatIdx === currentQ
                             ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
                             : answered
-                            ? "bg-foreground text-background"
+                            ? "bg-primary/20 text-primary"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
