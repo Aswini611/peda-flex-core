@@ -10,8 +10,8 @@ serve(async (req) => {
 
   try {
     const { subject, studentClass, topic, questions, answers } = await req.json();
-    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_API_KEY) throw new Error("GROK_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROK_API_KEY");
+    if (!GROQ_API_KEY) throw new Error("GROK_API_KEY is not configured");
 
     // Build question analysis
     const correctQs: string[] = [];
@@ -74,24 +74,25 @@ ${wrongQs.length > 0 ? wrongQs.map((w, i) => `${i + 1}. Question: ${w.question}\
 
 Analyze the student's performance and provide strengths, weaknesses, and improvement suggestions.`;
 
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GROK_API_KEY}`,
+        Authorization: `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-mini",
+        model: "llama-3.3-70b-versatile",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("API error:", response.status, t);
+      console.error("Groq API error:", response.status, t);
       throw new Error(`API error: ${response.status}`);
     }
 

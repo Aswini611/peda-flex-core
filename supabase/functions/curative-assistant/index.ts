@@ -15,8 +15,8 @@ serve(async (req) => {
   try {
     const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
 
-    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_API_KEY) throw new Error("GROK_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROK_API_KEY");
+    if (!GROQ_API_KEY) throw new Error("GROK_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -601,16 +601,16 @@ Make the plan specific, actionable, and based on actual assessment data.`,
     }
 
     // 5. Call OpenRouter API (streaming)
-    console.log("Calling Grok API with model: grok-3-mini, messages count:", openaiMessages.length);
+    console.log("Calling Groq API with model: llama-3.3-70b-versatile, messages count:", openaiMessages.length);
 
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GROK_API_KEY}`,
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-mini",
+        model: "llama-3.3-70b-versatile",
         messages: openaiMessages,
         temperature: 0.7,
         stream: true,
@@ -619,7 +619,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Grok API error:", response.status, errorText);
+      console.error("Groq API error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
@@ -634,7 +634,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       });
     }
 
-    console.log("Grok API response successful, streaming started");
+    console.log("Groq API response successful, streaming started");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
