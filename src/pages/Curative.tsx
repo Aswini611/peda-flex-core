@@ -498,7 +498,9 @@ Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
 ${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use 5E Instructional Model: Engage, Explore, Explain, Elaborate, Evaluate with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
 
-Do NOT mention individual student names. Focus on class-wide patterns and actionable teaching strategies.`,
+IMPORTANT: For each VARK learning style group (Visual, Auditory, Read/Write, Kinesthetic), LIST the actual student names that belong to that group based on their assessment data. This helps the teacher quickly assign students to the right group.
+
+Also, whenever you use any advanced or technical word (like ZPD, Bloom's Taxonomy, Primacy Effect, Scaffolding, etc.), ALWAYS add a simple "decode" explanation right after it so that anyone — students, parents, or volunteers — can understand it easily.`,
       "generate",
     );
   };
