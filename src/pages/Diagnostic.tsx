@@ -10,10 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search } from "lucide-react";
-import { getAgeGroupConfig, type AgeGroupConfig } from "@/data/assessmentQuestions";
+import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search, BookOpen } from "lucide-react";
+import { getAgeGroupConfig, getDimensionStartIndex, type AgeGroupConfig } from "@/data/assessmentQuestions";
 import { getTeacherAgeGroupConfig, type TeacherAgeGroupConfig } from "@/data/teacherAssessmentQuestions";
-import { getVarkAgeGroupConfig, type VarkAgeGroupConfig } from "@/data/varkQuestions";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -42,6 +41,37 @@ const Diagnostic = () => {
   return <StudentAssessment userId={user?.id} studentName={profile?.full_name || ""} />;
 };
 
+// ─── Dimension Header Component ───
+const DimensionHeader = ({ name, description, current, total }: { name: string; description: string; current: number; total: number }) => (
+  <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+    <div className="flex items-center gap-2 mb-1">
+      <BookOpen className="h-4 w-4 text-primary" />
+      <span className="text-sm font-semibold text-primary">{name}</span>
+    </div>
+    <p className="text-xs text-muted-foreground">{description}</p>
+    <p className="text-xs text-muted-foreground mt-1">Question {current} of {total} in this section</p>
+  </div>
+);
+
+// ─── Helper: get current dimension info from flat index ───
+function getCurrentDimensionInfo(config: AgeGroupConfig, flatIndex: number) {
+  let cumulative = 0;
+  for (let i = 0; i < config.dimensions.length; i++) {
+    const dim = config.dimensions[i];
+    if (flatIndex < cumulative + dim.questions.length) {
+      return {
+        dimension: dim,
+        dimensionIndex: i,
+        questionInDimension: flatIndex - cumulative + 1,
+        totalInDimension: dim.questions.length,
+        isFirstInDimension: flatIndex === cumulative,
+      };
+    }
+    cumulative += dim.questions.length;
+  }
+  return null;
+}
+
 // ─── Student Assessment ───────────────────────────────────────
 
 interface Teacher {
@@ -62,10 +92,8 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [loadingTeachers, setLoadingTeachers] = useState(true);
 
   const [config, setConfig] = useState<AgeGroupConfig | null>(null);
-  const [varkConfig, setVarkConfig] = useState<VarkAgeGroupConfig | null>(null);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [varkAnswers, setVarkAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -96,19 +124,12 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     if (!cfg) return;
     setConfig(cfg);
     setAnswers({});
-    const vCfg = getVarkAgeGroupConfig(ageGroup);
-    setVarkConfig(vCfg || null);
-    setVarkAnswers({});
     setCurrentQ(0);
     setPhase("quiz");
   };
 
   const handleAnswer = (questionId: number, value: number) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
-  };
-
-  const handleVarkAnswer = (questionId: number, modality: string) => {
-    setVarkAnswers((prev) => ({ ...prev, [questionId]: modality }));
   };
 
   const handleSubmitWithAnswers = async (finalAnswers: Record<number, number>) => {
@@ -120,7 +141,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         student_age: parseInt(age),
         age_group: config.ageGroup,
         teacher_id: teacherId,
-        responses: { ...finalAnswers, vark: varkAnswers },
+        responses: finalAnswers,
         submitted_by: userId,
         student_class: studentClass,
         section: section.trim(),
@@ -137,11 +158,10 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     }
   };
 
-  const assessmentCount = config?.questions.length || 30;
-  const varkCount = varkConfig?.questions.length || 20;
-  const totalQuestions = assessmentCount + varkCount;
-  const totalAnswered = Object.keys(answers).length + Object.keys(varkAnswers).length;
-  const progress = Math.round((totalAnswered / totalQuestions) * 100);
+  const allQuestions = config?.questions || [];
+  const totalQuestions = allQuestions.length;
+  const totalAnswered = Object.keys(answers).length;
+  const progress = Math.round((totalAnswered / (totalQuestions || 1)) * 100);
 
   // ─── Form Phase ───
   if (phase === "form") {
@@ -256,16 +276,16 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     );
   }
 
-  // ─── Unified Quiz Phase (30 Assessment + 20 VARK = 50 Questions) ───
+  // ─── Unified Quiz Phase ───
   if (phase === "quiz") {
     if (!config) return null;
-    const isVarkQuestion = currentQ >= assessmentCount;
-    const varkIndex = currentQ - assessmentCount;
+    const question = allQuestions[currentQ];
+    if (!question) return null;
     const isLastQuestion = currentQ === totalQuestions - 1;
     const allAnswered = totalAnswered === totalQuestions;
-
-    // Current question display number (1-based)
     const displayNum = currentQ + 1;
+
+    const dimInfo = getCurrentDimensionInfo(config, currentQ);
 
     return (
       <AppLayout>
@@ -281,83 +301,51 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
             <span>{totalAnswered} answered</span>
           </div>
           <Progress value={progress} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {isVarkQuestion ? "VARK Learning Style Questions" : "Assessment Questions"}
-          </p>
         </div>
+
+        {/* Dimension Header */}
+        {dimInfo && (
+          <DimensionHeader
+            name={dimInfo.dimension.name}
+            description={dimInfo.dimension.description}
+            current={dimInfo.questionInDimension}
+            total={dimInfo.totalInDimension}
+          />
+        )}
 
         {/* Question Card */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            {!isVarkQuestion ? (
-              // Assessment question (Likert scale)
-              <div className="animate-fade-in" key={currentQ}>
-                <p className="text-lg font-medium text-foreground mb-6">
-                  <span className="text-primary font-bold mr-2">{displayNum}.</span>
-                  {config.questions[currentQ].text}
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {config.options.map((opt) => {
-                    const qId = config.questions[currentQ].id;
-                    const selected = answers[qId] === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => {
-                          handleAnswer(qId, opt.value);
-                          if (!isLastQuestion) {
-                            setTimeout(() => setCurrentQ((q) => q + 1), 350);
-                          }
-                        }}
-                        className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
-                          selected
-                            ? "border-primary bg-primary/10 text-primary shadow-sm"
-                            : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
-                        }`}
-                      >
-                        <span className="text-2xl">{opt.emoji}</span>
-                        <span>{opt.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="animate-fade-in" key={currentQ}>
+              <p className="text-lg font-medium text-foreground mb-6">
+                <span className="text-primary font-bold mr-2">{displayNum}.</span>
+                {question.text}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {config.options.map((opt) => {
+                  const selected = answers[question.id] === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        handleAnswer(question.id, opt.value);
+                        if (!isLastQuestion) {
+                          setTimeout(() => setCurrentQ((q) => q + 1), 350);
+                        }
+                      }}
+                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
+                        selected
+                          ? "border-primary bg-primary/10 text-primary shadow-sm"
+                          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
+                      }`}
+                    >
+                      <span className="text-2xl">{opt.emoji}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
-              // VARK question (MCQ)
-              varkConfig && (
-                <div className="animate-fade-in" key={`vark-${varkIndex}`}>
-                  <p className="text-lg font-medium text-foreground mb-6">
-                    <span className="text-primary font-bold mr-2">{displayNum}.</span>
-                    {varkConfig.questions[varkIndex].text}
-                  </p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {varkConfig.questions[varkIndex].options.map((opt) => {
-                      const vqId = varkConfig.questions[varkIndex].id;
-                      const selected = varkAnswers[vqId] === opt.modality;
-                      return (
-                        <button
-                          key={opt.label}
-                          onClick={() => {
-                            handleVarkAnswer(vqId, opt.modality);
-                            if (!isLastQuestion) {
-                              setTimeout(() => setCurrentQ((q) => q + 1), 350);
-                            }
-                          }}
-                          className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
-                            selected
-                              ? "border-primary bg-primary/10 text-primary shadow-sm"
-                              : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
-                          }`}
-                        >
-                          <span className="text-lg font-bold text-primary/70 w-6">{opt.label}.</span>
-                          <span>{opt.text}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )
-            )}
+            </div>
           </CardContent>
         </Card>
 
@@ -373,9 +361,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
           <div className="flex gap-2">
             {(() => {
-              const currentAnswered = isVarkQuestion
-                ? varkConfig && varkAnswers[varkConfig.questions[varkIndex].id] !== undefined
-                : answers[config.questions[currentQ].id] !== undefined;
+              const currentAnswered = answers[question.id] !== undefined;
 
               if (!isLastQuestion && currentAnswered) {
                 return (
@@ -403,27 +389,35 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
           </div>
         </div>
 
-        {/* Question dots navigation */}
-        <div className="mt-6 flex flex-wrap gap-1.5 justify-center">
-          {Array.from({ length: totalQuestions }, (_, i) => {
-            const isVark = i >= assessmentCount;
-            const answered = isVark
-              ? varkConfig && varkAnswers[varkConfig.questions[i - assessmentCount].id] !== undefined
-              : answers[config.questions[i].id] !== undefined;
+        {/* Dimension-grouped dot navigation */}
+        <div className="mt-6 space-y-3">
+          {config.dimensions.map((dim, dimIdx) => {
+            const startIdx = getDimensionStartIndex(config, dimIdx);
             return (
-              <button
-                key={i}
-                onClick={() => setCurrentQ(i)}
-                className={`h-7 w-7 rounded-full text-xs font-medium transition-all ${
-                  i === currentQ
-                    ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
-                    : answered
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {i + 1}
-              </button>
+              <div key={dim.name}>
+                <p className="text-xs font-medium text-muted-foreground mb-1.5 truncate">{dim.name}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {dim.questions.map((q, qIdx) => {
+                    const flatIdx = startIdx + qIdx;
+                    const answered = answers[q.id] !== undefined;
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => setCurrentQ(flatIdx)}
+                        className={`h-7 w-7 rounded-full text-xs font-medium transition-all ${
+                          flatIdx === currentQ
+                            ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
+                            : answered
+                            ? "bg-foreground text-background"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {q.id}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
