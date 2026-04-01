@@ -187,12 +187,12 @@ FOUNDATIONAL PRINCIPLES — APPLY TO EVERY LESSON PLAN
 
 1. **Primacy Effect:** Place the MOST IMPORTANT concept in the FIRST 10 minutes of the lesson. The brain remembers what it encounters first.
 2. **Recency Effect:** End EVERY lesson with a revision/recap activity in the LAST 5 minutes. The brain remembers what it encounters last.
-3. **10-2-10 Chunking Rule (for 40-minute lessons):** Break teaching into TWO cycles of:
-   - 10 minutes of INPUT (teacher explains)
-   - 2 minutes of PROCESSING (students talk, reflect, or write)
-   - 10 minutes of APPLICATION (students practice or solve)
-   Total: 2 cycles × 12 min = 24 min for main teaching. Remaining time: 5 min hook + 5 min assessment + 6 min closure = 40 min total.
-   IMPORTANT: ALL lesson plans MUST be exactly 40 minutes.
+3. **10-2-10 Chunking Rule:** Break teaching into cycles of:
+   - INPUT phase (teacher explains)
+   - PROCESSING phase (students talk, reflect, or write)
+   - APPLICATION phase (students practice or solve)
+   Scale the number of chunks and their durations proportionally to the TOTAL lesson duration requested. For a 40-min lesson use 2 chunks; for 20-min use 1 chunk; for 60-min use 3 chunks. NEVER skip any section — compress them proportionally instead.
+   IMPORTANT: The lesson plan MUST fit the EXACT duration specified by the teacher. Distribute time across ALL sections (Hook, Main Teaching, Group Activity, Assessment, Closure) proportionally. Do NOT skip any section regardless of duration.
 4. **Cognitive Load Management:** Keep information load LOW. Never introduce more than 3 new concepts in one chunk. Use visual aids when verbal information is complex (Sweller's Cognitive Load Theory).
 5. **Emotional Safety (Amygdala Filter):** Start with a warm, non-threatening hook. If the class emotional state is stressed or post-lunch, begin with a brain break or movement activity.
 6. **Patterning & Meaning:** The brain seeks patterns. Always connect NEW concepts to KNOWN real-life examples, cultural references, or previously learned material.
@@ -281,7 +281,13 @@ IMPORTANT: Do NOT use "By the end of this lesson, students will be able to" — 
 
 ---
 
-## 🎯 4. Activities — Differentiated Group Work (20 minutes)
+## 🎯 4. Activities — Differentiated Group Work (MANDATORY FOR ALL DURATIONS)
+
+**⚠️ CRITICAL: EVERY lesson plan MUST include a group activity, regardless of duration.**
+- For short lessons (15-25 min): Include a **Quick Group Activity** (3-5 minutes) — e.g., Think-Pair-Share, quick peer quiz, 2-minute group discussion, or rapid sorting game.
+- For medium lessons (26-40 min): Include a **Standard Group Activity** (10-20 minutes) — full VARK-based group work with differentiated tasks.
+- For long lessons (41-60+ min): Include **Extended Group Activities** (20-30 minutes) — multiple rounds, rotations, or project-based group tasks.
+- NEVER skip group activities. If time is tight, compress them but ALWAYS include at least one collaborative activity.
 
 ### Group Organization
 - **Setup:** Organize students into 4 groups based on VARK/MI profiles from assessment data
@@ -458,24 +464,32 @@ This helps the teacher know exactly which students go into which group. Use the 
 - Avoid these words completely: utilize, facilitate, demonstrate, assess, implement, pedagogical, scaffold, differentiated, cognitive, metacognitive, formative, summative. Use instead: use, help, show, check, do, teaching, support, different levels, thinking, self-check, quick check, final test.
 - Even section headings should be simple. Instead of "Differentiated Group Work" say "Group Activities (for different learning styles)".
 
-## 📖 DECODE BOX — EXPLAIN ADVANCED TERMS (MANDATORY)
+## 📖 DECODE BOX — EXPLAIN ALL ADVANCED/DIFFICULT WORDS (MANDATORY — MOST CRITICAL RULE)
 
-Whenever you MUST use an advanced or technical term (like ZPD, Bloom's Taxonomy, Primacy Effect, Scaffolding, etc.), you MUST immediately follow it with a simple "decode" explanation in parentheses or a small callout box.
+**EVERY single advanced, technical, or uncommon word used ANYWHERE in the lesson plan MUST be immediately decoded.**
+This applies to ALL types of advanced words — not just teaching terms, but also:
+- **Subject-specific words** (e.g., photosynthesis, denominator, ecosystem, peninsula, molecule)
+- **Teaching/pedagogy terms** (e.g., ZPD, Bloom's Taxonomy, Scaffolding, Primacy Effect)
+- **Academic vocabulary** (e.g., hypothesis, inference, chronological, symmetry)
+- **Any word a parent or non-teacher might not understand**
 
-**Format Option 1 — Inline decode:**
-> **ZPD** _(what this means: the sweet spot where a task is not too easy and not too hard — the student can do it with a little help)_
+**Format Option 1 — Inline decode (preferred for subject words):**
+> **Photosynthesis** _(what this means: the way plants make their own food using sunlight, water, and air — like a plant's kitchen!)_
 
-**Format Option 2 — Decode box after section:**
+**Format Option 2 — Decode box after section (for multiple terms):**
 > 📖 **Word Decoder:**
 > - **Primacy Effect** = The brain remembers what it learns FIRST. That's why we teach the big idea at the start.
 > - **Scaffolding** = Giving students step-by-step support, like training wheels on a bicycle.
-> - **Bloom's Taxonomy** = A way to organize thinking from simple (remembering facts) to complex (creating something new).
+> - **Denominator** = The bottom number in a fraction — it tells you how many equal parts the whole is divided into.
+> - **Ecosystem** = A community of living things (plants, animals, insects) and their environment (water, soil, air) all working together — like a neighbourhood where everyone depends on each other.
 
 **Rules:**
+- **DECODE EVERY advanced word on FIRST use** — no exceptions. If in doubt, decode it.
 - Add a decode box at least once per major section if any advanced term appears.
-- The decode should be so simple that a 10-year-old or a parent with no teaching background can understand it.
+- The decode should be so simple that a 10-year-old or a parent with no teaching/subject background can understand it.
 - Use everyday comparisons and real-life examples in the decode (e.g., "like training wheels", "like building blocks", "like a recipe").
 - If a term was already decoded earlier in the plan, you can skip it the second time — but the FIRST use MUST have a decode.
+- Subject-specific words in activity descriptions, worksheets, and assessment questions MUST also be decoded.
 
 **The lesson plan should be so simple that even a parent or volunteer with no teaching experience can pick it up and teach the class.**
 
