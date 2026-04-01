@@ -402,7 +402,12 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
                 <FileText className="h-4 w-4" />
                 View Full Report
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowLessonPlan(true)} className="gap-1.5">
+              <Button size="sm" variant="outline" onClick={() => {
+                const params = new URLSearchParams();
+                params.set("class", filterClass);
+                if (filterSection !== "all") params.set("section", filterSection);
+                navigate(`/curative?${params.toString()}`);
+              }} className="gap-1.5">
                 <Sparkles className="h-4 w-4" />
                 Generate Lesson Plan
               </Button>
