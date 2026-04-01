@@ -865,7 +865,7 @@ Also, whenever you use any advanced or technical word (like ZPD, Bloom's Taxonom
 
         {/* Chat Area */}
         <div className="border-x-2 border-b-2 border-accent/10 rounded-b-2xl bg-card shadow-xl overflow-hidden">
-          <div ref={contentRef} className="min-h-[340px] max-h-[520px] overflow-y-auto p-5 space-y-5" style={{ background: 'linear-gradient(180deg, hsl(var(--muted)/0.15) 0%, hsl(var(--background)) 100%)' }}>
+          <div ref={contentRef} onScroll={handleChatScroll} className="min-h-[340px] max-h-[600px] overflow-y-auto p-5 space-y-5" style={{ background: 'linear-gradient(180deg, hsl(var(--muted)/0.15) 0%, hsl(var(--background)) 100%)', overflowAnchor: 'none' }}>
             {chatMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-[300px] text-center animate-fade-in">
                 {/* Animated Bot Avatar */}
