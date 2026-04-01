@@ -620,7 +620,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenRouter API error:", response.status, errorText);
+      console.error("Lovable AI API error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
@@ -635,8 +635,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       });
     }
 
-    // OpenRouter uses OpenAI-compatible streaming format — pass through directly
-    console.log("OpenRouter API response successful, streaming started");
+    console.log("Lovable AI API response successful, streaming started");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
