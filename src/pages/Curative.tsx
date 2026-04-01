@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import teacherAiAvatar from "@/assets/teacher-ai-avatar.png";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import html2pdf from "html2pdf.js";
@@ -824,8 +825,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg animate-bounce-slow">
-                  <Bot className="h-6 w-6 text-white" />
+                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg animate-bounce-slow border-2 border-white/30">
+                  <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white/30 animate-pulse" />
               </div>
@@ -852,8 +853,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               <div className="flex flex-col items-center justify-center h-[300px] text-center animate-fade-in">
                 {/* Animated Bot Avatar */}
                 <div className="relative mb-5">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-lg border border-accent/10">
-                    <Bot className="h-10 w-10 text-accent animate-bounce-slow" />
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 border-accent/20">
+                    <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover animate-bounce-slow" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-card flex items-center justify-center">
                     <Sparkles className="h-2.5 w-2.5 text-white" />
@@ -941,8 +942,8 @@ REQUIREMENTS:
               <div key={i} className="animate-fade-in">
                 <div className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
-                    <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center mt-1 shadow-sm border border-accent/10">
-                      <Bot className="h-4.5 w-4.5 text-accent" />
+                    <div className="shrink-0 w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-accent/10">
+                      <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}
                   <div className={`rounded-2xl px-5 py-4 max-w-[85%] shadow-sm ${
@@ -981,8 +982,8 @@ REQUIREMENTS:
 
             {isStreaming && chatMessages[chatMessages.length - 1]?.role !== "assistant" && (
               <div className="flex gap-3 animate-fade-in">
-                <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm border border-accent/10">
-                  <Bot className="h-4.5 w-4.5 text-accent" />
+                <div className="shrink-0 w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-accent/10">
+                  <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" loading="lazy" />
                 </div>
                 <div className="bg-card border border-border/60 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
                   <div className="flex items-center gap-2">
