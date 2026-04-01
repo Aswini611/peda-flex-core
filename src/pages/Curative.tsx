@@ -740,6 +740,29 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
           </div>
 
+          {/* Topic & Duration row */}
+          <div className="mt-4 flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Topic (Optional)</label>
+              <Input
+                value={topicValue}
+                onChange={(e) => setTopicValue(e.target.value)}
+                placeholder="e.g. Photosynthesis, Fractions, The Water Cycle..."
+                className="w-full"
+              />
+            </div>
+            <div className="w-[160px]">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Duration (mins)</label>
+              <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                <SelectTrigger><SelectValue placeholder="Duration" /></SelectTrigger>
+                <SelectContent>
+                  {[20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90].map((d) => (
+                    <SelectItem key={d} value={String(d)}>{d} minutes</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <div className="mt-4 flex items-center gap-3">
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
