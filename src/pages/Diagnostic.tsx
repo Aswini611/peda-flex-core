@@ -634,105 +634,119 @@ const DiagnosticTeacher = () => {
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Teacher Assessment"
-        subtitle={`${config.label} — Assessing: ${selectedStudentName}`}
-      />
-
-      {/* Progress */}
-      <div className="mb-6">
-        <div className="flex justify-between text-sm text-muted-foreground mb-2">
-          <span>Question {currentQ + 1} of {totalQuestions}</span>
-          <span>{answeredCount} answered</span>
-        </div>
-        <Progress value={progress} className="h-2" />
-      </div>
-
-      {/* Question Card */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="animate-fade-in" key={currentQ}>
-            <p className="text-lg font-medium text-foreground mb-6">
-              <span className="text-primary font-bold mr-2">{question.id}.</span>
-              {question.text}
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Teacher Assessment</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Assessing: {selectedStudentName} — {answeredCount} of {totalQuestions} answered
             </p>
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {config.options.map((opt) => {
-                const selected = answers[question.id] === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      handleAnswer(question.id, opt.value);
-                      if (!isLastQuestion) {
-                        setTimeout(() => setCurrentQ((q) => q + 1), 350);
-                      }
-                    }}
-                    className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all ${
-                      selected
-                        ? "border-primary bg-primary/10 text-primary shadow-sm"
-                        : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
-                    }`}
-                  >
-                    <span className="text-2xl">{opt.emoji}</span>
-                    <span>{opt.label}</span>
-                  </button>
-                );
-              })}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-foreground">{progress}%</span>
+            <div className="w-32">
+              <Progress value={progress} className="h-2" />
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Navigation */}
-      <div className="flex justify-between items-center">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
-          disabled={currentQ === 0}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" /> Previous
-        </Button>
-
-        <div className="flex gap-2">
-          {!isLastQuestion && answers[question.id] !== undefined && (
-            <Button onClick={() => setCurrentQ((q) => q + 1)}>
-              Next <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          )}
-          {isLastQuestion && answers[question.id] !== undefined && (
-            <div className="flex flex-col items-end gap-1">
-              <Button onClick={handleSubmit} disabled={submitting || !allAnswered}>
-                {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
-              </Button>
-              {!allAnswered && (
-                <span className="text-xs text-destructive">
-                  {totalQuestions - answeredCount} question{totalQuestions - answeredCount > 1 ? "s" : ""} unanswered
-                </span>
-              )}
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* Question dots navigation */}
-      <div className="mt-6 flex flex-wrap gap-1.5 justify-center">
-        {config.questions.map((q, i) => (
-          <button
-            key={q.id}
-            onClick={() => setCurrentQ(i)}
-            className={`h-7 w-7 rounded-full text-xs font-medium transition-all ${
-              i === currentQ
-                ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
-                : answers[q.id] !== undefined
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {q.id}
-          </button>
-        ))}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          {/* Left: Question */}
+          <div>
+            <Card className="mb-5 shadow-sm">
+              <CardContent className="p-8">
+                <div className="animate-fade-in" key={currentQ}>
+                  <p className="text-lg font-medium text-foreground mb-8 leading-relaxed">
+                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold mr-3">
+                      {question.id}
+                    </span>
+                    {question.text}
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {config.options.map((opt) => {
+                      const selected = answers[question.id] === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            handleAnswer(question.id, opt.value);
+                            if (!isLastQuestion) {
+                              setTimeout(() => setCurrentQ((q) => q + 1), 350);
+                            }
+                          }}
+                          className={`flex items-center gap-3 rounded-lg border p-4 text-left text-sm font-medium transition-all ${
+                            selected
+                              ? "border-accent bg-accent/10 text-accent shadow-sm"
+                              : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-muted/50"
+                          }`}
+                        >
+                          <span className="text-2xl">{opt.emoji}</span>
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-between items-center">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
+                disabled={currentQ === 0}
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" /> Previous
+              </Button>
+              <div className="flex gap-2">
+                {!isLastQuestion && answers[question.id] !== undefined && (
+                  <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                    Next <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                )}
+                {isLastQuestion && answers[question.id] !== undefined && (
+                  <div className="flex flex-col items-end gap-1">
+                    <Button onClick={handleSubmit} disabled={submitting || !allAnswered}>
+                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
+                    </Button>
+                    {!allAnswered && (
+                      <span className="text-xs text-destructive">
+                        {totalQuestions - answeredCount} unanswered
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Question Navigator */}
+          <Card className="h-fit sticky top-4 overflow-auto max-h-[calc(100vh-120px)]">
+            <CardContent className="p-5">
+              <div className="grid grid-cols-10 gap-1.5">
+                {config.questions.map((q, i) => {
+                  const isCurrent = i === currentQ;
+                  const answered = answers[q.id] !== undefined;
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => setCurrentQ(i)}
+                      className={`h-8 w-8 rounded-full text-xs font-medium transition-all flex items-center justify-center ${
+                        isCurrent
+                          ? "ring-2 ring-accent ring-offset-2 ring-offset-card bg-card text-foreground font-bold"
+                          : answered
+                          ? "bg-muted-foreground text-card"
+                          : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
+                      }`}
+                    >
+                      {q.id}
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );
