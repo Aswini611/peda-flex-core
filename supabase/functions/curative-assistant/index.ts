@@ -601,19 +601,18 @@ Make the plan specific, actionable, and based on actual assessment data.`,
     }
 
     // 5. Call OpenRouter API (streaming)
-    console.log("Calling Lovable AI Gateway with model: google/gemini-2.5-flash, messages count:", openaiMessages.length);
+    console.log("Calling Grok API with model: grok-3-mini, messages count:", openaiMessages.length);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${GROK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "grok-3-mini",
         messages: openaiMessages,
         temperature: 0.7,
-        max_tokens: 8192,
         stream: true,
       }),
     });
