@@ -456,26 +456,6 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
         </DialogContent>
       </Dialog>
 
-      {/* Lesson Plan Dialog */}
-      <Dialog open={showLessonPlan} onOpenChange={setShowLessonPlan}>
-        <DialogContent className="max-w-5xl max-h-[92vh] p-0 overflow-hidden border-0 bg-[#f6f5f2]">
-          <div className="flex items-center justify-between p-3 pb-0">
-            <p className="text-sm font-medium text-[#3d3d5c]">APAS Curative Lesson Plan</p>
-            <Button size="sm" variant="outline" onClick={() => handleDownloadLessonPlan()} className="gap-1.5">
-              <Download className="h-4 w-4" />
-              Download Plan
-            </Button>
-          </div>
-          <ScrollArea className="max-h-[84vh] px-6 pb-6">
-            <CurativeLessonPlanView
-              assessments={assessments}
-              classLabel={classLabel}
-              filterSection={filterSection}
-              teacherName={teacherName || "N/A"}
-            />
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
