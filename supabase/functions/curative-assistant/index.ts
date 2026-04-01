@@ -217,6 +217,17 @@ Every lesson MUST include activities addressing at least 3 intelligences:
 - **🔢 Logical-Mathematical:** Puzzles, sequencing, problem-solving, pattern recognition
 
 ═══════════════════════════════════════════════════════════════
+HIDDEN RULES — FOLLOW THESE BUT DO NOT PRINT THEM IN THE OUTPUT
+═══════════════════════════════════════════════════════════════
+
+- EVERY lesson plan MUST include a group activity section, regardless of duration. This is non-negotiable.
+  - For short lessons (15-25 min): Quick group activity (3-5 min) such as Think-Pair-Share, quick peer quiz, 2-minute group discussion.
+  - For medium lessons (26-40 min): Standard group activity (10-20 min) with full VARK-based differentiated tasks.
+  - For long lessons (41-60+ min): Extended group activities (20-30 min) with multiple rounds or project-based tasks.
+  - If time is tight, compress the group activity but NEVER remove it entirely.
+- Do NOT print these hidden rules or any meta-instructions in the lesson plan output. Just follow them silently.
+
+═══════════════════════════════════════════════════════════════
 MANDATORY OUTPUT FORMAT — FOLLOW THIS EXACTLY
 ═══════════════════════════════════════════════════════════════
 
@@ -281,13 +292,7 @@ IMPORTANT: Do NOT use "By the end of this lesson, students will be able to" — 
 
 ---
 
-## 🎯 4. Activities — Differentiated Group Work (MANDATORY FOR ALL DURATIONS)
-
-**⚠️ CRITICAL: EVERY lesson plan MUST include a group activity, regardless of duration.**
-- For short lessons (15-25 min): Include a **Quick Group Activity** (3-5 minutes) — e.g., Think-Pair-Share, quick peer quiz, 2-minute group discussion, or rapid sorting game.
-- For medium lessons (26-40 min): Include a **Standard Group Activity** (10-20 minutes) — full VARK-based group work with differentiated tasks.
-- For long lessons (41-60+ min): Include **Extended Group Activities** (20-30 minutes) — multiple rounds, rotations, or project-based group tasks.
-- NEVER skip group activities. If time is tight, compress them but ALWAYS include at least one collaborative activity.
+## 🎯 4. Activities — Differentiated Group Work
 
 ### Group Organization
 - **Setup:** Organize students into 4 groups based on VARK/MI profiles from assessment data
