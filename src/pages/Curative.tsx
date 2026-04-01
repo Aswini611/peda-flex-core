@@ -366,7 +366,20 @@ const Curative = () => {
     enabled: !!selectedClass && !!selectedSection && !!user?.id,
   });
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
+  const userScrolledUp = useRef(false);
+
+  const handleChatScroll = useCallback(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    userScrolledUp.current = distanceFromBottom > 80;
+  }, []);
+
+  useEffect(() => {
+    if (!userScrolledUp.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages]);
 
   useEffect(() => {
     setSelectedSection("");
