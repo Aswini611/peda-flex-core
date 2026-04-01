@@ -41,15 +41,13 @@ const Diagnostic = () => {
   return <StudentAssessment userId={user?.id} studentName={profile?.full_name || ""} />;
 };
 
-// ─── Dimension Header Component ───
-const DimensionHeader = ({ name, description, current, total }: { name: string; description: string; current: number; total: number }) => (
-  <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
-    <div className="flex items-center gap-2 mb-1">
-      <BookOpen className="h-4 w-4 text-primary" />
-      <span className="text-sm font-semibold text-primary">{name}</span>
+// ─── Dimension Header Component (Exam-style) ───
+const DimensionHeader = ({ name, current, total }: { name: string; description: string; current: number; total: number }) => (
+  <div className="mb-4 px-4 py-2.5 rounded-md bg-muted/60 border border-border">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-semibold text-foreground">{name}</span>
+      <span className="text-xs text-muted-foreground">Question {current} of {total} in this section</span>
     </div>
-    <p className="text-xs text-muted-foreground">{description}</p>
-    <p className="text-xs text-muted-foreground mt-1">Question {current} of {total} in this section</p>
   </div>
 );
 
