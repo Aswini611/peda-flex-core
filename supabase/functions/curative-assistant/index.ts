@@ -619,7 +619,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Grok API error:", response.status, errorText);
+      console.error("Groq API error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
