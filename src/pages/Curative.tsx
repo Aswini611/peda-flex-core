@@ -456,6 +456,14 @@ const Curative = () => {
     }
   }, [selectedClass, selectedSection, selectedSubject, chatMessages, isStreaming]);
 
+  const getDurationBreakdown = (mins: number) => {
+    const hook = Math.max(3, Math.round(mins * 0.125));
+    const assessment = Math.max(3, Math.round(mins * 0.125));
+    const closure = Math.max(3, Math.round(mins * 0.15));
+    const main = mins - hook - assessment - closure;
+    return { hook, main, assessment, closure };
+  };
+
   const handleGeneratePlan = () => {
     const subjectLabel = selectedSubject ? selectedSubject : "";
     const chapterLabel = selectedChapter
@@ -463,16 +471,19 @@ const Curative = () => {
       : "";
     const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
     const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
+    const topicText = topicValue.trim() ? `, Topic: "${topicValue.trim()}"` : "";
     const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
+    const duration = parseInt(selectedDuration) || 40;
+    const { hook, main, assessment, closure } = getDurationBreakdown(duration);
     sendMessage(
-      `Generate a 40-MINUTE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${curriculumText} with ${studentCount} students.
+      `Generate a ${duration}-MINUTE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.
 
-IMPORTANT: The lesson MUST be exactly 40 minutes. Structure the timing as:
-- Hook/Introduction: 5 minutes (Primacy Effect — deliver key concept here)
-- Main Teaching: TWO 10-2-10 chunks = 24 minutes (10 min input → 2 min processing → 10 min application, repeated twice)
-- Assessment/Exit Ticket: 5 minutes
-- Closure/Revision: 6 minutes (Recency Effect — recap here)
+IMPORTANT: The lesson MUST be exactly ${duration} minutes. Structure the timing as:
+- Hook/Introduction: ${hook} minutes (Primacy Effect — deliver key concept here)
+- Main Teaching: ${main} minutes (use chunked delivery with processing breaks)
+- Assessment/Exit Ticket: ${assessment} minutes
+- Closure/Revision: ${closure} minutes (Recency Effect — recap here)
 
 Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs aligned with the topic and curriculum.
 
