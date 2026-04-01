@@ -982,8 +982,8 @@ REQUIREMENTS:
 
             {isStreaming && chatMessages[chatMessages.length - 1]?.role !== "assistant" && (
               <div className="flex gap-3 animate-fade-in">
-                <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm border border-accent/10">
-                  <Bot className="h-4.5 w-4.5 text-accent" />
+                <div className="shrink-0 w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-accent/10">
+                  <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" loading="lazy" />
                 </div>
                 <div className="bg-card border border-border/60 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
                   <div className="flex items-center gap-2">
