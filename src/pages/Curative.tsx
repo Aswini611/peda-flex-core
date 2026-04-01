@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -664,15 +664,36 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
   return (
     <AppLayout>
-      <PageHeader title="Lesson Plan Generator" subtitle="AI-powered teaching assistant — generates differentiated lesson plans using class reports & textbooks" />
+      {/* Hero Header */}
+      <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/90 via-primary to-primary/80 p-8 shadow-xl animate-fade-in">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djJoLTJ2LTJoMnptMC00aDJ2MmgtMnYtMnptLTQgOGgydjJoLTJ2LTJ6bTIgMGgydjJoLTJ2LTJ6bTItNGgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl animate-bounce-slow">
+              <Wand2 className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Lesson Plan Generator</h1>
+              <p className="text-white/75 text-sm mt-0.5">AI-powered teaching assistant — generates differentiated lesson plans using class reports & textbooks</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Card className="mb-6">
-        <CardContent className="p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Select Class</label>
+      {/* Configuration Card */}
+      <Card className="mb-6 border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <CardHeader className="pb-3 border-b border-border/50">
+          <CardTitle className="text-base flex items-center gap-2 text-primary">
+            <BookMarked className="h-5 w-5" />
+            Configure Your Lesson
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-5 pt-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="group">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Class</label>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger><SelectValue placeholder="Choose a class..." /></SelectTrigger>
+                <SelectTrigger className="transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"><SelectValue placeholder="Choose a class..." /></SelectTrigger>
                 <SelectContent>
                   {CLASS_OPTIONS.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
@@ -683,10 +704,10 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Select Section</label>
+            <div className="group">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Section</label>
               <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedClass}>
-                <SelectTrigger><SelectValue placeholder={!selectedClass ? "Select a class first..." : "Choose a section..."} /></SelectTrigger>
+                <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder={!selectedClass ? "Select a class first..." : "Choose a section..."} /></SelectTrigger>
                 <SelectContent>
                   {sections.map((s) => (
                     <SelectItem key={s} value={s}>
@@ -697,37 +718,26 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               </Select>
             </div>
 
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Select Subject</label>
+            <div className="group">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Subject</label>
               <Select value={selectedSubject} onValueChange={setSelectedSubject} disabled={!selectedClass}>
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      !selectedClass
-                        ? "Select a class first..."
-                        : subjects.length === 0
-                          ? "No textbooks found"
-                          : "Choose a subject..."
-                    }
-                  />
+                <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                  <SelectValue placeholder={!selectedClass ? "Select a class first..." : subjects.length === 0 ? "No textbooks found" : "Choose a subject..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((s) => (
                     <SelectItem key={s.value} value={s.value}>
-                      <span className="flex items-center gap-2">
-                        <BookOpen className="h-3.5 w-3.5" />
-                        {s.label}
-                      </span>
+                      <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" />{s.label}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Curriculum</label>
+            <div className="group">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Curriculum</label>
               <Select value={selectedCurriculum} onValueChange={setSelectedCurriculum}>
-                <SelectTrigger><SelectValue placeholder="Choose curriculum..." /></SelectTrigger>
+                <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Choose curriculum..." /></SelectTrigger>
                 <SelectContent>
                   {CURRICULUM_OPTIONS.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
@@ -737,24 +747,27 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
                 </SelectContent>
               </Select>
             </div>
-
           </div>
 
           {/* Topic & Duration row */}
-          <div className="mt-4 flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Topic (Optional)</label>
+          <div className="mt-5 flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px] group">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
+                <BookOpen className="h-3 w-3" /> Topic (Optional)
+              </label>
               <Input
                 value={topicValue}
                 onChange={(e) => setTopicValue(e.target.value)}
                 placeholder="e.g. Photosynthesis, Fractions, The Water Cycle..."
-                className="w-full"
+                className="w-full transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"
               />
             </div>
-            <div className="w-[160px]">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Duration (mins)</label>
+            <div className="w-[170px] group">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
+                <Clock className="h-3 w-3" /> Duration
+              </label>
               <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-                <SelectTrigger><SelectValue placeholder="Duration" /></SelectTrigger>
+                <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Duration" /></SelectTrigger>
                 <SelectContent>
                   {[20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90].map((d) => (
                     <SelectItem key={d} value={String(d)}>{d} minutes</SelectItem>
@@ -764,37 +777,48 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-3">
-            <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
-              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate {selectedDuration}-Min Lesson Plan</>)}
+          {/* Generate Button */}
+          <div className="mt-6 flex items-center gap-3">
+            <Button
+              onClick={handleGeneratePlan}
+              disabled={!isReady || isStreaming}
+              size="lg"
+              className="shrink-0 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-base px-8 py-3 rounded-xl"
+            >
+              {isStreaming ? (
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating...</>
+              ) : (
+                <><Sparkles className="h-5 w-5 mr-2" /> Generate Lesson Plan</>
+              )}
             </Button>
           </div>
 
+          {/* Status Badges */}
           {isReady && (
-            <div className="mt-3 flex items-center gap-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs gap-1"><GraduationCap className="h-3 w-3" /> {getClassLabel(selectedClass)}</Badge>
+            <div className="mt-4 flex items-center gap-2 flex-wrap animate-fade-in">
+              <Badge variant="secondary" className="text-xs gap-1 shadow-sm"><GraduationCap className="h-3 w-3" /> {getClassLabel(selectedClass)}</Badge>
               <Badge variant="outline" className="text-xs gap-1"><Users className="h-3 w-3" /> Section {selectedSection}</Badge>
               {selectedSubject && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <BookOpen className="h-3 w-3" /> {selectedSubject}
-                </Badge>
+                <Badge variant="outline" className="text-xs gap-1"><BookOpen className="h-3 w-3" /> {selectedSubject}</Badge>
               )}
               {selectedCurriculum && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <Globe className="h-3 w-3" /> {CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label}
-                </Badge>
+                <Badge variant="outline" className="text-xs gap-1"><Globe className="h-3 w-3" /> {CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label}</Badge>
               )}
+              {topicValue.trim() && (
+                <Badge className="text-xs gap-1 bg-primary/10 text-primary border-primary/20"><BookMarked className="h-3 w-3" /> {topicValue.trim()}</Badge>
+              )}
+              <Badge variant="outline" className="text-xs gap-1"><Clock className="h-3 w-3" /> {selectedDuration} min</Badge>
               <span className="text-xs text-muted-foreground ml-2">
-                {studentCount} student{studentCount !== 1 ? "s" : ""} found • AI will use assessment reports & textbook
-                content
+                {studentCount} student{studentCount !== 1 ? "s" : ""} found • AI will use assessment reports & textbook content
               </span>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+      {/* Chat Card */}
+      <Card className="mb-6 border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border/50">
           <CardTitle className="text-sm flex items-center gap-2"><MessageSquare className="h-4 w-4 text-primary" /> AI Teaching Assistant</CardTitle>
           {chatMessages.length > 0 && (
             <Button variant="ghost" size="sm" onClick={() => { setChatMessages([]); setHasGeneratedContent(false); }} className="text-xs gap-1"><Trash2 className="h-3 w-3" /> Clear</Button>
