@@ -942,8 +942,8 @@ REQUIREMENTS:
               <div key={i} className="animate-fade-in">
                 <div className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
-                    <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center mt-1 shadow-sm border border-accent/10">
-                      <Bot className="h-4.5 w-4.5 text-accent" />
+                    <div className="shrink-0 w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-accent/10">
+                      <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}
                   <div className={`rounded-2xl px-5 py-4 max-w-[85%] shadow-sm ${
