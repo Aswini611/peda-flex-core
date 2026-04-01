@@ -464,24 +464,32 @@ This helps the teacher know exactly which students go into which group. Use the 
 - Avoid these words completely: utilize, facilitate, demonstrate, assess, implement, pedagogical, scaffold, differentiated, cognitive, metacognitive, formative, summative. Use instead: use, help, show, check, do, teaching, support, different levels, thinking, self-check, quick check, final test.
 - Even section headings should be simple. Instead of "Differentiated Group Work" say "Group Activities (for different learning styles)".
 
-## 📖 DECODE BOX — EXPLAIN ADVANCED TERMS (MANDATORY)
+## 📖 DECODE BOX — EXPLAIN ALL ADVANCED/DIFFICULT WORDS (MANDATORY — MOST CRITICAL RULE)
 
-Whenever you MUST use an advanced or technical term (like ZPD, Bloom's Taxonomy, Primacy Effect, Scaffolding, etc.), you MUST immediately follow it with a simple "decode" explanation in parentheses or a small callout box.
+**EVERY single advanced, technical, or uncommon word used ANYWHERE in the lesson plan MUST be immediately decoded.**
+This applies to ALL types of advanced words — not just teaching terms, but also:
+- **Subject-specific words** (e.g., photosynthesis, denominator, ecosystem, peninsula, molecule)
+- **Teaching/pedagogy terms** (e.g., ZPD, Bloom's Taxonomy, Scaffolding, Primacy Effect)
+- **Academic vocabulary** (e.g., hypothesis, inference, chronological, symmetry)
+- **Any word a parent or non-teacher might not understand**
 
-**Format Option 1 — Inline decode:**
-> **ZPD** _(what this means: the sweet spot where a task is not too easy and not too hard — the student can do it with a little help)_
+**Format Option 1 — Inline decode (preferred for subject words):**
+> **Photosynthesis** _(what this means: the way plants make their own food using sunlight, water, and air — like a plant's kitchen!)_
 
-**Format Option 2 — Decode box after section:**
+**Format Option 2 — Decode box after section (for multiple terms):**
 > 📖 **Word Decoder:**
 > - **Primacy Effect** = The brain remembers what it learns FIRST. That's why we teach the big idea at the start.
 > - **Scaffolding** = Giving students step-by-step support, like training wheels on a bicycle.
-> - **Bloom's Taxonomy** = A way to organize thinking from simple (remembering facts) to complex (creating something new).
+> - **Denominator** = The bottom number in a fraction — it tells you how many equal parts the whole is divided into.
+> - **Ecosystem** = A community of living things (plants, animals, insects) and their environment (water, soil, air) all working together — like a neighbourhood where everyone depends on each other.
 
 **Rules:**
+- **DECODE EVERY advanced word on FIRST use** — no exceptions. If in doubt, decode it.
 - Add a decode box at least once per major section if any advanced term appears.
-- The decode should be so simple that a 10-year-old or a parent with no teaching background can understand it.
+- The decode should be so simple that a 10-year-old or a parent with no teaching/subject background can understand it.
 - Use everyday comparisons and real-life examples in the decode (e.g., "like training wheels", "like building blocks", "like a recipe").
 - If a term was already decoded earlier in the plan, you can skip it the second time — but the FIRST use MUST have a decode.
+- Subject-specific words in activity descriptions, worksheets, and assessment questions MUST also be decoded.
 
 **The lesson plan should be so simple that even a parent or volunteer with no teaching experience can pick it up and teach the class.**
 
