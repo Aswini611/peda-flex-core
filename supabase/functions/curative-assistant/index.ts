@@ -618,11 +618,17 @@ Make the plan specific, actionable, and based on actual assessment data.`,
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Groq API error:", response.status, errorText);
+      console.error("Lovable AI error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
           status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds in Settings → Workspace → Usage." }), {
+          status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -633,7 +639,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
       });
     }
 
-    console.log("Groq API response successful, streaming started");
+    console.log("Lovable AI response successful, streaming started");
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
