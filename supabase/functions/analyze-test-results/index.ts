@@ -92,7 +92,7 @@ Analyze the student's performance and provide strengths, weaknesses, and improve
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("API error:", response.status, t);
+      console.error("Groq API error:", response.status, t);
       throw new Error(`API error: ${response.status}`);
     }
 
