@@ -601,16 +601,16 @@ Make the plan specific, actionable, and based on actual assessment data.`,
     }
 
     // 5. Call OpenRouter API (streaming)
-    console.log("Calling Grok API with model: grok-3-mini, messages count:", openaiMessages.length);
+    console.log("Calling Groq API with model: llama-3.3-70b-versatile, messages count:", openaiMessages.length);
 
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GROK_API_KEY}`,
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-mini",
+        model: "llama-3.3-70b-versatile",
         messages: openaiMessages,
         temperature: 0.7,
         stream: true,
