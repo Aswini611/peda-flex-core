@@ -816,30 +816,81 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
         </CardContent>
       </Card>
 
-      {/* Chat Card */}
-      <Card className="mb-6 border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border/50">
-          <CardTitle className="text-sm flex items-center gap-2"><MessageSquare className="h-4 w-4 text-primary" /> AI Teaching Assistant</CardTitle>
-          {chatMessages.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => { setChatMessages([]); setHasGeneratedContent(false); }} className="text-xs gap-1"><Trash2 className="h-3 w-3" /> Clear</Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div ref={contentRef} className="min-h-[300px] max-h-[500px] overflow-y-auto rounded-lg border border-border bg-muted/30 p-4 mb-4 space-y-4">
+      {/* AI Teaching Assistant */}
+      <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        {/* Assistant Header */}
+        <div className="relative rounded-t-2xl overflow-hidden bg-gradient-to-r from-accent via-accent/90 to-primary p-5">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-60" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg animate-bounce-slow">
+                  <Bot className="h-6 w-6 text-white" />
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white/30 animate-pulse" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  AI Teaching Assistant
+                  <span className="text-[10px] font-medium bg-white/20 backdrop-blur-sm text-white/90 px-2 py-0.5 rounded-full uppercase tracking-wider">Online</span>
+                </h2>
+                <p className="text-white/70 text-xs mt-0.5">Your intelligent co-teacher — ask anything about your class</p>
+              </div>
+            </div>
+            {chatMessages.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => { setChatMessages([]); setHasGeneratedContent(false); }} className="text-white/70 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
+                <Trash2 className="h-3.5 w-3.5" /> Clear Chat
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        <div className="border-x-2 border-b-2 border-accent/10 rounded-b-2xl bg-card shadow-xl overflow-hidden">
+          <div ref={contentRef} className="min-h-[340px] max-h-[520px] overflow-y-auto p-5 space-y-5" style={{ background: 'linear-gradient(180deg, hsl(var(--muted)/0.15) 0%, hsl(var(--background)) 100%)' }}>
             {chatMessages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-[260px] text-center">
-                <Bot className="h-12 w-12 text-muted-foreground mb-3" />
-                <h3 className="text-sm font-semibold mb-1">AI Teaching Assistant</h3>
-                <p className="text-xs text-muted-foreground max-w-sm">Select a class, section, and subject above, then click "Generate Lesson Plan" or ask any question.</p>
-                <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                  {isReady && (
-                    <>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What are the class-wide weak areas for ${getClassLabel(selectedClass)} Section ${selectedSection} based on the assessment report? Focus on dimensions where the class is struggling overall and avoid mentioning individual student names. Provide a summary of weak dimensions and average performance levels.`, "chat")} disabled={isStreaming}>Show weak areas</Button>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+              <div className="flex flex-col items-center justify-center h-[300px] text-center animate-fade-in">
+                {/* Animated Bot Avatar */}
+                <div className="relative mb-5">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-lg border border-accent/10">
+                    <Bot className="h-10 w-10 text-accent animate-bounce-slow" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-card flex items-center justify-center">
+                    <Sparkles className="h-2.5 w-2.5 text-white" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-1.5">Hello, Teacher! 👋</h3>
+                <p className="text-sm text-muted-foreground max-w-md mb-1">I'm your AI Teaching Assistant powered by advanced intelligence.</p>
+                <p className="text-xs text-muted-foreground/70 max-w-sm mb-6">Select a class & section above, then generate a lesson plan or ask me anything about your students.</p>
+                
+                {/* Quick Action Cards */}
+                {isReady && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full max-w-2xl">
+                    <button
+                      onClick={() => sendMessage(`What are the class-wide weak areas for ${getClassLabel(selectedClass)} Section ${selectedSection} based on the assessment report? Focus on dimensions where the class is struggling overall and avoid mentioning individual student names. Provide a summary of weak dimensions and average performance levels.`, "chat")}
+                      disabled={isStreaming}
+                      className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <MessageSquare className="h-4.5 w-4.5 text-red-500" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground/80">Weak Areas</span>
+                    </button>
+                    <button
+                      onClick={() => {
                         const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "English";
                         sendMessage(`Generate a lesson plan for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} – Chapter 1 based on the class assessment report. Focus on class-wide performance patterns with ${studentCount} students. Do NOT mention individual student names - provide recommendations based on class-level weak areas and average performance metrics. Generate ONLY the lesson plan, not a diagnostic report.`, "generate");
-                      }} disabled={isStreaming}>Lesson plan for Ch. 1</Button>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+                      }}
+                      disabled={isStreaming}
+                      className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <BookOpen className="h-4.5 w-4.5 text-blue-500" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground/80">Ch. 1 Plan</span>
+                    </button>
+                    <button
+                      onClick={() => {
                         const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "English";
                         sendMessage(`Create a comprehensive practice worksheet package for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} with MINIMUM 5 PAGES structured as follows:
 
@@ -862,42 +913,66 @@ REQUIREMENTS:
 - Do NOT mention individual student names
 - Include a COMPLETE ANSWER KEY at the end covering all pages
 - Professional formatting with clear section breaks between pages`, "generate");
-                      }} disabled={isStreaming}>Generate Worksheets</Button>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => sendMessage(`What teaching strategies would you recommend for ${getClassLabel(selectedClass)} Section ${selectedSection} with ${studentCount} students based on class-wide performance? Focus on class-level interventions and do NOT mention individual student names. Provide actionable teaching strategies for the entire section.`, "chat")} disabled={isStreaming}>Teaching strategies</Button>
-                    </>
-                  )}
-                </div>
+                      }}
+                      disabled={isStreaming}
+                      className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <Wand2 className="h-4.5 w-4.5 text-green-500" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground/80">Worksheets</span>
+                    </button>
+                    <button
+                      onClick={() => sendMessage(`What teaching strategies would you recommend for ${getClassLabel(selectedClass)} Section ${selectedSection} with ${studentCount} students based on class-wide performance? Focus on class-level interventions and do NOT mention individual student names. Provide actionable teaching strategies for the entire section.`, "chat")}
+                      disabled={isStreaming}
+                      className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <GraduationCap className="h-4.5 w-4.5 text-purple-500" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground/80">Strategies</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
             {chatMessages.map((msg, i) => (
-              <div key={i}>
+              <div key={i} className="animate-fade-in">
                 <div className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
-                    <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5"><Bot className="h-4 w-4 text-primary" /></div>
+                    <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center mt-1 shadow-sm border border-accent/10">
+                      <Bot className="h-4.5 w-4.5 text-accent" />
+                    </div>
                   )}
-                  <div className={`rounded-lg px-5 py-4 max-w-[85%] ${msg.role === "user" ? "bg-primary text-primary-foreground text-sm" : "bg-card border border-border shadow-sm"}`}>
+                  <div className={`rounded-2xl px-5 py-4 max-w-[85%] shadow-sm ${
+                    msg.role === "user" 
+                      ? "bg-gradient-to-br from-accent to-accent/85 text-white text-sm rounded-br-md" 
+                      : "bg-card border border-border/60 rounded-bl-md"
+                  }`}>
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none">
                         <ReactMarkdown components={MarkdownComponents}>
                           {msg.content}
                         </ReactMarkdown>
                       </div>
-                    ) : (<p className="text-sm">{msg.content}</p>)}
+                    ) : (<p className="text-sm leading-relaxed">{msg.content}</p>)}
                   </div>
                   {msg.role === "user" && (
-                    <div className="shrink-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center mt-0.5"><User className="h-4 w-4 text-primary-foreground" /></div>
+                    <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mt-1 shadow-sm">
+                      <User className="h-4 w-4 text-primary-foreground" />
+                    </div>
                   )}
                 </div>
                 {msg.role === "assistant" && (
-                  <div className="flex justify-start mt-2 ml-10">
+                  <div className="flex justify-start mt-2.5 ml-11">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleDownloadPDF(msg.content, i)}
-                      className="text-xs gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                      className="text-xs gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 border-green-200 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/30"
                     >
-                      <Download className="h-3 w-3" /> Download as PDF
+                      <Download className="h-3.5 w-3.5" /> Download PDF
                     </Button>
                   </div>
                 )}
@@ -905,22 +980,51 @@ REQUIREMENTS:
             ))}
 
             {isStreaming && chatMessages[chatMessages.length - 1]?.role !== "assistant" && (
-              <div className="flex gap-3">
-                <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center"><Bot className="h-4 w-4 text-primary" /></div>
-                <div className="bg-card border border-border rounded-lg px-4 py-3"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+              <div className="flex gap-3 animate-fade-in">
+                <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm border border-accent/10">
+                  <Bot className="h-4.5 w-4.5 text-accent" />
+                </div>
+                <div className="bg-card border border-border/60 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                    <span className="text-xs text-muted-foreground">Thinking...</span>
+                    <span className="flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
 
-          <div className="flex gap-2">
-            <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
-              placeholder={isReady ? `Ask about ${getClassLabel(selectedClass)} Section ${selectedSection} curriculum, textbooks...` : "Select a class and section first..."}
-              disabled={!isReady || isStreaming} className="flex-1" />
-            <Button onClick={handleSendChat} disabled={!isReady || !inputValue.trim() || isStreaming} size="icon"><Send className="h-4 w-4" /></Button>
+          {/* Input Area */}
+          <div className="border-t border-border/50 p-4 bg-muted/20">
+            <div className="flex gap-2.5 items-center">
+              <div className="relative flex-1">
+                <Input 
+                  value={inputValue} 
+                  onChange={(e) => setInputValue(e.target.value)} 
+                  onKeyDown={handleKeyDown}
+                  placeholder={isReady ? `Ask about ${getClassLabel(selectedClass)} Section ${selectedSection}...` : "Select a class and section first..."}
+                  disabled={!isReady || isStreaming} 
+                  className="pr-4 rounded-xl border-border/60 bg-card focus:ring-accent/30 focus:border-accent/50 transition-all duration-300 h-11" 
+                />
+              </div>
+              <Button 
+                onClick={handleSendChat} 
+                disabled={!isReady || !inputValue.trim() || isStreaming} 
+                size="icon"
+                className="h-11 w-11 rounded-xl bg-gradient-to-br from-accent to-accent/85 hover:from-accent/90 hover:to-accent shadow-md hover:shadow-lg hover:scale-[1.05] active:scale-[0.95] transition-all duration-300"
+              >
+                <Send className="h-4.5 w-4.5" />
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </AppLayout>
   );
 };
