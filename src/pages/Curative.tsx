@@ -743,7 +743,7 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
 
           <div className="mt-4 flex items-center gap-3">
             <Button onClick={handleGeneratePlan} disabled={!isReady || isStreaming} className="shrink-0">
-              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate 40-Min Lesson Plan</>)}
+              {isStreaming ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>) : (<><Sparkles className="h-4 w-4 mr-2" /> Generate {selectedDuration}-Min Lesson Plan</>)}
             </Button>
           </div>
 
