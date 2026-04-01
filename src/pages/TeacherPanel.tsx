@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -39,6 +40,7 @@ interface StudentAssessment {
 
 const TeacherPanel = () => {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [selectedAssessment, setSelectedAssessment] = useState<StudentAssessment | null>(null);
   const [filterClass, setFilterClass] = useState<string>("all");
   const [filterSection, setFilterSection] = useState<string>("all");
@@ -337,9 +339,9 @@ interface ClassReportProps {
 }
 
 const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: ClassReportProps) => {
+  const navigate = useNavigate();
   const classLabel = CLASS_OPTIONS.find(c => c.value === filterClass)?.label || filterClass;
   const [showFullReport, setShowFullReport] = useState(false);
-  const [showLessonPlan, setShowLessonPlan] = useState(false);
 
   const reportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const reportId = `APD-CLS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
@@ -401,7 +403,12 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
                 <FileText className="h-4 w-4" />
                 View Full Report
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowLessonPlan(true)} className="gap-1.5">
+              <Button size="sm" variant="outline" onClick={() => {
+                const params = new URLSearchParams();
+                params.set("class", filterClass);
+                if (filterSection !== "all") params.set("section", filterSection);
+                navigate(`/curative?${params.toString()}`);
+              }} className="gap-1.5">
                 <Sparkles className="h-4 w-4" />
                 Generate Lesson Plan
               </Button>
@@ -449,26 +456,6 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: C
         </DialogContent>
       </Dialog>
 
-      {/* Lesson Plan Dialog */}
-      <Dialog open={showLessonPlan} onOpenChange={setShowLessonPlan}>
-        <DialogContent className="max-w-5xl max-h-[92vh] p-0 overflow-hidden border-0 bg-[#f6f5f2]">
-          <div className="flex items-center justify-between p-3 pb-0">
-            <p className="text-sm font-medium text-[#3d3d5c]">APAS Curative Lesson Plan</p>
-            <Button size="sm" variant="outline" onClick={() => handleDownloadLessonPlan()} className="gap-1.5">
-              <Download className="h-4 w-4" />
-              Download Plan
-            </Button>
-          </div>
-          <ScrollArea className="max-h-[84vh] px-6 pb-6">
-            <CurativeLessonPlanView
-              assessments={assessments}
-              classLabel={classLabel}
-              filterSection={filterSection}
-              teacherName={teacherName || "N/A"}
-            />
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

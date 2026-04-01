@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -244,8 +245,9 @@ async function streamChat({
 const Curative = () => {
   const { profile, user } = useAuth();
   const { awardXp } = useGamification();
-  const [selectedClass, setSelectedClass] = useState("");
-  const [selectedSection, setSelectedSection] = useState("");
+  const [searchParams] = useSearchParams();
+  const [selectedClass, setSelectedClass] = useState(searchParams.get("class") || "");
+  const [selectedSection, setSelectedSection] = useState(searchParams.get("section") || "");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
