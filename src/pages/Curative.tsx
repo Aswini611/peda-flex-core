@@ -853,8 +853,8 @@ Do NOT mention individual student names. Focus on class-wide patterns and action
               <div className="flex flex-col items-center justify-center h-[300px] text-center animate-fade-in">
                 {/* Animated Bot Avatar */}
                 <div className="relative mb-5">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-lg border border-accent/10">
-                    <Bot className="h-10 w-10 text-accent animate-bounce-slow" />
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 border-accent/20">
+                    <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover animate-bounce-slow" />
                   </div>
                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-card flex items-center justify-center">
                     <Sparkles className="h-2.5 w-2.5 text-white" />
