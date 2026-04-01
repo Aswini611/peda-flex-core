@@ -163,39 +163,7 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
 
         // Download and extract actual PDF text content
         if (matchedName) {
-          textbookContext += `\nSelected textbook: ${matchedName}.`;
-          try {
-            console.log(`Downloading textbook: ${classFolder}/${matchedName}`);
-            const { data: fileData, error: downloadError } = await supabase.storage
-              .from("textbooks")
-              .download(`${classFolder}/${matchedName}`);
-
-            if (downloadError) {
-              console.error("Textbook download error:", downloadError.message);
-              textbookContext += ` (Could not download textbook for content extraction)`;
-            } else if (fileData) {
-              // Extract text from PDF using pdf-parse
-              const pdfParse = (await import("https://esm.sh/pdf-parse@1.1.1")).default;
-              const arrayBuffer = await fileData.arrayBuffer();
-              const buffer = new Uint8Array(arrayBuffer);
-              const pdfData = await pdfParse(buffer);
-              
-              let extractedText = pdfData.text || "";
-              const totalChars = extractedText.length;
-              const MAX_CHARS = 15000; // Cap to avoid memory/token limits
-              
-              if (extractedText.length > MAX_CHARS) {
-                extractedText = extractedText.substring(0, MAX_CHARS) + `\n\n[... Textbook content truncated. Showing first ${MAX_CHARS} of ${totalChars} characters ...]`;
-              }
-              
-              console.log(`Extracted ${totalChars} chars from textbook (using ${Math.min(totalChars, MAX_CHARS)})`);
-              
-              textbookContext += `\n\n═══ ACTUAL TEXTBOOK CONTENT (${matchedName}) ═══\n${extractedText}\n═══ END TEXTBOOK CONTENT ═══\n\nIMPORTANT: Use the ACTUAL textbook content above to create lesson plans that directly reference chapters, topics, examples, and exercises from this textbook. Align all activities and assessments with the textbook material.`;
-            }
-          } catch (pdfError) {
-            console.error("PDF extraction error:", pdfError);
-            textbookContext += ` Use your knowledge of this textbook's typical curriculum content to inform lesson plans. (PDF extraction failed: ${pdfError instanceof Error ? pdfError.message : "unknown error"})`;
-          }
+          textbookContext += `\nSelected textbook: ${matchedName}. Use your internal knowledge of NCERT/CBSE/Cambridge curriculum content for this subject and class level to inform lesson plans. Align activities with standard textbook chapters and topics.`;
         }
       }
     }
