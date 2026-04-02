@@ -94,6 +94,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+          </GovernanceNotificationProvider>
           </NotificationProvider>
         </AuthProvider>
       </BrowserRouter>
