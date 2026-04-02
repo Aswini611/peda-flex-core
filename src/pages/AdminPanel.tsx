@@ -47,6 +47,8 @@ interface ClassTeacher {
   id: string;
   class_id: string;
   teacher_id: string;
+  teacher_role: string;
+  subject: string | null;
   profiles: { full_name: string | null } | null;
 }
 
@@ -67,6 +69,9 @@ const AdminPanel = () => {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedClassForTeacher, setSelectedClassForTeacher] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [selectedTeacherRole, setSelectedTeacherRole] = useState("primary");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [teacherViewMode, setTeacherViewMode] = useState<"assign" | "by-class" | "by-teacher">("assign");
   const [selectedTeacherForQuestions, setSelectedTeacherForQuestions] = useState("");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
   const [questionAssignments, setQuestionAssignments] = useState<any[]>([]);
@@ -80,7 +85,7 @@ const AdminPanel = () => {
       supabase.from("students").select("id, profile_id, grade, age, profiles(full_name)"),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
       supabase.from("class_students").select("id, class_id, student_id, students(id, grade, profiles(full_name))"),
-      supabase.from("class_teachers").select("id, class_id, teacher_id, profiles:teacher_id(full_name)"),
+      supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
       supabase.from("teacher_question_assignments").select("*"),
     ]);
     if (classesRes.data) setClasses(classesRes.data);
@@ -141,16 +146,29 @@ const AdminPanel = () => {
 
   const handleAssignTeacher = async () => {
     if (!selectedClassForTeacher || !selectedTeacher) return;
+    if (selectedTeacherRole === "subject" && !selectedSubject.trim()) {
+      toast({ title: "Error", description: "Subject is required for subject teachers", variant: "destructive" });
+      return;
+    }
     const { error } = await supabase.from("class_teachers").insert({
       class_id: selectedClassForTeacher,
       teacher_id: selectedTeacher,
+      teacher_role: selectedTeacherRole,
+      subject: selectedTeacherRole === "subject" ? selectedSubject.trim() : null,
       assigned_by: user?.id,
     });
     if (error) {
-      toast({ title: "Error", description: error.code === "23505" ? "Teacher already in this class" : error.message, variant: "destructive" });
+      const msg = error.code === "23505"
+        ? selectedTeacherRole === "primary"
+          ? "This class already has a primary teacher. Remove the existing one first."
+          : "Teacher already assigned to this class"
+        : error.message;
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } else {
       toast({ title: "Teacher assigned" });
       setSelectedTeacher("");
+      setSelectedSubject("");
+      setSelectedTeacherRole("primary");
       fetchAll();
     }
   };
@@ -394,66 +412,221 @@ const AdminPanel = () => {
           <TabsContent value="teachers">
             <Card>
               <CardHeader>
-                <CardTitle>Teacher Allotment</CardTitle>
-                <CardDescription>Assign teachers to classes</CardDescription>
+                <CardTitle>Teacher-to-Class Assignment</CardTitle>
+                <CardDescription>Assign primary and subject teachers to classes. One primary teacher per class, multiple subject teachers allowed.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex flex-wrap gap-3 items-end">
-                  <div className="space-y-1.5 min-w-[180px]">
-                    <Label>Class</Label>
-                    <Select value={selectedClassForTeacher} onValueChange={setSelectedClassForTeacher}>
-                      <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                      <SelectContent>
-                        {classes.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5 min-w-[200px]">
-                    <Label>Teacher</Label>
-                    <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
-                      <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
-                      <SelectContent>
-                        {teachers.map(t => (
-                          <SelectItem key={t.id} value={t.id}>{t.full_name || "Unnamed"}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleAssignTeacher} disabled={!selectedClassForTeacher || !selectedTeacher}>
-                    <Plus className="h-4 w-4 mr-1" /> Assign
-                  </Button>
+                {/* View mode tabs */}
+                <div className="flex gap-2 border-b border-border pb-3">
+                  {[
+                    { key: "assign" as const, label: "Assign Teacher" },
+                    { key: "by-class" as const, label: "Class → Teachers" },
+                    { key: "by-teacher" as const, label: "Teacher → Classes" },
+                  ].map(tab => (
+                    <Button
+                      key={tab.key}
+                      variant={teacherViewMode === tab.key ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTeacherViewMode(tab.key)}
+                    >
+                      {tab.label}
+                    </Button>
+                  ))}
                 </div>
 
-                {selectedClassForTeacher && (
-                  <div>
-                    <h4 className="text-sm font-medium text-foreground mb-2">
-                      Teachers in {getClassName(selectedClassForTeacher)}
-                    </h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Teacher Name</TableHead>
-                          <TableHead className="w-12"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {classTeachers.filter(ct => ct.class_id === selectedClassForTeacher).map(ct => (
-                          <TableRow key={ct.id}>
-                            <TableCell>{(ct.profiles as any)?.full_name || "Unnamed"}</TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => handleRemoveTeacher(ct.id)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </TableCell>
+                {/* === ASSIGN VIEW === */}
+                {teacherViewMode === "assign" && (
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap gap-3 items-end">
+                      <div className="space-y-1.5 min-w-[180px]">
+                        <Label>Class</Label>
+                        <Select value={selectedClassForTeacher} onValueChange={setSelectedClassForTeacher}>
+                          <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                          <SelectContent>
+                            {classes.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5 min-w-[200px]">
+                        <Label>Teacher</Label>
+                        <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
+                          <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
+                          <SelectContent>
+                            {teachers.map(t => (
+                              <SelectItem key={t.id} value={t.id}>{t.full_name || "Unnamed"}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5 min-w-[140px]">
+                        <Label>Role</Label>
+                        <Select value={selectedTeacherRole} onValueChange={setSelectedTeacherRole}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="primary">Primary Teacher</SelectItem>
+                            <SelectItem value="subject">Subject Teacher</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {selectedTeacherRole === "subject" && (
+                        <div className="space-y-1.5 min-w-[160px]">
+                          <Label>Subject</Label>
+                          <Input placeholder="e.g. Math, Science" value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} />
+                        </div>
+                      )}
+                      <Button onClick={handleAssignTeacher} disabled={!selectedClassForTeacher || !selectedTeacher}>
+                        <Plus className="h-4 w-4 mr-1" /> Assign
+                      </Button>
+                    </div>
+
+                    {selectedClassForTeacher && (
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground mb-2">
+                          Teachers in {getClassName(selectedClassForTeacher)}
+                        </h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Teacher Name</TableHead>
+                              <TableHead>Role</TableHead>
+                              <TableHead>Subject</TableHead>
+                              <TableHead className="w-12"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {classTeachers.filter(ct => ct.class_id === selectedClassForTeacher).map(ct => (
+                              <TableRow key={ct.id}>
+                                <TableCell className="font-medium">{(ct.profiles as any)?.full_name || "Unnamed"}</TableCell>
+                                <TableCell>
+                                  <Badge variant={ct.teacher_role === "primary" ? "default" : "secondary"}>
+                                    {ct.teacher_role === "primary" ? "Primary" : "Subject"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{ct.subject || "—"}</TableCell>
+                                <TableCell>
+                                  <Button variant="ghost" size="icon" onClick={() => handleRemoveTeacher(ct.id)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            {classTeachers.filter(ct => ct.class_id === selectedClassForTeacher).length === 0 && (
+                              <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No teachers assigned</TableCell></TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* === CLASS → TEACHERS VIEW === */}
+                {teacherViewMode === "by-class" && (
+                  <div className="space-y-4">
+                    {classes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No classes created yet.</p>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Class</TableHead>
+                            <TableHead>Primary Teacher</TableHead>
+                            <TableHead>Subject Teachers</TableHead>
                           </TableRow>
-                        ))}
-                        {classTeachers.filter(ct => ct.class_id === selectedClassForTeacher).length === 0 && (
-                          <TableRow><TableCell colSpan={2} className="text-center text-muted-foreground">No teachers assigned</TableCell></TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {classes.map(c => {
+                            const assigned = classTeachers.filter(ct => ct.class_id === c.id);
+                            const primary = assigned.find(ct => ct.teacher_role === "primary");
+                            const subjects = assigned.filter(ct => ct.teacher_role === "subject");
+                            return (
+                              <TableRow key={c.id}>
+                                <TableCell className="font-medium">{c.name} - {c.section}</TableCell>
+                                <TableCell>
+                                  {primary ? (
+                                    <Badge className="bg-primary/10 text-primary border-primary/20">{(primary.profiles as any)?.full_name || "Unnamed"}</Badge>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground italic">Not assigned</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {subjects.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {subjects.map(st => (
+                                        <Badge key={st.id} variant="secondary" className="text-xs">
+                                          {(st.profiles as any)?.full_name || "Unnamed"} ({st.subject})
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground italic">None</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </div>
+                )}
+
+                {/* === TEACHER → CLASSES VIEW === */}
+                {teacherViewMode === "by-teacher" && (
+                  <div className="space-y-4">
+                    {teachers.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No teachers found.</p>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Teacher</TableHead>
+                            <TableHead>Primary Class</TableHead>
+                            <TableHead>Subject Classes</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {teachers.map(t => {
+                            const assigned = classTeachers.filter(ct => ct.teacher_id === t.id);
+                            const primaryAssignments = assigned.filter(ct => ct.teacher_role === "primary");
+                            const subjectAssignments = assigned.filter(ct => ct.teacher_role === "subject");
+                            return (
+                              <TableRow key={t.id}>
+                                <TableCell className="font-medium">{t.full_name || "Unnamed"}</TableCell>
+                                <TableCell>
+                                  {primaryAssignments.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {primaryAssignments.map(pa => (
+                                        <Badge key={pa.id} className="bg-primary/10 text-primary border-primary/20">
+                                          {getClassName(pa.class_id)}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground italic">None</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {subjectAssignments.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {subjectAssignments.map(sa => (
+                                        <Badge key={sa.id} variant="secondary" className="text-xs">
+                                          {getClassName(sa.class_id)} ({sa.subject})
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground italic">None</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    )}
                   </div>
                 )}
               </CardContent>

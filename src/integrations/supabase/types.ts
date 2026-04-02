@@ -220,21 +220,27 @@ export type Database = {
           assigned_by: string | null
           class_id: string
           id: string
+          subject: string | null
           teacher_id: string
+          teacher_role: string
         }
         Insert: {
           assigned_at?: string
           assigned_by?: string | null
           class_id: string
           id?: string
+          subject?: string | null
           teacher_id: string
+          teacher_role?: string
         }
         Update: {
           assigned_at?: string
           assigned_by?: string | null
           class_id?: string
           id?: string
+          subject?: string | null
           teacher_id?: string
+          teacher_role?: string
         }
         Relationships: [
           {
