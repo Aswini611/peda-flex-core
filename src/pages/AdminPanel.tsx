@@ -71,6 +71,7 @@ const AdminPanel = () => {
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
   const [questionAssignments, setQuestionAssignments] = useState<any[]>([]);
   const [createClassOpen, setCreateClassOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
