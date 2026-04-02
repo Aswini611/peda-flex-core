@@ -298,6 +298,78 @@ export type Database = {
           },
         ]
       }
+      diagnostic_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          approved_count: number | null
+          assigned_at: string | null
+          class_name: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          purpose: string
+          section: string
+          status: string
+          subject: string
+          suggested_count: number
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_count?: number | null
+          assigned_at?: string | null
+          class_name: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          purpose: string
+          section?: string
+          status?: string
+          subject: string
+          suggested_count: number
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_count?: number | null
+          assigned_at?: string | null
+          class_name?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          purpose?: string
+          section?: string
+          status?: string
+          subject?: string
+          suggested_count?: number
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_requests_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_sessions: {
         Row: {
           accuracy: number

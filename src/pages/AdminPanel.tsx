@@ -13,8 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet } from "lucide-react";
+import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet, ClipboardCheck } from "lucide-react";
 import { ExcelImportModal } from "@/components/ExcelImportModal";
+import { DiagnosticApprovalPanel } from "@/components/DiagnosticApprovalPanel";
 
 interface ClassRecord {
   id: string;
@@ -257,10 +258,11 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            <TabsTrigger value="approvals">Approvals</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="config">Config</TabsTrigger>
           </TabsList>
@@ -631,6 +633,12 @@ const AdminPanel = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+
+          {/* ===== APPROVALS TAB ===== */}
+          <TabsContent value="approvals">
+            <DiagnosticApprovalPanel />
           </TabsContent>
 
           {/* ===== QUESTION ALLOTMENT TAB ===== */}
