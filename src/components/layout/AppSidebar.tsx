@@ -20,9 +20,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Student Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
-  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student", "admin"] },
-  { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
-  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
+  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"] },
+  { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"] },
+  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
