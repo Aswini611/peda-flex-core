@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Trophy,
   ClipboardList,
+  Shield,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,7 @@ const navItems = [
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher", "admin"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
+  { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
   { title: "Settings", icon: Settings, path: "/settings" },
