@@ -146,16 +146,29 @@ const AdminPanel = () => {
 
   const handleAssignTeacher = async () => {
     if (!selectedClassForTeacher || !selectedTeacher) return;
+    if (selectedTeacherRole === "subject" && !selectedSubject.trim()) {
+      toast({ title: "Error", description: "Subject is required for subject teachers", variant: "destructive" });
+      return;
+    }
     const { error } = await supabase.from("class_teachers").insert({
       class_id: selectedClassForTeacher,
       teacher_id: selectedTeacher,
+      teacher_role: selectedTeacherRole,
+      subject: selectedTeacherRole === "subject" ? selectedSubject.trim() : null,
       assigned_by: user?.id,
     });
     if (error) {
-      toast({ title: "Error", description: error.code === "23505" ? "Teacher already in this class" : error.message, variant: "destructive" });
+      const msg = error.code === "23505"
+        ? selectedTeacherRole === "primary"
+          ? "This class already has a primary teacher. Remove the existing one first."
+          : "Teacher already assigned to this class"
+        : error.message;
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } else {
       toast({ title: "Teacher assigned" });
       setSelectedTeacher("");
+      setSelectedSubject("");
+      setSelectedTeacherRole("primary");
       fetchAll();
     }
   };
