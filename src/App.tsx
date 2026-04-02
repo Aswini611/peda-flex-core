@@ -18,6 +18,7 @@ import TeacherPanel from "./pages/TeacherPanel";
 import SettingsPage from "./pages/Settings";
 import Gamification from "./pages/Gamification";
 import AcademicTests from "./pages/AcademicTests";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
