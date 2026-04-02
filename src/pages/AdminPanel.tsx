@@ -279,6 +279,8 @@ const AdminPanel = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
+                <ExcelImportModal open={importOpen} onOpenChange={setImportOpen} onImportComplete={fetchAll} />
               </CardHeader>
               <CardContent>
                 {classes.length === 0 ? (
