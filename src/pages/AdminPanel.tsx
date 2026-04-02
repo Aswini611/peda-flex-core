@@ -85,7 +85,7 @@ const AdminPanel = () => {
       supabase.from("students").select("id, profile_id, grade, age, profiles(full_name)"),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
       supabase.from("class_students").select("id, class_id, student_id, students(id, grade, profiles(full_name))"),
-      supabase.from("class_teachers").select("id, class_id, teacher_id, profiles:teacher_id(full_name)"),
+      supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
       supabase.from("teacher_question_assignments").select("*"),
     ]);
     if (classesRes.data) setClasses(classesRes.data);
