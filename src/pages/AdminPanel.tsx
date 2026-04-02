@@ -69,6 +69,9 @@ const AdminPanel = () => {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedClassForTeacher, setSelectedClassForTeacher] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [selectedTeacherRole, setSelectedTeacherRole] = useState("primary");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [teacherViewMode, setTeacherViewMode] = useState<"assign" | "by-class" | "by-teacher">("assign");
   const [selectedTeacherForQuestions, setSelectedTeacherForQuestions] = useState("");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
   const [questionAssignments, setQuestionAssignments] = useState<any[]>([]);
