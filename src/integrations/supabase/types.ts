@@ -418,6 +418,45 @@ export type Database = {
         }
         Relationships: []
       }
+      governance_notifications: {
+        Row: {
+          channel: string
+          created_at: string
+          event_type: string
+          id: string
+          is_read: boolean
+          message: string
+          reference_id: string | null
+          reference_type: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          event_type: string
+          id?: string
+          is_read?: boolean
+          message: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lesson_assignments: {
         Row: {
           assigned_at: string

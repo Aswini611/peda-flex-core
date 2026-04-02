@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { GovernanceNotificationProvider } from "@/contexts/GovernanceNotificationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
 import Login from "./pages/Login";
@@ -31,6 +32,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <NotificationProvider>
+          <GovernanceNotificationProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/login" element={<Login />} />
@@ -92,6 +94,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+          </GovernanceNotificationProvider>
           </NotificationProvider>
         </AuthProvider>
       </BrowserRouter>
