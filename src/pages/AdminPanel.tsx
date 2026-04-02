@@ -263,22 +263,21 @@ const AdminPanel = () => {
                     <DialogTrigger asChild>
                       <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Class</Button>
                     </DialogTrigger>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
-                    <div className="space-y-4 pt-2">
-                      <div className="space-y-2">
-                        <Label>Class Name</Label>
-                        <Input placeholder="e.g. Class 5, Nursery, LKG" value={newClassName} onChange={e => setNewClassName(e.target.value)} />
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
+                      <div className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                          <Label>Class Name</Label>
+                          <Input placeholder="e.g. Class 5, Nursery, LKG" value={newClassName} onChange={e => setNewClassName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Section</Label>
+                          <Input placeholder="e.g. A, B, C" value={newClassSection} onChange={e => setNewClassSection(e.target.value)} />
+                        </div>
+                        <Button onClick={handleCreateClass} className="w-full">Create Class</Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Section</Label>
-                        <Input placeholder="e.g. A, B, C" value={newClassSection} onChange={e => setNewClassSection(e.target.value)} />
-                      </div>
-                      <Button onClick={handleCreateClass} className="w-full">Create Class</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <ExcelImportModal open={importOpen} onOpenChange={setImportOpen} onImportComplete={fetchAll} />
               </CardHeader>
