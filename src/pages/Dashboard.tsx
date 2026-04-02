@@ -583,14 +583,214 @@ const TeacherHome = () => {
   );
 };
 
+/* ───────────────────────────── ADMIN HOME ───────────────────────────── */
+
+const adminFeatureCards = [
+  {
+    icon: Users,
+    title: "Student Reports",
+    description: "View detailed diagnostic reports for every student across all classes — learning styles, multiple intelligences, and cognitive profiles.",
+    path: "/teacher",
+    color: "from-blue-500/20 to-blue-600/10",
+    iconColor: "text-blue-600",
+  },
+  {
+    icon: AlertTriangle,
+    title: "Real-time Alerts",
+    description: "Monitor system-wide mismatch alerts, flagged performance issues, and intervention recommendations across all classes.",
+    path: "/alerts",
+    color: "from-amber-500/20 to-amber-600/10",
+    iconColor: "text-amber-600",
+  },
+  {
+    icon: GraduationCap,
+    title: "Admin Panel",
+    description: "Manage classes, allot students and teachers, configure diagnostic questions, and import students via Excel.",
+    path: "/admin",
+    color: "from-violet-500/20 to-violet-600/10",
+    iconColor: "text-violet-600",
+  },
+];
+
+const AdminHome = () => {
+  const { profile } = useAuth();
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
+    queryFn: async () => {
+      const [classesRes, studentsRes, teachersRes, assessmentsRes, alertsRes] = await Promise.all([
+        supabase.from("classes").select("id", { count: "exact", head: true }),
+        supabase.from("students").select("id", { count: "exact", head: true }),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "teacher"),
+        supabase.from("student_assessments").select("id", { count: "exact", head: true }),
+        supabase.from("mismatch_alerts").select("id", { count: "exact", head: true }).eq("status", "flagged"),
+      ]);
+      return {
+        classes: classesRes.count ?? 0,
+        students: studentsRes.count ?? 0,
+        teachers: teachersRes.count ?? 0,
+        assessments: assessmentsRes.count ?? 0,
+        activeAlerts: alertsRes.count ?? 0,
+      };
+    },
+  });
+
+  return (
+    <AppLayout>
+      {/* Hero Section */}
+      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-2xl">
+        <div
+          className="relative px-8 py-12 md:py-16"
+          style={{
+            backgroundImage: `url(${teacherHeroBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--sidebar-primary))]/90 to-[hsl(var(--sidebar-primary))]/70" />
+          <div className="relative z-10 max-w-2xl">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-6 w-6 text-white/80" />
+              <span className="text-sm font-medium text-white/70 uppercase tracking-wider">APAS Admin Console</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              Welcome, {profile?.full_name || "Admin"}
+            </h1>
+            <p className="text-base text-white/70 mb-1">{today}</p>
+            <p className="text-sm text-white/60 max-w-lg mt-3 leading-relaxed">
+              APAS (Adaptive Pedagogy & Analytics System) is a futuristic AI Operating System designed to personalise learning at scale. As an admin, you oversee the entire ecosystem — classes, teachers, students, diagnostics, and system-wide analytics — all from one place.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+        {[
+          { label: "Classes", value: stats?.classes, icon: Book, color: "bg-primary/10", iconColor: "text-primary" },
+          { label: "Students", value: stats?.students, icon: Users, color: "bg-blue-500/10", iconColor: "text-blue-600" },
+          { label: "Teachers", value: stats?.teachers, icon: GraduationCap, color: "bg-emerald-500/10", iconColor: "text-emerald-600" },
+          { label: "Assessments", value: stats?.assessments, icon: CheckCircle, color: "bg-violet-500/10", iconColor: "text-violet-600" },
+          { label: "Active Alerts", value: stats?.activeAlerts, icon: AlertTriangle, color: "bg-amber-500/10", iconColor: "text-amber-600" },
+        ].map((stat) => (
+          <Card key={stat.label} className="border-border/60">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}>
+                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{isLoading ? "—" : stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* About APAS */}
+      <div className="mb-10">
+        <h2 className="text-xl font-bold text-foreground mb-1">About APAS</h2>
+        <p className="text-sm text-muted-foreground mb-4">Understanding the system you manage.</p>
+        <Card className="border-border/60">
+          <CardContent className="p-6 space-y-4">
+            <p className="text-sm text-foreground leading-relaxed">
+              <strong>APAS</strong> (Adaptive Pedagogy & Analytics System) is a next-generation AI-powered educational platform that personalises learning for every student. It uses a collaborative network of AI agents — Planner, Executor, Analyst, Tutor, and Creator — to provide a highly individualised experience across CBSE, IB, and Cambridge curricula.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-lg border border-border p-4 bg-primary/5">
+                <Brain className="h-5 w-5 text-primary mb-2" />
+                <h4 className="text-sm font-semibold text-foreground mb-1">Diagnostic Intelligence</h4>
+                <p className="text-xs text-muted-foreground">Maps every student's VARK learning style, multiple intelligences, and Zone of Proximal Development using research-backed assessments.</p>
+              </div>
+              <div className="rounded-lg border border-border p-4 bg-emerald-500/5">
+                <Sparkles className="h-5 w-5 text-emerald-600 mb-2" />
+                <h4 className="text-sm font-semibold text-foreground mb-1">AI Lesson Generation</h4>
+                <p className="text-xs text-muted-foreground">Generates curriculum-aligned, personalised lesson plans tailored to each student's unique cognitive profile and learning needs.</p>
+              </div>
+              <div className="rounded-lg border border-border p-4 bg-violet-500/5">
+                <LineChart className="h-5 w-5 text-violet-600 mb-2" />
+                <h4 className="text-sm font-semibold text-foreground mb-1">Analytics & Tracking</h4>
+                <p className="text-xs text-muted-foreground">Tracks normalised learning gains, identifies performance mismatches, and provides real-time alerts for proactive intervention.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* What You Can Do */}
+      <div className="mb-10">
+        <h2 className="text-xl font-bold text-foreground mb-1">Admin Capabilities</h2>
+        <p className="text-sm text-muted-foreground mb-6">Your tools for overseeing and managing the entire APAS ecosystem.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {adminFeatureCards.map((feature) => (
+            <Link key={feature.path} to={feature.path} className="group">
+              <Card className="h-full border-border/60 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
+                <CardContent className="p-6">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
+                    <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    {feature.description}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    Open <ArrowRight className="h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Admin Workflow */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-1">Admin Workflow</h2>
+        <p className="text-sm text-muted-foreground mb-6">Your role in the APAS ecosystem.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { step: "01", title: "Setup Classes", description: "Create classes with sections, or bulk import students via Excel to auto-create classes.", icon: Book },
+            { step: "02", title: "Assign Teachers", description: "Allot teachers to classes and assign diagnostic question sets by age group.", icon: GraduationCap },
+            { step: "03", title: "Monitor Reports", description: "Review all student diagnostic reports across every class and teacher in the system.", icon: FileText },
+            { step: "04", title: "Manage Alerts", description: "Oversee real-time mismatch alerts and ensure timely interventions across the system.", icon: AlertTriangle },
+          ].map((step, i) => (
+            <div key={i} className="relative">
+              <Card className="h-full border-border/60">
+                <CardContent className="p-5">
+                  <span className="text-3xl font-black text-primary/15 absolute top-3 right-4">{step.step}</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">
+                    <step.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{step.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AppLayout>
+  );
+};
+
 /* ───────────────────────────── ROUTER ───────────────────────────── */
 
 const Dashboard = () => {
   const { profile } = useAuth();
-  const isStudent = profile?.role === "student";
 
-  if (isStudent) {
+  if (profile?.role === "student") {
     return <StudentDashboard />;
+  }
+
+  if (profile?.role === "admin") {
+    return <AdminHome />;
   }
 
   return <TeacherHome />;
