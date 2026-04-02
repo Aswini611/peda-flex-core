@@ -49,7 +49,7 @@ const TeacherPanel = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const { data: assessments, isLoading } = useQuery({
-    queryKey: ["teacher-student-assessments", user?.id],
+    queryKey: ["teacher-student-assessments", user?.id, profile?.role],
     queryFn: async () => {
       let query = supabase
         .from("student_assessments")
