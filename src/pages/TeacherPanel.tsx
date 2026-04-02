@@ -409,15 +409,17 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
                 <FileText className="h-4 w-4" />
                 View Full Report
               </Button>
-              <Button size="sm" variant="outline" onClick={() => {
-                const params = new URLSearchParams();
-                params.set("class", filterClass);
-                if (filterSection !== "all") params.set("section", filterSection);
-                navigate(`/curative?${params.toString()}`);
-              }} className="gap-1.5">
-                <Sparkles className="h-4 w-4" />
-                Generate Lesson Plan
-              </Button>
+              {userRole !== "admin" && (
+                <Button size="sm" variant="outline" onClick={() => {
+                  const params = new URLSearchParams();
+                  params.set("class", filterClass);
+                  if (filterSection !== "all") params.set("section", filterSection);
+                  navigate(`/curative?${params.toString()}`);
+                }} className="gap-1.5">
+                  <Sparkles className="h-4 w-4" />
+                  Generate Lesson Plan
+                </Button>
+              )}
               <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
                 <Download className="h-4 w-4" />
                 Download
