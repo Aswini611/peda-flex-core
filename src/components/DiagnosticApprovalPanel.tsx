@@ -46,10 +46,20 @@ export const DiagnosticApprovalPanel = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("diagnostic_requests")
-        .select("*, profiles:teacher_id!diagnostic_requests_teacher_id_fkey(full_name)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as DiagnosticRequest[];
+      // Fetch teacher names separately
+      const teacherIds = [...new Set((data || []).map(r => r.teacher_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", teacherIds);
+      const nameMap = new Map((profiles || []).map(p => [p.id, p.full_name]));
+      return (data || []).map(r => ({
+        ...r,
+        profiles: { full_name: nameMap.get(r.teacher_id) || null },
+      })) as DiagnosticRequest[];
     },
   });
 
