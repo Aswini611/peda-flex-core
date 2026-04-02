@@ -341,9 +341,10 @@ interface ClassReportProps {
   filterClass: string;
   filterSection: string;
   teacherName?: string;
+  userRole?: string;
 }
 
-const ClassReport = ({ assessments, filterClass, filterSection, teacherName }: ClassReportProps) => {
+const ClassReport = ({ assessments, filterClass, filterSection, teacherName, userRole }: ClassReportProps) => {
   const navigate = useNavigate();
   const classLabel = CLASS_OPTIONS.find(c => c.value === filterClass)?.label || filterClass;
   const [showFullReport, setShowFullReport] = useState(false);
