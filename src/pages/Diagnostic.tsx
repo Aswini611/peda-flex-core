@@ -536,76 +536,75 @@ const DiagnosticTeacher = () => {
     return (
       <AppLayout>
         <PageHeader title="Teacher Assessment" subtitle="Assess a student's developmental profile" />
-        <Card className="max-w-lg mx-auto">
-          <CardContent className="p-6 space-y-5">
-            <div className="text-center mb-2">
-              <ClipboardList className="h-10 w-10 text-primary mx-auto mb-2" />
-              <h2 className="text-lg font-semibold text-foreground">Start a New Assessment</h2>
-              <p className="text-sm text-muted-foreground">Select the age group and student to begin</p>
-            </div>
+        <div className="space-y-6">
+          <Card className="max-w-lg mx-auto">
+            <CardContent className="p-6 space-y-5">
+              <div className="text-center mb-2">
+                <ClipboardList className="h-10 w-10 text-primary mx-auto mb-2" />
+                <h2 className="text-lg font-semibold text-foreground">Start a New Assessment</h2>
+                <p className="text-sm text-muted-foreground">Select the age group and student to begin</p>
+              </div>
 
-            <div className="space-y-2">
-              <Label>For which age group are you teaching?</Label>
-              <Select value={ageGroup} onValueChange={setAgeGroup}>
-                <SelectTrigger><SelectValue placeholder="Select age group" /></SelectTrigger>
-                <SelectContent>
-                  {TEACHER_AGE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label>For which age group are you teaching?</Label>
+                <Select value={ageGroup} onValueChange={setAgeGroup}>
+                  <SelectTrigger><SelectValue placeholder="Select age group" /></SelectTrigger>
+                  <SelectContent>
+                    {TEACHER_AGE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Name of the Student</Label>
-              <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={studentSearchOpen}
-                    className="w-full justify-between font-normal"
-                  >
-                    {selectedStudentName || (loadingStudents ? "Loading students..." : "Search and select a student...")}
-                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput
-                      placeholder="Search student name..."
-                      value={searchQuery}
-                      onValueChange={setSearchQuery}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No students found.</CommandEmpty>
-                      <CommandGroup>
-                        {filteredStudents.map((student) => (
-                          <CommandItem
-                            key={student.id}
-                            value={student.full_name || student.id}
-                            onSelect={() => {
-                              setSelectedStudentId(student.id);
-                              setSelectedStudentName(student.full_name || "Unknown");
-                              setStudentSearchOpen(false);
-                              setSearchQuery("");
-                            }}
-                          >
-                            {student.full_name || "Unnamed Student"}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+              <div className="space-y-2">
+                <Label>Name of the Student</Label>
+                <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      {selectedStudentName ? (
+                        <span className="truncate">{selectedStudentName}</span>
+                      ) : (
+                        <span className="text-muted-foreground flex items-center gap-2"><Search className="h-4 w-4" /> Search and select student...</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search student..." value={searchQuery} onValueChange={setSearchQuery} />
+                      <CommandList>
+                        <CommandEmpty>{loadingStudents ? "Loading…" : "No student found."}</CommandEmpty>
+                        <CommandGroup>
+                          {filteredStudents.map((s) => (
+                            <CommandItem
+                              key={s.id}
+                              value={s.full_name || s.id}
+                              onSelect={() => {
+                                setSelectedStudentId(s.id);
+                                setSelectedStudentName(s.full_name || "");
+                                setStudentSearchOpen(false);
+                                setSearchQuery("");
+                              }}
+                            >
+                              {s.full_name || "Unnamed"}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            <Button className="w-full" size="lg" onClick={startQuiz} disabled={!canStartQuiz}>
-              Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
+              <Button className="w-full" size="lg" onClick={startQuiz} disabled={!canStartQuiz}>
+                Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Diagnostic Question Request Form */}
+          <DiagnosticRequestForm />
+        </div>
       </AppLayout>
     );
   }
