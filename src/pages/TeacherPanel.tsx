@@ -181,7 +181,7 @@ const TeacherPanel = () => {
 
       {/* Class Report View */}
       {showClassReport && filteredAssessments.length > 0 && (
-        <ClassReport assessments={filteredAssessments} filterClass={filterClass} filterSection={filterSection} teacherName={profile?.full_name || undefined} />
+        <ClassReport assessments={filteredAssessments} filterClass={filterClass} filterSection={filterSection} teacherName={profile?.full_name || undefined} userRole={profile?.role} />
       )}
 
       {/* Individual Reports Table */}
