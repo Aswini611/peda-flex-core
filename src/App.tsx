@@ -82,6 +82,13 @@ const App = () => (
                   </RoleGuard>
                 </ProtectedRoute>
               } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["admin"]}>
+                    <AdminPanel />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
