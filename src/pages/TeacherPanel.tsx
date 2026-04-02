@@ -49,13 +49,18 @@ const TeacherPanel = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const { data: assessments, isLoading } = useQuery({
-    queryKey: ["teacher-student-assessments", user?.id],
+    queryKey: ["teacher-student-assessments", user?.id, profile?.role],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("student_assessments")
-        .select("id, student_name, student_age, age_group, responses, created_at, student_class, section")
-        .eq("teacher_id", user!.id)
-        .order("created_at", { ascending: false });
+        .select("id, student_name, student_age, age_group, responses, created_at, student_class, section");
+
+      // Admins see all assessments; teachers see only their own
+      if (profile?.role !== "admin") {
+        query = query.eq("teacher_id", user!.id);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       return (data as any[]) as StudentAssessment[];
