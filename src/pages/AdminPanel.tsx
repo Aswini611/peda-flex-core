@@ -47,6 +47,8 @@ interface ClassTeacher {
   id: string;
   class_id: string;
   teacher_id: string;
+  teacher_role: string;
+  subject: string | null;
   profiles: { full_name: string | null } | null;
 }
 
