@@ -46,7 +46,7 @@ export const DiagnosticApprovalPanel = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("diagnostic_requests")
-        .select("*, profiles:teacher_id(full_name)")
+        .select("*, profiles:teacher_id!diagnostic_requests_teacher_id_fkey(full_name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as DiagnosticRequest[];
