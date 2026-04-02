@@ -635,6 +635,12 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
 
+
+          {/* ===== APPROVALS TAB ===== */}
+          <TabsContent value="approvals">
+            <DiagnosticApprovalPanel />
+          </TabsContent>
+
           {/* ===== QUESTION ALLOTMENT TAB ===== */}
           <TabsContent value="questions">
             <Card>
