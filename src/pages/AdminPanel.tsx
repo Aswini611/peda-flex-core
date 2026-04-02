@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School } from "lucide-react";
+import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet } from "lucide-react";
+import { ExcelImportModal } from "@/components/ExcelImportModal";
 
 interface ClassRecord {
   id: string;
@@ -70,6 +71,7 @@ const AdminPanel = () => {
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
   const [questionAssignments, setQuestionAssignments] = useState<any[]>([]);
   const [createClassOpen, setCreateClassOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -253,25 +255,31 @@ const AdminPanel = () => {
                   <CardTitle>Class Management</CardTitle>
                   <CardDescription>Create and manage classes with sections</CardDescription>
                 </div>
-                <Dialog open={createClassOpen} onOpenChange={setCreateClassOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Class</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
-                    <div className="space-y-4 pt-2">
-                      <div className="space-y-2">
-                        <Label>Class Name</Label>
-                        <Input placeholder="e.g. Class 5, Nursery, LKG" value={newClassName} onChange={e => setNewClassName(e.target.value)} />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+                    <FileSpreadsheet className="h-4 w-4 mr-1" /> Import Excel
+                  </Button>
+                  <Dialog open={createClassOpen} onOpenChange={setCreateClassOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Class</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
+                      <div className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                          <Label>Class Name</Label>
+                          <Input placeholder="e.g. Class 5, Nursery, LKG" value={newClassName} onChange={e => setNewClassName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Section</Label>
+                          <Input placeholder="e.g. A, B, C" value={newClassSection} onChange={e => setNewClassSection(e.target.value)} />
+                        </div>
+                        <Button onClick={handleCreateClass} className="w-full">Create Class</Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Section</Label>
-                        <Input placeholder="e.g. A, B, C" value={newClassSection} onChange={e => setNewClassSection(e.target.value)} />
-                      </div>
-                      <Button onClick={handleCreateClass} className="w-full">Create Class</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <ExcelImportModal open={importOpen} onOpenChange={setImportOpen} onImportComplete={fetchAll} />
               </CardHeader>
               <CardContent>
                 {classes.length === 0 ? (

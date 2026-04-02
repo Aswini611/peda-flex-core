@@ -666,7 +666,10 @@ export type Database = {
           dominant_intelligence: string | null
           grade: string | null
           id: string
+          parent_email: string | null
+          parent_phone: string | null
           profile_id: string
+          roll_number: string | null
           vark_type: string | null
           zpd_score: number | null
         }
@@ -677,7 +680,10 @@ export type Database = {
           dominant_intelligence?: string | null
           grade?: string | null
           id?: string
+          parent_email?: string | null
+          parent_phone?: string | null
           profile_id: string
+          roll_number?: string | null
           vark_type?: string | null
           zpd_score?: number | null
         }
@@ -688,7 +694,10 @@ export type Database = {
           dominant_intelligence?: string | null
           grade?: string | null
           id?: string
+          parent_email?: string | null
+          parent_phone?: string | null
           profile_id?: string
+          roll_number?: string | null
           vark_type?: string | null
           zpd_score?: number | null
         }
