@@ -255,9 +255,14 @@ const AdminPanel = () => {
                   <CardTitle>Class Management</CardTitle>
                   <CardDescription>Create and manage classes with sections</CardDescription>
                 </div>
-                <Dialog open={createClassOpen} onOpenChange={setCreateClassOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Class</Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+                    <FileSpreadsheet className="h-4 w-4 mr-1" /> Import Excel
+                  </Button>
+                  <Dialog open={createClassOpen} onOpenChange={setCreateClassOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Class</Button>
+                    </DialogTrigger>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
