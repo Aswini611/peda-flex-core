@@ -225,7 +225,7 @@ const AdminPanel = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Admin Panel</h1>
+          <h1 className="text-2xl font-bold text-foreground">Master User Panel</h1>
           <p className="text-sm text-muted-foreground">Manage classes, allotments, and diagnostic configuration</p>
         </div>
 

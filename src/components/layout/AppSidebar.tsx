@@ -24,7 +24,7 @@ const navItems = [
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
-  { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin"] },
+  { title: "Master User Panel", icon: Shield, path: "/admin", roles: ["admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
   { title: "Settings", icon: Settings, path: "/settings" },
@@ -133,7 +133,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     {profile.full_name || "User"}
                   </p>
                   <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-                    {profile.role}
+                    {profile.role === "admin" ? "Master User" : profile.role}
                   </p>
                 </div>
               )}

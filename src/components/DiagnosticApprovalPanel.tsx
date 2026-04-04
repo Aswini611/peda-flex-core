@@ -232,7 +232,7 @@ export const DiagnosticApprovalPanel = () => {
                     <p className="text-xs text-muted-foreground">You may modify the count from the teacher's suggestion.</p>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Admin Notes (optional)</Label>
+                    <Label>Master User Notes (optional)</Label>
                     <Textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} placeholder="Add notes or instructions for the teacher..." rows={2} />
                   </div>
                   <div className="flex gap-3">

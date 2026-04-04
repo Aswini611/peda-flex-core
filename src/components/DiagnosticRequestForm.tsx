@@ -86,7 +86,7 @@ export const DiagnosticRequestForm = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Request submitted! Awaiting admin approval.");
+      toast.success("Request submitted! Awaiting Master User approval.");
       setClassName("");
       setSection("A");
       setSubject("");
@@ -128,7 +128,7 @@ export const DiagnosticRequestForm = () => {
             <Send className="h-5 w-5" />
             Request Diagnostic Questions
           </CardTitle>
-          <CardDescription>Submit a request for diagnostic question approval. Admin will review and set the final question count.</CardDescription>
+          <CardDescription>Submit a request for diagnostic question approval. Master User will review and set the final question count.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
