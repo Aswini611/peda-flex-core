@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { AgeGroup, getAgeGroupByAge, AGE_GROUPS } from "../engine/ageGroups";
-import { selectGamesForStudent, SelectedGame } from "../engine/gameSelector";
+import { selectGamesForStudent, selectGamesForGeneric, SelectedGame, GameMode } from "../engine/gameSelector";
 import { getSubjectsForClass } from "../engine/classSubjects";
 import { resetQuestionTracker } from "../engine/contentPools";
-import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, Loader2, User } from "lucide-react";
+import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, User, Layers, Puzzle } from "lucide-react";
 
 interface Props {
   studentAge?: number;
-  onStart: (selectedGames: SelectedGame[], ageGroup: AgeGroup, subject: string, studentClass: string) => void;
+  onStart: (selectedGames: SelectedGame[], ageGroup: AgeGroup, subject: string, studentClass: string, mode: GameMode) => void;
 }
 
 const CLASS_OPTIONS = [
@@ -23,8 +23,8 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
+  const [mode, setMode] = useState<GameMode>('subject');
 
-  // Update age group whenever age changes
   useEffect(() => {
     const numAge = parseInt(age);
     if (numAge >= 4 && numAge <= 18) {
@@ -34,7 +34,6 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
     }
   }, [age]);
 
-  // Load subjects when class changes (hardcoded per class)
   useEffect(() => {
     if (!selectedClass) { setSubjects([]); setSelectedSubject(''); return; }
     setSelectedSubject('');
@@ -42,14 +41,22 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
   }, [selectedClass]);
 
   const handleStart = () => {
-    if (!ageGroup || !selectedSubject || !selectedClass) return;
-    resetQuestionTracker(); // Clear dedup tracker for new round
-    const games = selectGamesForStudent(ageGroup.id, selectedSubject);
-    onStart(games, ageGroup, selectedSubject, selectedClass);
+    if (!ageGroup || !selectedClass) return;
+    if (mode === 'subject' && !selectedSubject) return;
+
+    resetQuestionTracker();
+
+    if (mode === 'subject') {
+      const games = selectGamesForStudent(ageGroup.id, selectedSubject);
+      onStart(games, ageGroup, selectedSubject, selectedClass, 'subject');
+    } else {
+      const games = selectGamesForGeneric(ageGroup.id);
+      onStart(games, ageGroup, 'General', selectedClass, 'generic');
+    }
   };
 
   const validAge = parseInt(age) >= 4 && parseInt(age) <= 18;
-  const canStart = validAge && selectedClass && selectedSubject && ageGroup;
+  const canStart = validAge && selectedClass && ageGroup && (mode === 'generic' || selectedSubject);
 
   return (
     <div className="text-center max-w-xl mx-auto space-y-8 welcome-enter">
@@ -67,7 +74,47 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
           Adaptive Game Round
         </h1>
         <p className="text-sm mt-2" style={{ color: "rgba(241,245,249,0.5)" }}>
-          Games are personalized based on your age, class & subject
+          Games are personalized based on your age, class & preferences
+        </p>
+      </div>
+
+      {/* Mode Tabs */}
+      <div className="space-y-3">
+        <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
+          <Layers className="h-4 w-4" /> Choose Game Mode
+        </label>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => { setMode('subject'); setSelectedSubject(''); }}
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 hover:scale-105"
+            style={{
+              background: mode === 'subject' ? "rgba(168,85,247,0.25)" : "rgba(255,255,255,0.05)",
+              border: `2px solid ${mode === 'subject' ? "rgba(168,85,247,0.6)" : "rgba(255,255,255,0.1)"}`,
+              color: mode === 'subject' ? "#C084FC" : "rgba(241,245,249,0.5)",
+              boxShadow: mode === 'subject' ? "0 0 20px rgba(168,85,247,0.15)" : "none",
+            }}
+          >
+            <BookOpen className="h-4 w-4" />
+            Subject-wise
+          </button>
+          <button
+            onClick={() => setMode('generic')}
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 hover:scale-105"
+            style={{
+              background: mode === 'generic' ? "rgba(56,189,248,0.25)" : "rgba(255,255,255,0.05)",
+              border: `2px solid ${mode === 'generic' ? "rgba(56,189,248,0.6)" : "rgba(255,255,255,0.1)"}`,
+              color: mode === 'generic' ? "#7DD3FC" : "rgba(241,245,249,0.5)",
+              boxShadow: mode === 'generic' ? "0 0 20px rgba(56,189,248,0.15)" : "none",
+            }}
+          >
+            <Puzzle className="h-4 w-4" />
+            Generic
+          </button>
+        </div>
+        <p className="text-xs" style={{ color: "rgba(241,245,249,0.35)" }}>
+          {mode === 'subject'
+            ? 'Games tailored to a specific subject from your curriculum'
+            : 'Brain training games with cognitive challenges & mixed-subject quizzes'}
         </p>
       </div>
 
@@ -137,25 +184,41 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
         </div>
       )}
 
-      {/* Subject Selection */}
-      {validAge && selectedClass && (
+      {/* Subject Selection — only in subject mode */}
+      {mode === 'subject' && validAge && selectedClass && (
         <div className="space-y-3 animate-fade-in">
           <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
             <BookOpen className="h-4 w-4" /> Select Subject
           </label>
           <div className="flex flex-wrap gap-2 justify-center">
-              {subjects.map(sub => (
-                <button key={sub} onClick={() => setSelectedSubject(sub)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 ${selectedSubject === sub ? 'scale-105' : ''}`}
-                  style={{
-                    background: selectedSubject === sub ? "rgba(168,85,247,0.3)" : "rgba(255,255,255,0.05)",
-                    border: `1px solid ${selectedSubject === sub ? "rgba(168,85,247,0.6)" : "rgba(255,255,255,0.1)"}`,
-                    color: selectedSubject === sub ? "#C084FC" : "rgba(241,245,249,0.6)",
-                  }}>
-                  {sub}
-                </button>
-              ))}
+            {subjects.map(sub => (
+              <button key={sub} onClick={() => setSelectedSubject(sub)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 ${selectedSubject === sub ? 'scale-105' : ''}`}
+                style={{
+                  background: selectedSubject === sub ? "rgba(168,85,247,0.3)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${selectedSubject === sub ? "rgba(168,85,247,0.6)" : "rgba(255,255,255,0.1)"}`,
+                  color: selectedSubject === sub ? "#C084FC" : "rgba(241,245,249,0.6)",
+                }}>
+                {sub}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Generic mode info */}
+      {mode === 'generic' && validAge && selectedClass && (
+        <div className="animate-fade-in rounded-2xl p-4 mx-auto max-w-md"
+          style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)" }}>
+          <div className="flex items-start gap-3">
+            <Brain className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: "#7DD3FC" }} />
+            <div className="text-left space-y-1">
+              <p className="text-sm font-bold" style={{ color: "#7DD3FC" }}>Generic Brain Training</p>
+              <p className="text-xs leading-relaxed" style={{ color: "rgba(241,245,249,0.5)" }}>
+                Includes cognitive games (memory, logic, speed, verbal) and mixed-subject quizzes pulling questions from all your class subjects.
+              </p>
             </div>
+          </div>
         </div>
       )}
 
