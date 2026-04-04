@@ -657,7 +657,7 @@ const AdminHome = () => {
               <span className="text-sm font-medium text-white/70 uppercase tracking-wider">APAS Admin Console</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Welcome, {profile?.full_name || "Admin"}
+              Welcome, {profile?.full_name || "Master User"}
             </h1>
             <p className="text-base text-white/70 mb-1">{today}</p>
             <p className="text-sm text-white/60 max-w-lg mt-3 leading-relaxed">
