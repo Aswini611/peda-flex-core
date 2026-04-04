@@ -253,11 +253,12 @@ const Gamification = () => {
     return () => clearTimeout(t);
   }, [phase]);
 
-  const handleSetupComplete = (games: SelectedGame[], ag: AgeGroup, sub: string, cls: string) => {
+  const handleSetupComplete = (games: SelectedGame[], ag: AgeGroup, sub: string, cls: string, mode: GameMode) => {
     setSelectedGames(games);
     setAgeGroup(ag);
     setSubject(sub);
     setStudentClass(cls);
+    setGameMode(mode);
     setPhase("WELCOME");
   };
 
