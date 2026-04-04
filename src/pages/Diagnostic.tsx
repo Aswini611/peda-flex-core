@@ -168,93 +168,99 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   if (phase === "form") {
     return (
       <AppLayout>
-        <PageHeader title="Student Assessment" subtitle="Complete your learning profile assessment" />
-        <Card className="max-w-lg mx-auto">
-          <CardContent className="p-6 space-y-5">
-            <div className="text-center mb-2">
-              <ClipboardList className="h-10 w-10 text-primary mx-auto mb-2" />
-              <h2 className="text-lg font-semibold text-foreground">Let's get started</h2>
-              <p className="text-sm text-muted-foreground">Fill in your details to begin the assessment</p>
-            </div>
+        <PageHeader title="Student Diagnostic" subtitle="Complete assessments and diagnostic tests" />
+        <div className="space-y-8">
+          {/* Diagnostic Tests Section */}
+          <StudentDiagnosticTest />
 
-            <div className="space-y-2">
-              <Label>Full Name</Label>
-              <Input
-                value={name}
-                readOnly
-                disabled
-                className="bg-muted cursor-not-allowed"
-              />
-            </div>
+          {/* Learning Profile Assessment */}
+          <Card className="max-w-lg mx-auto">
+            <CardContent className="p-6 space-y-5">
+              <div className="text-center mb-2">
+                <ClipboardList className="h-10 w-10 text-primary mx-auto mb-2" />
+                <h2 className="text-lg font-semibold text-foreground">Learning Profile Assessment</h2>
+                <p className="text-sm text-muted-foreground">Fill in your details to begin the assessment</p>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Age</Label>
-              <Input
-                type="number"
-                min="3"
-                max="18"
-                placeholder="Enter your age"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  value={name}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Class</Label>
-              <Select value={studentClass} onValueChange={setStudentClass}>
-                <SelectTrigger><SelectValue placeholder="Select your class" /></SelectTrigger>
-                <SelectContent>
-                  {CLASS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label>Age</Label>
+                <Input
+                  type="number"
+                  min="3"
+                  max="18"
+                  placeholder="Enter your age"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Section</Label>
-              <Input
-                placeholder="Enter your section (e.g., A, B, C)"
-                value={section}
-                onChange={(e) => setSection(e.target.value)}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label>Class</Label>
+                <Select value={studentClass} onValueChange={setStudentClass}>
+                  <SelectTrigger><SelectValue placeholder="Select your class" /></SelectTrigger>
+                  <SelectContent>
+                    {CLASS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Curriculum</Label>
-              <Select value={curriculum} onValueChange={setCurriculum}>
-                <SelectTrigger><SelectValue placeholder="Select your curriculum" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CBSE">CBSE</SelectItem>
-                  <SelectItem value="IB">IB</SelectItem>
-                  <SelectItem value="Cambridge">Cambridge</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Class Teacher</Label>
-              <Select value={teacherId} onValueChange={setTeacherId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={loadingTeachers ? "Loading teachers..." : "Select your teacher"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {teachers.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.full_name || "Unnamed Teacher"}
-                    </SelectItem>
-                  ))}
-                  {!loadingTeachers && teachers.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">No teachers found</div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label>Section</Label>
+                <Input
+                  placeholder="Enter your section (e.g., A, B, C)"
+                  value={section}
+                  onChange={(e) => setSection(e.target.value)}
+                />
+              </div>
 
-            <Button className="w-full" size="lg" onClick={startQuiz} disabled={!canStartQuiz}>
-              Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label>Curriculum</Label>
+                <Select value={curriculum} onValueChange={setCurriculum}>
+                  <SelectTrigger><SelectValue placeholder="Select your curriculum" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CBSE">CBSE</SelectItem>
+                    <SelectItem value="IB">IB</SelectItem>
+                    <SelectItem value="Cambridge">Cambridge</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Class Teacher</Label>
+                <Select value={teacherId} onValueChange={setTeacherId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingTeachers ? "Loading teachers..." : "Select your teacher"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.full_name || "Unnamed Teacher"}
+                      </SelectItem>
+                    ))}
+                    {!loadingTeachers && teachers.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">No teachers found</div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button className="w-full" size="lg" onClick={startQuiz} disabled={!canStartQuiz}>
+                Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </AppLayout>
     );
   }
