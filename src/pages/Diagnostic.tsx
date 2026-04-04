@@ -606,6 +606,9 @@ const DiagnosticTeacher = () => {
 
           {/* Diagnostic Question Request Form */}
           <DiagnosticRequestForm />
+
+          {/* Assign approved questions */}
+          <DiagnosticAssignPanel />
         </div>
       </AppLayout>
     );
