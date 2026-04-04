@@ -405,10 +405,10 @@ const Gamification = () => {
                   <p className="text-[10px]" style={{ color: "rgba(241,245,249,0.4)" }}>Age {ageGroup.ageRange[0]}-{ageGroup.ageRange[1]}</p>
                 </div>
               </div>
-              <div className="px-5 py-3 rounded-2xl flex items-center gap-2" style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.3)" }}>
-                <span className="text-xl">📘</span>
+              <div className="px-5 py-3 rounded-2xl flex items-center gap-2" style={{ background: gameMode === 'generic' ? "rgba(56,189,248,0.1)" : "rgba(168,85,247,0.1)", border: `1px solid ${gameMode === 'generic' ? "rgba(56,189,248,0.3)" : "rgba(168,85,247,0.3)"}` }}>
+                <span className="text-xl">{gameMode === 'generic' ? '🧩' : '📘'}</span>
                 <div>
-                  <p className="text-xs font-bold" style={{ color: "#A855F7" }}>{subject}</p>
+                  <p className="text-xs font-bold" style={{ color: gameMode === 'generic' ? "#7DD3FC" : "#A855F7" }}>{gameMode === 'generic' ? 'Generic Mode' : subject}</p>
                   <p className="text-[10px]" style={{ color: "rgba(241,245,249,0.4)" }}>Class {studentClass}</p>
                 </div>
               </div>
