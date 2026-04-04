@@ -86,7 +86,7 @@ export const DiagnosticRequestForm = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Request submitted! Awaiting admin approval.");
+      toast.success("Request submitted! Awaiting Master User approval.");
       setClassName("");
       setSection("A");
       setSubject("");
