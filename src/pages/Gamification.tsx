@@ -12,7 +12,7 @@ import { CategorySort } from "@/components/gamification/games/CategorySort";
 import { SpeedTap } from "@/components/gamification/games/SpeedTap";
 import { VisualMemory } from "@/components/gamification/games/VisualMemory";
 import { GameSetupScreen } from "@/components/gamification/setup/GameSetupScreen";
-import { SelectedGame } from "@/components/gamification/engine/gameSelector";
+import { SelectedGame, GameMode } from "@/components/gamification/engine/gameSelector";
 import { AgeGroup } from "@/components/gamification/engine/ageGroups";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
