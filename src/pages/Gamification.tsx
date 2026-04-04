@@ -215,6 +215,7 @@ const Gamification = () => {
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
   const [subject, setSubject] = useState('');
   const [studentClass, setStudentClass] = useState('');
+  const [gameMode, setGameMode] = useState<GameMode>('subject');
 
   const [phase, setPhase] = useState<AdaptivePhase>("SETUP");
   const [currentGame, setCurrentGame] = useState(0);
