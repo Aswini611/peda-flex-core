@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { DiagnosticRequestForm } from "@/components/DiagnosticRequestForm";
+import { DiagnosticAssignPanel } from "@/components/DiagnosticAssignPanel";
+import { StudentDiagnosticTest } from "@/components/StudentDiagnosticTest";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGamification } from "@/hooks/useGamification";
 import { PageHeader } from "@/components/PageHeader";
