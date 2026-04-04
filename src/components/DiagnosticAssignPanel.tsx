@@ -22,6 +22,7 @@ interface DiagnosticRequest {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  assigned_at: string | null;
   questions: any[] | null;
 }
 
