@@ -133,7 +133,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     {profile.full_name || "User"}
                   </p>
                   <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-                    {profile.role}
+                    {profile.role === "admin" ? "Master User" : profile.role}
                   </p>
                 </div>
               )}
