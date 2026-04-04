@@ -604,7 +604,7 @@ const adminFeatureCards = [
   },
   {
     icon: GraduationCap,
-    title: "Admin Panel",
+    title: "Master User Panel",
     description: "Manage classes, allot students and teachers, configure diagnostic questions, and import students via Excel.",
     path: "/admin",
     color: "from-violet-500/20 to-violet-600/10",
