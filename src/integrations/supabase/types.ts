@@ -310,6 +310,7 @@ export type Database = {
           created_at: string
           id: string
           purpose: string
+          questions: Json | null
           section: string
           status: string
           subject: string
@@ -328,6 +329,7 @@ export type Database = {
           created_at?: string
           id?: string
           purpose: string
+          questions?: Json | null
           section?: string
           status?: string
           subject: string
@@ -346,6 +348,7 @@ export type Database = {
           created_at?: string
           id?: string
           purpose?: string
+          questions?: Json | null
           section?: string
           status?: string
           subject?: string
@@ -366,6 +369,44 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_submissions: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          request_id: string
+          score: number
+          student_id: string
+          total_questions: number
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          request_id: string
+          score?: number
+          student_id: string
+          total_questions?: number
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          request_id?: string
+          score?: number
+          student_id?: string
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_submissions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_requests"
             referencedColumns: ["id"]
           },
         ]
