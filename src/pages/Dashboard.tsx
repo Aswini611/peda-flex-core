@@ -71,11 +71,13 @@ const StudentDashboard = () => {
   const { data: assignments, isLoading } = useQuery({
     queryKey: ["student-assignments", user?.id],
     queryFn: async () => {
-      let { data: studentRecord } = await supabase
+      const { data: studentRows } = await supabase
         .from("students")
         .select("id")
         .eq("profile_id", user!.id)
-        .maybeSingle();
+        .limit(1);
+
+      let studentRecord = studentRows?.[0] ?? null;
 
       if (!studentRecord) {
         const { data: newStudent } = await supabase
