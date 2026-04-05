@@ -6,61 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import AuthBackground from "@/components/AuthBackground";
-
-const loginRoles = [
-  { value: "student", label: "Student" },
-  { value: "teacher", label: "Teacher" },
-  { value: "school_admin", label: "Admin" },
-  { value: "admin", label: "Master Admin" },
-] as const;
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [loginRole, setLoginRole] = useState<string>("student");
+  const [isStudentLogin, setIsStudentLogin] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const isStudent = loginRole === "student";
-  const isStaff = loginRole === "teacher" || loginRole === "admin" || loginRole === "school_admin";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const email = isStudent ? `${identifier.trim().toLowerCase()}@student.apas.local` : identifier;
+    const email = isStudentLogin
+      ? `${identifier.trim().toLowerCase()}@student.apas.local`
+      : identifier;
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    // Verify the user's actual role matches the selected login role
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (profile && profile.role !== loginRole) {
-      await supabase.auth.signOut();
-      const roleLabels: Record<string, string> = {
-        student: "Student",
-        teacher: "Teacher",
-        school_admin: "Admin",
-        admin: "Master Admin",
-      };
-      toast({
-        title: "Role mismatch",
-        description: `This account is registered as "${roleLabels[profile.role] || profile.role}". Please select the correct role to log in.`,
-        variant: "destructive",
-      });
       setLoading(false);
       return;
     }
@@ -73,7 +40,6 @@ const Login = () => {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
       <AuthBackground />
 
-      {/* Content */}
       <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-2">
@@ -84,42 +50,31 @@ const Login = () => {
           <p className="text-sm text-muted-foreground">Adaptive Pedagogy & Analytics System</p>
         </div>
 
-        {/* Card – glassmorphism */}
+        {/* Card */}
         <div className="rounded-2xl bg-white/60 backdrop-blur-xl p-8 shadow-2xl shadow-indigo-500/10 border border-white/50 ring-1 ring-black/[0.03]">
           <h2 className="mb-1 text-lg font-semibold text-foreground">Sign in</h2>
           <p className="mb-6 text-sm text-muted-foreground">Enter your credentials to continue</p>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Role selector */}
-            <div className="space-y-2">
-              <Label className="text-foreground font-medium">I am a</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {loginRoles.map((r) => (
-                  <button
-                    key={r.value}
-                    type="button"
-                    onClick={() => { setLoginRole(r.value); setIdentifier(""); }}
-                    className={cn(
-                      "rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                      loginRole === r.value
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md shadow-indigo-500/10"
-                        : "border-border bg-white/70 text-muted-foreground hover:border-indigo-300 hover:bg-indigo-50/30"
-                    )}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Student toggle */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isStudentLogin}
+                onChange={(e) => { setIsStudentLogin(e.target.checked); setIdentifier(""); }}
+                className="rounded border-border accent-indigo-600"
+              />
+              <span className="text-sm font-medium text-foreground">I am a Student</span>
+            </label>
 
             <div className="space-y-2">
               <Label htmlFor="identifier" className="text-foreground font-medium">
-                {isStudent ? "Student ID" : "Email"}
+                {isStudentLogin ? "Student ID" : "Email"}
               </Label>
               <Input
                 id="identifier"
-                type={isStudent ? "text" : "email"}
-                placeholder={isStudent ? "e.g. STU2024001" : "you@example.com"}
+                type={isStudentLogin ? "text" : "email"}
+                placeholder={isStudentLogin ? "e.g. STU2024001" : "you@example.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
@@ -127,9 +82,7 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground font-medium">
-                Password
-              </Label>
+              <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
               <Input
                 id="password"
                 type="password"
