@@ -11,7 +11,8 @@ import AuthBackground from "@/components/AuthBackground";
 
 const loginRoles = [
   { value: "student", label: "Student" },
-  { value: "staff", label: "Teacher / Master User" },
+  { value: "teacher", label: "Teacher" },
+  { value: "admin", label: "Master User" },
 ] as const;
 
 const Login = () => {
