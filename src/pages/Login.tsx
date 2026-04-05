@@ -33,13 +33,39 @@ const Login = () => {
 
     const email = isStudent ? `${identifier.trim().toLowerCase()}@student.apas.local` : identifier;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/dashboard");
+      setLoading(false);
+      return;
     }
+
+    // Verify the user's actual role matches the selected login role
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profile && profile.role !== loginRole) {
+      await supabase.auth.signOut();
+      const roleLabels: Record<string, string> = {
+        student: "Student",
+        teacher: "Teacher",
+        school_admin: "Admin",
+        admin: "Master Admin",
+      };
+      toast({
+        title: "Role mismatch",
+        description: `This account is registered as "${roleLabels[profile.role] || profile.role}". Please select the correct role to log in.`,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    navigate("/dashboard");
     setLoading(false);
   };
 
