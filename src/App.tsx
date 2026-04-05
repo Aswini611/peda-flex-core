@@ -48,23 +48,23 @@ const App = () => (
               } />
               <Route path="/analytics" element={
                 <ProtectedRoute>
-                  <RoleGuard allowedRoles={["teacher", "admin"]}>
+                  <RoleGuard allowedRoles={["teacher", "admin", "school_admin"]}>
                     <Analytics />
                   </RoleGuard>
                 </ProtectedRoute>
               } />
-               <Route path="/alerts" element={
-                 <ProtectedRoute>
-                   <RoleGuard allowedRoles={["admin"]}>
-                     <Alerts />
-                   </RoleGuard>
-                 </ProtectedRoute>
-               } />
+              <Route path="/alerts" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["admin"]}>
+                    <Alerts />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
               <Route
                 path="/teacher"
                 element={
                   <ProtectedRoute>
-                    <RoleGuard allowedRoles={["teacher", "admin"]}>
+                    <RoleGuard allowedRoles={["teacher", "admin", "school_admin"]}>
                       <TeacherPanel />
                     </RoleGuard>
                   </ProtectedRoute>
@@ -86,7 +86,7 @@ const App = () => (
               } />
               <Route path="/admin" element={
                 <ProtectedRoute>
-                  <RoleGuard allowedRoles={["admin"]}>
+                  <RoleGuard allowedRoles={["admin", "school_admin"]}>
                     <AdminPanel />
                   </RoleGuard>
                 </ProtectedRoute>

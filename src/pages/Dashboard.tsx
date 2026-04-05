@@ -789,7 +789,7 @@ const Dashboard = () => {
     return <StudentDashboard />;
   }
 
-  if (profile?.role === "admin") {
+  if (profile?.role === "admin" || profile?.role === "school_admin") {
     return <AdminHome />;
   }
 

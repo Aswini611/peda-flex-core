@@ -12,6 +12,7 @@ import AuthBackground from "@/components/AuthBackground";
 const roles = [
   { value: "student", label: "Student", desc: "Track your learning" },
   { value: "teacher", label: "Teacher", desc: "Manage courses" },
+  { value: "school_admin", label: "Admin", desc: "School management" },
 ] as const;
 
 const hasUpperCase = (str: string) => /[A-Z]/.test(str);
@@ -40,7 +41,7 @@ const Register = () => {
   const { toast } = useToast();
 
   const isStudent = role === "student";
-  const usesEmail = role === "teacher";
+  const usesEmail = role === "teacher" || role === "school_admin";
   const passwordIsValid = isPasswordValid(password);
   const passwordsMatch = password === confirmPassword && password.length > 0;
   const canSubmit = passwordIsValid && passwordsMatch && fullName.trim() && identifier.trim();
@@ -173,7 +174,7 @@ const Register = () => {
             {/* Role selector */}
             <div className="space-y-2">
               <Label className="text-foreground font-medium">Role</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {roles.map((r) => (
                   <button
                     key={r.value}
