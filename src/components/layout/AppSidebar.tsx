@@ -19,12 +19,12 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
-  { title: "Student Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"] },
+  { title: "Student Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin", "school_admin"] },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"] },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"] },
-  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"] },
+  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "school_admin"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
-  { title: "Master User Panel", icon: Shield, path: "/admin", roles: ["admin"] },
+  { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "school_admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
   { title: "Settings", icon: Settings, path: "/settings" },
@@ -133,7 +133,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     {profile.full_name || "User"}
                   </p>
                   <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-                    {profile.role === "admin" ? "Master User" : profile.role}
+                    {profile.role === "admin" ? "Master Admin" : profile.role === "school_admin" ? "Admin" : profile.role}
                   </p>
                 </div>
               )}
