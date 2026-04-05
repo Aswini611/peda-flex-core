@@ -66,7 +66,7 @@ const Login = () => {
             {/* Role selector */}
             <div className="space-y-2">
               <Label className="text-foreground font-medium">I am a</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {loginRoles.map((r) => (
                   <button
                     key={r.value}
