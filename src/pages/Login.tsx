@@ -11,7 +11,8 @@ import AuthBackground from "@/components/AuthBackground";
 
 const loginRoles = [
   { value: "student", label: "Student" },
-  { value: "staff", label: "Teacher / Master User" },
+  { value: "teacher", label: "Teacher" },
+  { value: "admin", label: "Master User" },
 ] as const;
 
 const Login = () => {
@@ -23,6 +24,7 @@ const Login = () => {
   const { toast } = useToast();
 
   const isStudent = loginRole === "student";
+  const isStaff = loginRole === "teacher" || loginRole === "admin";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +66,7 @@ const Login = () => {
             {/* Role selector */}
             <div className="space-y-2">
               <Label className="text-foreground font-medium">I am a</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {loginRoles.map((r) => (
                   <button
                     key={r.value}
