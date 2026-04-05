@@ -54,8 +54,9 @@ interface ClassTeacher {
 }
 
 const AdminPanel = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
+  const isMasterAdmin = profile?.role === "admin";
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -258,13 +259,13 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-6" : "grid-cols-3")}>
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
-            <TabsTrigger value="approvals">Approvals</TabsTrigger>
-            <TabsTrigger value="questions">Questions</TabsTrigger>
-            <TabsTrigger value="config">Config</TabsTrigger>
+            {isMasterAdmin && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
+            {isMasterAdmin && <TabsTrigger value="questions">Questions</TabsTrigger>}
+            {isMasterAdmin && <TabsTrigger value="config">Config</TabsTrigger>}
           </TabsList>
 
           {/* ===== CLASSES TAB ===== */}
