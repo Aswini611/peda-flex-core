@@ -133,7 +133,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     try {
       const { data: assignedRequests } = await supabase
         .from("diagnostic_requests")
-        .select("questions, question_distribution, class_name, approved_count")
+        .select("questions, question_distribution, class_name, section, approved_count")
         .in("status", ["assigned", "approved"])
         .eq("teacher_id", teacherId);
 
