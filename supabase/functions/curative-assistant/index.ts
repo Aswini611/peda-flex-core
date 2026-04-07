@@ -407,12 +407,13 @@ For EACH group, present as a structured card:
 | BBL Principle | ✅ Applied? | Where in Lesson |
 |---------------|------------|-----------------|
 | Primacy Effect (key concept first 10 min) | ✅ | Section 2 — Hook |
-| Recency Effect (revision last 5 min) | ✅ | Section 6 — Closure |
+| Recency Effect (revision last 6 min) | ✅ | Section 6 — Closure |
 | 10-2-10 Chunking | ✅ | Section 3 — Main Teaching |
 | Cognitive Load (≤3 new concepts per chunk) | ✅ | Each chunk |
 | Real-life connections (Patterning) | ✅ | [where] |
 | Social Brain (collaborative activity) | ✅ | Section 4 — Group Work |
 | Spaced Repetition suggested | ✅ | Section 6 — Closure |
+| Exit Ticket (formative evaluation) | ✅ | Section 7 — Assessment |
 | ZPD 3-tier tasks | ✅ | Sections 3 & 4 |
 | MI multi-channel delivery | ✅ | Throughout |
 
