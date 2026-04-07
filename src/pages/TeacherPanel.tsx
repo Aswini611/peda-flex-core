@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, FileText, Filter, BarChart3, Download, Sparkles, Send } from "lucide-react";
+import { Users, FileText, Filter, BarChart3, Download, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +20,7 @@ import { analyzeResponses } from "@/data/reportTheories";
 import { deriveVarkScores } from "@/data/varkMapping";
 import { ClassReportView } from "@/components/ClassReportView";
 import { CurativeLessonPlanView } from "@/components/CurativeLessonPlanView";
-import { TeacherRequestForm } from "@/components/TeacherRequestForm";
+
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -103,27 +103,14 @@ const TeacherPanel = () => {
     setCurrentPage(1);
   };
 
-  const [activeTab, setActiveTab] = useState("reports");
-
   return (
     <AppLayout>
       <PageHeader
         title="Teacher Panel"
-        subtitle="Manage student reports and diagnostic requests"
+        subtitle="Manage student reports"
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="reports" className="gap-1.5">
-            <Users className="h-4 w-4" /> Student Reports
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="gap-1.5">
-            <Send className="h-4 w-4" /> Requests
-          </TabsTrigger>
-        </TabsList>
-
-        {/* ===== REPORTS TAB ===== */}
-        <TabsContent value="reports">
+      <div>
           {/* Filters */}
           <Card className="mb-6">
             <CardContent className="p-4">
@@ -347,13 +334,7 @@ const TeacherPanel = () => {
               teacherName={profile?.full_name || undefined}
             />
           )}
-        </TabsContent>
-
-        {/* ===== REQUESTS TAB ===== */}
-        <TabsContent value="requests">
-          <TeacherRequestForm />
-        </TabsContent>
-      </Tabs>
+        </div>
     </AppLayout>
   );
 };

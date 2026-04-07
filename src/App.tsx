@@ -20,6 +20,7 @@ import SettingsPage from "./pages/Settings";
 import Gamification from "./pages/Gamification";
 import AcademicTests from "./pages/AcademicTests";
 import AdminPanel from "./pages/AdminPanel";
+import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,13 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleGuard allowedRoles={["admin", "school_admin"]}>
                     <AdminPanel />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
+              <Route path="/requests" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["teacher"]}>
+                    <Requests />
                   </RoleGuard>
                 </ProtectedRoute>
               } />
