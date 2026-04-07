@@ -23,6 +23,7 @@ interface DiagnosticRequest {
   purpose: string;
   suggested_count: number;
   approved_count: number | null;
+  question_distribution: Record<string, number> | null;
   status: string;
   admin_notes: string | null;
   created_at: string;
@@ -223,6 +224,20 @@ export const DiagnosticApprovalPanel = () => {
                 <span className="text-sm text-muted-foreground">Purpose:</span>
                 <p className="text-sm text-foreground bg-muted/50 rounded-md p-3 mt-1">{reviewRequest.purpose}</p>
               </div>
+
+              {reviewRequest.question_distribution && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Question Distribution:</span>
+                  <div className="mt-1 grid grid-cols-1 gap-1 max-h-[200px] overflow-auto">
+                    {Object.entries(reviewRequest.question_distribution).map(([cat, count]) => (
+                      <div key={cat} className="flex justify-between text-sm bg-muted/50 rounded px-3 py-1.5">
+                        <span className="text-foreground">{cat}</span>
+                        <span className="font-medium text-foreground">{count} Qs</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {reviewRequest.status === "pending" ? (
                 <>

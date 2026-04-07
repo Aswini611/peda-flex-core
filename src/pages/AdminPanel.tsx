@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet, ClipboardCheck } from "lucide-react";
+import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet, ClipboardCheck, Bell } from "lucide-react";
 import { ExcelImportModal } from "@/components/ExcelImportModal";
 import { DiagnosticApprovalPanel } from "@/components/DiagnosticApprovalPanel";
 
@@ -66,6 +66,7 @@ const AdminPanel = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const isMasterAdmin = profile?.role === "admin";
+  const isSchoolAdmin = profile?.role === "school_admin";
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -273,8 +274,9 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-6" : "grid-cols-1")}>
+          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-7" : isSchoolAdmin ? "grid-cols-2" : "grid-cols-1")}>
             <TabsTrigger value="classes">Classes</TabsTrigger>
+            {(isMasterAdmin || isSchoolAdmin) && <TabsTrigger value="notifications" className="gap-1"><Bell className="h-3.5 w-3.5" /> Notifications</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="students">Students</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="teachers">Teachers</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
@@ -439,6 +441,13 @@ const AdminPanel = () => {
               </DialogContent>
             </Dialog>
           </TabsContent>
+
+          {/* ===== NOTIFICATIONS TAB (School Admin + Master Admin) ===== */}
+          {(isMasterAdmin || isSchoolAdmin) && (
+            <TabsContent value="notifications">
+              <DiagnosticApprovalPanel />
+            </TabsContent>
+          )}
 
           {/* ===== STUDENT ALLOTMENT TAB (Master Admin only) ===== */}
           {isMasterAdmin && <TabsContent value="students">
@@ -738,6 +747,7 @@ const AdminPanel = () => {
               </CardContent>
             </Card>
           </TabsContent>}
+
 
 
           {/* ===== APPROVALS TAB ===== */}
