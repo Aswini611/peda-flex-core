@@ -680,7 +680,40 @@ const DiagnosticTeacher = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Left: Question */}
           <div>
-            <Card className="mb-5 shadow-sm">
+            {/* Submit button above questions */}
+            <div className="flex justify-end mb-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" className="gap-1.5">
+                    <CheckCircle className="h-4 w-4" />
+                    Submit Assessment ({answeredCount}/{totalQuestions} answered)
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      Are you sure you want to submit?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You have answered {answeredCount} out of {totalQuestions} questions.
+                      {answeredCount < totalQuestions && (
+                        <span className="block mt-1 font-medium text-foreground">
+                          {totalQuestions - answeredCount} question{totalQuestions - answeredCount > 1 ? "s" : ""} are still unanswered.
+                        </span>
+                      )}
+                      Once submitted, you cannot change your answers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSubmit} disabled={submitting}>
+                      {submitting ? "Submitting..." : "Yes, Submit"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
               <CardContent className="p-8">
                 <div className="animate-fade-in" key={currentQ}>
                   <p className="text-lg font-medium text-foreground mb-8 leading-relaxed">
