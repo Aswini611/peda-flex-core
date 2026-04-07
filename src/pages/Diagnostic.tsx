@@ -408,43 +408,16 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                 </Button>
 
                 <div className="flex gap-2">
-                  {(() => {
-                    const currentAnswered = answers[question.id] !== undefined;
-                    if (!isLastQuestion && currentAnswered) {
-                      return (
-                        <>
-                          <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                            Next <ArrowRight className="h-4 w-4 ml-1" />
-                          </Button>
-                          {canSubmit && (
-                            <Button variant="outline" onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting}>
-                              {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
-                            </Button>
-                          )}
-                        </>
-                      );
-                    }
-                    if (isLastQuestion && currentAnswered) {
-                      return (
-                        <div className="flex flex-col items-end gap-1">
-                          <Button onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting || !canSubmit}>
-                            {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
-                          </Button>
-                          {!canSubmit && (
-                            <span className="text-xs text-destructive">
-                              Answer at least {MIN_REQUIRED} questions ({MIN_REQUIRED - totalAnswered} more needed)
-                            </span>
-                          )}
-                          {canSubmit && totalAnswered < totalQuestions && (
-                            <span className="text-xs text-muted-foreground">
-                              {totalAnswered}/{totalQuestions} answered — you can submit now or continue
-                            </span>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                  {answers[question.id] !== undefined && !isLastQuestion && (
+                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
+                  {answers[question.id] !== undefined && isLastQuestion && (
+                    <Button onClick={() => setCurrentQ((q) => q + 1)} disabled>
+                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
