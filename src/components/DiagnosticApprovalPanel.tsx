@@ -125,32 +125,52 @@ export const DiagnosticApprovalPanel = () => {
     }
 
     setProcessing(true);
+
+    let assignedQuestions: any[] | null = null;
+
+    if (action === "approved" && reviewRequest.question_distribution) {
+      // Build the question set from the pre-stored question bank
+      assignedQuestions = buildQuestionSet(
+        reviewRequest.class_name,
+        reviewRequest.question_distribution
+      );
+
+      if (assignedQuestions.length === 0) {
+        toast.error("No matching questions found in the question bank for this class and categories.");
+        setProcessing(false);
+        return;
+      }
+
+      toast.info(`Assigning ${assignedQuestions.length} questions to ${reviewRequest.class_name} - ${reviewRequest.section} students.`);
+    }
+
+    const updatePayload: any = {
+      status: action === "approved" ? "assigned" : "rejected",
+      approved_count: action === "approved" ? count : null,
+      admin_notes: adminNotes.trim() || null,
+      approved_by: user.id,
+      approved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (assignedQuestions) {
+      updatePayload.questions = assignedQuestions;
+      updatePayload.assigned_at = new Date().toISOString();
+    }
+
     const { error } = await supabase
       .from("diagnostic_requests")
-      .update({
-        status: action,
-        approved_count: action === "approved" ? count : null,
-        admin_notes: adminNotes.trim() || null,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as any)
+      .update(updatePayload)
       .eq("id", reviewRequest.id);
 
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success(`Request ${action}!`);
-      // Insert notification alert
-      await supabase.from("mismatch_alerts").insert({
-        student_group: `Teacher: ${(reviewRequest.profiles as any)?.full_name || "Unknown"}`,
-        lesson_type: `Diagnostic Request ${action}`,
-        trigger_condition: `${reviewRequest.class_name} ${reviewRequest.section} - ${reviewRequest.subject}`,
-        recommendation: action === "approved"
-          ? `Approved ${count} questions. Teacher may now assign.`
-          : `Request rejected. ${adminNotes.trim() || "No notes provided."}`,
-        status: "flagged",
-      });
+      toast.success(
+        action === "approved"
+          ? `Request approved! ${assignedQuestions?.length || 0} questions assigned to ${reviewRequest.class_name} - ${reviewRequest.section} students.`
+          : "Request rejected."
+      );
       setReviewRequest(null);
       queryClient.invalidateQueries({ queryKey: ["admin-diagnostic-requests"] });
     }
