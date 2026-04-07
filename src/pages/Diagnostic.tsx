@@ -290,8 +290,6 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     const question = allQuestions[currentQ];
     if (!question) return null;
     const isLastQuestion = currentQ === totalQuestions - 1;
-    const MIN_REQUIRED = 15;
-    const canSubmit = totalAnswered >= MIN_REQUIRED;
     const displayNum = currentQ + 1;
 
     const dimInfo = getCurrentDimensionInfo(config, currentQ);
