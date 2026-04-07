@@ -714,6 +714,7 @@ const DiagnosticTeacher = () => {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
+            <Card className="mb-5 shadow-sm">
               <CardContent className="p-8">
                 <div className="animate-fade-in" key={currentQ}>
                   <p className="text-lg font-medium text-foreground mb-8 leading-relaxed">
