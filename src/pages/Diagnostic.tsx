@@ -266,9 +266,6 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
       <AppLayout>
         <PageHeader title="My Assessments" subtitle="View and complete your assigned tests" />
         <div className="space-y-8">
-          {/* Diagnostic Tests Section */}
-          <StudentDiagnosticTest />
-
           {/* Learning Profile Assessment */}
           <Card className="max-w-lg mx-auto">
             <CardContent className="p-6 space-y-5">
