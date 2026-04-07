@@ -658,8 +658,7 @@ const DiagnosticTeacher = () => {
   if (!config) return null;
   const question = config.questions[currentQ];
   const isLastQuestion = currentQ === totalQuestions - 1;
-  const MIN_REQUIRED = 15;
-  const canSubmit = answeredCount >= MIN_REQUIRED;
+    const isLastQuestion = currentQ === totalQuestions - 1;
 
   return (
     <AppLayout>
