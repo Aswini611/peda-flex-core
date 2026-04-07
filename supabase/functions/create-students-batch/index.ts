@@ -19,58 +19,89 @@ Deno.serve(async (req) => {
 
     const { students, mode } = await req.json();
 
-    // Mode: "import" — bulk create profiles + students without auth accounts
+    // Mode: "import" — bulk create auth users (triggers profile + student auto-creation), then update student details
     if (mode === "import") {
       const results: any[] = [];
 
       for (const s of students) {
-        // Create profile with service role (bypasses RLS)
-        const profileId = crypto.randomUUID();
-        const { error: profileError } = await supabaseAdmin
-          .from("profiles")
-          .insert({
-            id: profileId,
+        // Generate a unique placeholder email for each student
+        const uniqueId = crypto.randomUUID().slice(0, 8);
+        const placeholderEmail = `student_${uniqueId}@import.local`;
+        const placeholderPassword = crypto.randomUUID();
+
+        // Create auth user — the handle_new_user trigger will auto-create profile + student
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: placeholderEmail,
+          password: placeholderPassword,
+          email_confirm: true,
+          user_metadata: {
             full_name: s.student_name,
             role: "student",
-          });
+            class: s.class || null,
+          },
+        });
 
-        if (profileError) {
+        if (authError) {
           results.push({
             rowNum: s.rowNum,
             success: false,
-            error: profileError.message,
+            error: authError.message,
           });
           continue;
         }
 
-        // Create student record
+        const userId = authData.user.id;
+
+        // Update the auto-created student record with additional fields
         const { data: studentData, error: studentError } = await supabaseAdmin
           .from("students")
-          .insert({
-            profile_id: profileId,
-            grade: s.class || null,
+          .update({
             roll_number: s.roll_number || null,
             parent_phone: s.parent_phone || null,
             parent_email: s.parent_email || null,
+            grade: s.class || null,
           })
+          .eq("profile_id", userId)
           .select("id")
           .single();
 
         if (studentError) {
+          // Student record may not exist yet if trigger didn't fire — create it
+          const { data: insertedStudent, error: insertError } = await supabaseAdmin
+            .from("students")
+            .insert({
+              profile_id: userId,
+              grade: s.class || null,
+              roll_number: s.roll_number || null,
+              parent_phone: s.parent_phone || null,
+              parent_email: s.parent_email || null,
+            })
+            .select("id")
+            .single();
+
+          if (insertError) {
+            results.push({
+              rowNum: s.rowNum,
+              success: false,
+              error: insertError.message,
+            });
+            continue;
+          }
+
           results.push({
             rowNum: s.rowNum,
-            success: false,
-            error: studentError.message,
+            success: true,
+            studentId: insertedStudent.id,
+            profileId: userId,
           });
-          continue;
+        } else {
+          results.push({
+            rowNum: s.rowNum,
+            success: true,
+            studentId: studentData.id,
+            profileId: userId,
+          });
         }
-
-        results.push({
-          rowNum: s.rowNum,
-          success: true,
-          studentId: studentData.id,
-          profileId,
-        });
       }
 
       return new Response(JSON.stringify({ results }), {
