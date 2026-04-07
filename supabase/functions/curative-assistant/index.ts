@@ -354,7 +354,7 @@ For EACH group, present as a structured card:
 
 ---
 
-## 🔄 6. Closure — Revision Activity (Last 5 minutes — RECENCY EFFECT)
+## 🔄 6. Closure — Revision Activity (6 minutes — RECENCY EFFECT)
 
 **⚡ The brain remembers the LAST thing it encounters.**
 
@@ -366,6 +366,21 @@ For EACH group, present as a structured card:
 - **24-hour review:** [quick 5-min recap activity for next day]
 - **7-day review:** [short quiz or discussion prompt for next week]
 - **30-day review:** [integration activity connecting to future topics]
+
+---
+
+## 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+
+**🎯 Quick formative check to measure understanding before students leave.**
+
+- **Format:** [1-3 short questions / a quick problem / a one-sentence summary / a visual response]
+- **Questions:**
+  1. [Write one question testing the core concept of the lesson]
+  2. [Write one question requiring application or explanation]
+  3. [Optional: Write one higher-order thinking question]
+- **Collection Method:** [Slip of paper / digital form / verbal response / show of hands]
+- **Success Criteria:** [What percentage or level indicates mastery — e.g., 80% correct = concept understood]
+- **Follow-up:** How exit ticket results inform the next lesson or re-teaching needs
 
 ---
 
