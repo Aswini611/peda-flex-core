@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Download, Users } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Download, Users, Pencil } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface ExcelImportModalProps {
@@ -64,7 +65,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
   const [availableTeachers, setAvailableTeachers] = useState<{ id: string; full_name: string | null }[]>([]);
   const [unassignedClasses, setUnassignedClasses] = useState<UnassignedClass[]>([]);
   const [assigningTeachers, setAssigningTeachers] = useState(false);
-  // Store classMap so it persists between steps
+  const [editingRow, setEditingRow] = useState<number | null>(null);
   const classMapRef = useRef<Map<string, string>>(new Map());
 
   const reset = () => {
@@ -73,6 +74,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     setValidations([]);
     setReport(null);
     setUnassignedClasses([]);
+    setEditingRow(null);
     classMapRef.current = new Map();
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -89,6 +91,41 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       });
     }
   }, [open]);
+
+  const revalidate = (rows: ParsedRow[]) => {
+    const results: ValidationResult[] = rows.map((row) => {
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      if (!row.student_name) errors.push("Student name is required");
+      if (!row.class) errors.push("Class is required");
+      if (!row.section) errors.push("Section is required");
+      if (!row.roll_number) warnings.push("Roll number missing");
+      if (!row.teacher_name) warnings.push("Teacher not specified");
+      if (row.parent_phone && !/^\+?[\d\s-]{7,15}$/.test(row.parent_phone))
+        errors.push("Invalid phone format");
+      if (row.parent_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.parent_email))
+        errors.push("Invalid email format");
+      return { row, errors, warnings };
+    });
+
+    const rollMap = new Map<string, number[]>();
+    rows.forEach((r) => {
+      if (r.roll_number) {
+        const key = `${r.class}-${r.section}-${r.roll_number}`;
+        rollMap.set(key, [...(rollMap.get(key) || []), r.rowNum]);
+      }
+    });
+    rollMap.forEach((rowNums) => {
+      if (rowNums.length > 1) {
+        rowNums.forEach((rn) => {
+          const v = results.find((vr) => vr.row.rowNum === rn);
+          if (v) v.errors.push("Duplicate roll number in file");
+        });
+      }
+    });
+
+    setValidations(results);
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -114,43 +151,17 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         teacher_subject: String(r["teacher_subject"] || r["Teacher Subject"] || r["Subject"] || "").trim(),
       }));
 
-      const results: ValidationResult[] = rows.map((row) => {
-        const errors: string[] = [];
-        const warnings: string[] = [];
-        if (!row.student_name) errors.push("Student name is required");
-        if (!row.class) errors.push("Class is required");
-        if (!row.section) errors.push("Section is required");
-        if (!row.roll_number) warnings.push("Roll number missing");
-        if (!row.teacher_name) warnings.push("Teacher not specified");
-        if (row.parent_phone && !/^\+?[\d\s-]{7,15}$/.test(row.parent_phone))
-          errors.push("Invalid phone format");
-        if (row.parent_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.parent_email))
-          errors.push("Invalid email format");
-        return { row, errors, warnings };
-      });
-
-      // Check duplicate roll numbers within file
-      const rollMap = new Map<string, number[]>();
-      rows.forEach((r) => {
-        if (r.roll_number) {
-          const key = `${r.class}-${r.section}-${r.roll_number}`;
-          rollMap.set(key, [...(rollMap.get(key) || []), r.rowNum]);
-        }
-      });
-      rollMap.forEach((rowNums, _key) => {
-        if (rowNums.length > 1) {
-          rowNums.forEach((rn) => {
-            const v = results.find((vr) => vr.row.rowNum === rn);
-            if (v) v.errors.push(`Duplicate roll number in file`);
-          });
-        }
-      });
-
       setParsed(rows);
-      setValidations(results);
+      revalidate(rows);
       setStep("preview");
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  const updateRow = (rowNum: number, field: keyof ParsedRow, value: string) => {
+    const updated = parsed.map((r) => r.rowNum === rowNum ? { ...r, [field]: value } : r);
+    setParsed(updated);
+    revalidate(updated);
   };
 
   const handleImport = async () => {
@@ -164,7 +175,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     };
 
     try {
-      // 1. Get existing classes
       const { data: existingClasses } = await supabase.from("classes").select("id, name, section");
       const classMap = new Map<string, string>();
       existingClasses?.forEach((c) => classMap.set(`${c.name} - ${c.section}`, c.id));
@@ -173,7 +183,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       const neededClasses = new Set<string>();
       validRows.forEach((v) => neededClasses.add(`${v.row.class} - ${v.row.section}`));
 
-      // 2. Create missing classes
       for (const cn of neededClasses) {
         if (!classMap.has(cn)) {
           const [name, section] = cn.split(" - ");
@@ -191,7 +200,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         }
       }
 
-      // 3. Get existing students
       const { data: existingStudents } = await supabase
         .from("students")
         .select("id, roll_number, grade, profiles(full_name)");
@@ -199,7 +207,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         .from("class_students")
         .select("student_id, class_id");
 
-      // 4. Process students
       for (const v of validRows) {
         const className = `${v.row.class} - ${v.row.section}`;
         const classId = classMap.get(className);
@@ -265,7 +272,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         }
       }
 
-      // 5. Auto-assign teachers from Excel
+      // Auto-assign teachers from Excel
       const teachersByClass = new Map<string, { name: string; role: string; subject: string }>();
       validRows.forEach((v) => {
         if (v.row.teacher_name) {
@@ -288,7 +295,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         const classId = classMap.get(classKey);
         if (!classId) continue;
 
-        // Find teacher by name
         const matchedTeacher = availableTeachers.find(
           (t) => t.full_name?.toLowerCase() === teacher.name.toLowerCase()
         );
@@ -316,9 +322,8 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         }
       }
 
-      // 6. Find classes without teacher assignments (from this import)
+      // Find classes without teacher assignments
       const classesWithoutTeacher: UnassignedClass[] = [];
-      // Re-fetch class_teachers to get updated state
       const { data: updatedCT } = await supabase.from("class_teachers").select("class_id");
       const assignedClassIds = new Set(updatedCT?.map((ct) => ct.class_id) || []);
 
@@ -338,7 +343,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       classMapRef.current = classMap;
       setUnassignedClasses(classesWithoutTeacher);
 
-      // Add skipped error rows
       validations
         .filter((v) => v.errors.length > 0)
         .forEach((v) => {
@@ -381,11 +385,23 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ["student_name", "Class", "section", "roll_number", "parent_phone", "parent_email", "teacher_name", "teacher_role", "teacher_subject"],
-      ["John Doe", "Class 3", "A", "101", "+919876543210", "parent@email.com", "Mrs. Sharma", "primary", ""],
-      ["Jane Smith", "Class 4", "B", "102", "+919876543211", "", "Mr. Verma", "subject", "Mathematics"],
-      ["Bob Wilson", "Class 3", "A", "103", "+919876543212", "", "", "", ""],
+      ["student_name", "Class", "section", "roll_number", "parent_phone", "parent_email", "teacher_name"],
+      ["John Doe", "Class 3", "A", "101", "+919876543210", "parent@email.com", "Mrs. Sharma"],
+      ["Jane Smith", "Class 4", "B", "102", "+919876543211", "", "Mr. Verma"],
+      ["Bob Wilson", "Class 3", "A", "103", "+919876543212", "", ""],
     ]);
+
+    // Set column widths for better readability
+    ws["!cols"] = [
+      { wch: 20 }, // student_name
+      { wch: 12 }, // Class
+      { wch: 10 }, // section
+      { wch: 14 }, // roll_number
+      { wch: 18 }, // parent_phone
+      { wch: 22 }, // parent_email
+      { wch: 18 }, // teacher_name
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
     XLSX.writeFile(wb, "student_import_template.xlsx");
@@ -397,7 +413,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
@@ -412,10 +428,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
               <div>
                 <p className="text-foreground font-medium">Upload Excel File (.xlsx, .xls)</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Required: student_name, Class, section &nbsp;|&nbsp; Optional: roll_number, parent_phone, parent_email
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Teacher columns (optional): teacher_name, teacher_role, teacher_subject
+                  Columns: student_name, Class, section, roll_number, parent_phone, parent_email, teacher_name
                 </p>
               </div>
               <div className="flex gap-3 justify-center">
@@ -432,11 +445,11 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
               <h4 className="text-sm font-semibold text-foreground">How It Works</h4>
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                <li><strong>Download the template</strong> and fill in student details</li>
+                <li>Upload the filled file — preview &amp; <strong>edit any field</strong> before importing</li>
                 <li>Auto-creates classes as <strong>"Class - Section"</strong></li>
-                <li>Assigns students to their respective classes</li>
-                <li>If <strong>teacher_name</strong> is provided, auto-assigns teacher to the class</li>
-                <li>If teacher details are missing, you can assign them manually after import</li>
-                <li>Validates duplicates and skips them</li>
+                <li>If <strong>teacher_name</strong> matches a registered teacher, auto-assigns them</li>
+                <li>Unmatched classes can be assigned teachers manually after import</li>
               </ul>
             </div>
           </div>
@@ -444,7 +457,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
         {step === "preview" && (
           <div className="flex-1 flex flex-col space-y-4 min-h-0">
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-3 flex-wrap items-center">
               <Badge variant="secondary" className="gap-1">Total: {parsed.length} rows</Badge>
               <Badge className="gap-1 bg-emerald-600 hover:bg-emerald-700">
                 <CheckCircle2 className="h-3 w-3" /> Valid: {validCount}
@@ -459,47 +472,148 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
                   <Users className="h-3 w-3" /> Teacher data detected
                 </Badge>
               )}
+              <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
+                <Pencil className="h-3 w-3" /> Click any row to edit
+              </span>
             </div>
 
             <ScrollArea className="flex-1 border rounded-lg max-h-[400px]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">#</TableHead>
+                    <TableHead className="w-10">#</TableHead>
                     <TableHead>Student Name</TableHead>
                     <TableHead>Class</TableHead>
                     <TableHead>Section</TableHead>
                     <TableHead>Roll No.</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Teacher</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="w-16">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {validations.map((v) => (
-                    <TableRow key={v.row.rowNum} className={v.errors.length > 0 ? "bg-destructive/5" : ""}>
-                      <TableCell className="text-muted-foreground">{v.row.rowNum}</TableCell>
-                      <TableCell className="font-medium">{v.row.student_name || "—"}</TableCell>
-                      <TableCell>{v.row.class || "—"}</TableCell>
-                      <TableCell>{v.row.section || "—"}</TableCell>
-                      <TableCell>{v.row.roll_number || "—"}</TableCell>
-                      <TableCell className="text-xs">
-                        {v.row.teacher_name ? (
-                          <span>{v.row.teacher_name} <span className="text-muted-foreground">({v.row.teacher_role})</span></span>
-                        ) : (
-                          <span className="text-muted-foreground italic">Not specified</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {v.errors.length > 0 ? (
-                          <span className="text-xs text-destructive">{v.errors[0]}</span>
-                        ) : v.warnings.length > 0 ? (
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                        ) : (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {validations.map((v) => {
+                    const isEditing = editingRow === v.row.rowNum;
+                    return (
+                      <TableRow
+                        key={v.row.rowNum}
+                        className={`cursor-pointer ${v.errors.length > 0 ? "bg-destructive/5" : ""} ${isEditing ? "bg-accent/50" : "hover:bg-muted/50"}`}
+                        onClick={() => setEditingRow(isEditing ? null : v.row.rowNum)}
+                      >
+                        <TableCell className="text-muted-foreground text-xs">{v.row.rowNum}</TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              value={v.row.student_name}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateRow(v.row.rowNum, "student_name", e.target.value)}
+                              className="h-7 text-xs"
+                            />
+                          ) : (
+                            <span className="font-medium text-sm">{v.row.student_name || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              value={v.row.class}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateRow(v.row.rowNum, "class", e.target.value)}
+                              className="h-7 text-xs w-24"
+                            />
+                          ) : (
+                            <span className="text-sm">{v.row.class || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              value={v.row.section}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateRow(v.row.rowNum, "section", e.target.value)}
+                              className="h-7 text-xs w-16"
+                            />
+                          ) : (
+                            <span className="text-sm">{v.row.section || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              value={v.row.roll_number}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateRow(v.row.rowNum, "roll_number", e.target.value)}
+                              className="h-7 text-xs w-20"
+                            />
+                          ) : (
+                            <span className="text-sm">{v.row.roll_number || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              value={v.row.parent_phone}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateRow(v.row.rowNum, "parent_phone", e.target.value)}
+                              className="h-7 text-xs w-32"
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{v.row.parent_phone || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              value={v.row.parent_email}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateRow(v.row.rowNum, "parent_email", e.target.value)}
+                              className="h-7 text-xs w-36"
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{v.row.parent_email || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Select
+                              value={v.row.teacher_name || "__none__"}
+                              onValueChange={(val) => {
+                                updateRow(v.row.rowNum, "teacher_name", val === "__none__" ? "" : val);
+                              }}
+                            >
+                              <SelectTrigger className="h-7 text-xs w-32" onClick={(e) => e.stopPropagation()}>
+                                <SelectValue placeholder="Select teacher" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">No teacher</SelectItem>
+                                {availableTeachers.map((t) => (
+                                  <SelectItem key={t.id} value={t.full_name || t.id}>
+                                    {t.full_name || "Unnamed"}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="text-xs">
+                              {v.row.teacher_name || <span className="text-muted-foreground italic">—</span>}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {v.errors.length > 0 ? (
+                            <span className="text-xs text-destructive" title={v.errors.join(", ")}>
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            </span>
+                          ) : v.warnings.length > 0 ? (
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          ) : (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </ScrollArea>
