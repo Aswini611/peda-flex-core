@@ -13,6 +13,52 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, XCircle, Clock, Eye, ClipboardList, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AGE_GROUPS, type AgeGroupConfig, type Dimension } from "@/data/assessmentQuestions";
+
+/** Map class name to the appropriate age group in the question bank */
+function getAgeGroupForClass(className: string): number {
+  const lower = className.toLowerCase().trim();
+  if (["nursery", "lkg", "ukg"].includes(lower)) return 3;
+  const num = parseInt(lower.replace(/\D/g, ""));
+  if (!isNaN(num)) {
+    if (num <= 4) return 5;
+    if (num <= 9) return 10;
+    return 15;
+  }
+  return 5; // default
+}
+
+/** Pick N random questions from an array */
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(n, arr.length));
+}
+
+/** Build the question set from the question bank based on distribution */
+function buildQuestionSet(
+  className: string,
+  distribution: Record<string, number>
+): { id: number; text: string; category: string; modality?: string }[] {
+  const ageGroup = getAgeGroupForClass(className);
+  const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
+  if (!config) return [];
+
+  const result: { id: number; text: string; category: string; modality?: string }[] = [];
+
+  for (const [category, count] of Object.entries(distribution)) {
+    if (count <= 0) continue;
+    // Find matching dimension by name (case-insensitive partial match)
+    const dimension = config.dimensions.find(
+      d => d.name.toLowerCase() === category.toLowerCase()
+    );
+    if (dimension) {
+      const picked = pickRandom(dimension.questions, count);
+      result.push(...picked.map(q => ({ id: q.id, text: q.text, category: dimension.name, modality: q.modality })));
+    }
+  }
+
+  return result;
+}
 
 interface DiagnosticRequest {
   id: string;
