@@ -63,6 +63,7 @@ export const TeacherRequestForm = () => {
   const [purpose, setPurpose] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [viewRequest, setViewRequest] = useState<DiagnosticRequest | null>(null);
+  const [showForm, setShowForm] = useState(true);
 
   // Per-category question counts
   const [distribution, setDistribution] = useState<QuestionDistribution>(
@@ -119,6 +120,7 @@ export const TeacherRequestForm = () => {
       setSection("A");
       setPurpose("");
       setDistribution(Object.fromEntries(MI_CATEGORIES.map((c) => [c, 5])));
+      setShowForm(false);
       queryClient.invalidateQueries({ queryKey: ["teacher-diagnostic-requests"] });
     }
     setSubmitting(false);
@@ -148,7 +150,12 @@ export const TeacherRequestForm = () => {
 
   return (
     <div className="space-y-6">
-      {/* Request Form */}
+      {!showForm ? (
+        <Button onClick={() => setShowForm(true)} className="gap-1.5">
+          <Send className="h-4 w-4" /> New Request
+        </Button>
+      ) : (
+      /* Request Form */
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -221,6 +228,7 @@ export const TeacherRequestForm = () => {
           </Button>
         </CardContent>
       </Card>
+      )}
 
       {/* My Requests */}
       <Card>
