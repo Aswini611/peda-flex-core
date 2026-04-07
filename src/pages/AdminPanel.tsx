@@ -274,8 +274,9 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-6" : "grid-cols-1")}>
+          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-7" : isSchoolAdmin ? "grid-cols-2" : "grid-cols-1")}>
             <TabsTrigger value="classes">Classes</TabsTrigger>
+            {(isMasterAdmin || isSchoolAdmin) && <TabsTrigger value="notifications" className="gap-1"><Bell className="h-3.5 w-3.5" /> Notifications</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="students">Students</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="teachers">Teachers</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
