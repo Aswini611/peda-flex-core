@@ -103,236 +103,257 @@ const TeacherPanel = () => {
     setCurrentPage(1);
   };
 
+  const [activeTab, setActiveTab] = useState("reports");
+
   return (
     <AppLayout>
       <PageHeader
-        title="Student Reports"
-        subtitle="View and analyze student assessment reports by class and section"
+        title="Teacher Panel"
+        subtitle="Manage student reports and diagnostic requests"
       />
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Filters:</span>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Class</label>
-              <Select value={filterClass} onValueChange={handleClassChange}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Classes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
-                  {CLASS_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Section</label>
-              <Select value={filterSection} onValueChange={(val) => { setFilterSection(val); setShowClassReport(false); setCurrentPage(1); }}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="All Sections" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sections</SelectItem>
-                  {availableSections.map(sec => (
-                    <SelectItem key={sec} value={sec}>{sec}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Rows per page</label>
-              <Select value={String(rowsPerPage)} onValueChange={(val) => { setRowsPerPage(Number(val)); setCurrentPage(1); }}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[5, 10, 20, 50].map(n => (
-                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {filterClass !== "all" && (
-              <Button
-                variant={showClassReport ? "default" : "outline"}
-                size="sm"
-                className="gap-1.5"
-                onClick={() => setShowClassReport(!showClassReport)}
-              >
-                <BarChart3 className="h-4 w-4" />
-                {showClassReport ? "Show Individual Reports" : "View Class Report"}
-              </Button>
-            )}
-          </div>
-          {filteredAssessments.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-3">
-              Showing {filteredAssessments.length} student{filteredAssessments.length !== 1 ? "s" : ""}
-              {filterClass !== "all" && ` in ${CLASS_OPTIONS.find(c => c.value === filterClass)?.label || filterClass}`}
-              {filterSection !== "all" && ` Section ${filterSection}`}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="reports" className="gap-1.5">
+            <Users className="h-4 w-4" /> Student Reports
+          </TabsTrigger>
+          <TabsTrigger value="requests" className="gap-1.5">
+            <Send className="h-4 w-4" /> Requests
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Class Report View */}
-      {showClassReport && filteredAssessments.length > 0 && (
-        <ClassReport assessments={filteredAssessments} filterClass={filterClass} filterSection={filterSection} teacherName={profile?.full_name || undefined} userRole={profile?.role} />
-      )}
-
-      {/* Individual Reports Table */}
-      {!showClassReport && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Student Assessments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <LoadingSpinner />
-              </div>
-            ) : filteredAssessments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <h2 className="text-xl font-semibold text-foreground mb-2">No Assessments Found</h2>
-                <p className="text-muted-foreground max-w-md">
-                  {assessments && assessments.length > 0
-                    ? "No students match the selected filters. Try changing the class or section."
-                    : "Student assessment data will appear here once students complete their assessments and select you as their teacher."}
-                </p>
-              </div>
-            ) : (
-              <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Section</TableHead>
-                    <TableHead>Age Group</TableHead>
-                    <TableHead>Answered</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Report</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedAssessments.map((assessment, index) => {
-                    const responseCount = assessment.responses
-                      ? Object.keys(assessment.responses).length
-                      : 0;
-                    const classLabel = CLASS_OPTIONS.find(c => c.value === assessment.student_class)?.label || assessment.student_class || "—";
-                    const globalIndex = (currentPage - 1) * rowsPerPage + index;
-                    return (
-                      <TableRow key={assessment.id}>
-                        <TableCell className="font-medium">{globalIndex + 1}</TableCell>
-                        <TableCell className="font-medium">{assessment.student_name}</TableCell>
-                        <TableCell>{assessment.student_age}</TableCell>
-                        <TableCell>{classLabel}</TableCell>
-                        <TableCell>{assessment.section || "—"}</TableCell>
-                        <TableCell>{assessment.age_group}+</TableCell>
-                        <TableCell>{responseCount}</TableCell>
-                        <TableCell>
-                          {new Date(assessment.created_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedAssessment(assessment)}
-                            className="gap-1"
-                          >
-                            <FileText className="h-3.5 w-3.5" />
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {filteredAssessments.length > rowsPerPage && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {(currentPage - 1) * rowsPerPage + 1}–{Math.min(currentPage * rowsPerPage, filteredAssessments.length)} of {filteredAssessments.length}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={currentPage <= 1}
-                      onClick={() => setCurrentPage(p => p - 1)}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                      .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                        if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                        acc.push(p);
-                        return acc;
-                      }, [])
-                      .map((p, i) =>
-                        typeof p === "string" ? (
-                          <span key={`e${i}`} className="px-1 text-muted-foreground text-sm">…</span>
-                        ) : (
-                          <Button
-                            key={p}
-                            variant={p === currentPage ? "default" : "outline"}
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setCurrentPage(p)}
-                          >
-                            {p}
-                          </Button>
-                        )
-                      )}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={currentPage >= totalPages}
-                      onClick={() => setCurrentPage(p => p + 1)}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+        {/* ===== REPORTS TAB ===== */}
+        <TabsContent value="reports">
+          {/* Filters */}
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">Filters:</span>
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Class</label>
+                  <Select value={filterClass} onValueChange={handleClassChange}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="All Classes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {CLASS_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Section</label>
+                  <Select value={filterSection} onValueChange={(val) => { setFilterSection(val); setShowClassReport(false); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="All Sections" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sections</SelectItem>
+                      {availableSections.map(sec => (
+                        <SelectItem key={sec} value={sec}>{sec}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Rows per page</label>
+                  <Select value={String(rowsPerPage)} onValueChange={(val) => { setRowsPerPage(Number(val)); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5, 10, 20, 50].map(n => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {filterClass !== "all" && (
+                  <Button
+                    variant={showClassReport ? "default" : "outline"}
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setShowClassReport(!showClassReport)}
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    {showClassReport ? "Show Individual Reports" : "View Class Report"}
+                  </Button>
+                )}
+              </div>
+              {filteredAssessments.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  Showing {filteredAssessments.length} student{filteredAssessments.length !== 1 ? "s" : ""}
+                  {filterClass !== "all" && ` in ${CLASS_OPTIONS.find(c => c.value === filterClass)?.label || filterClass}`}
+                  {filterSection !== "all" && ` Section ${filterSection}`}
+                </p>
               )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
 
-      {selectedAssessment && (
-        <StudentReport
-          open={!!selectedAssessment}
-          onOpenChange={(open) => !open && setSelectedAssessment(null)}
-          studentName={selectedAssessment.student_name}
-          studentAge={selectedAssessment.student_age}
-          ageGroup={selectedAssessment.age_group}
-          responses={selectedAssessment.responses}
-          submittedAt={selectedAssessment.created_at}
-          studentClass={selectedAssessment.student_class || undefined}
-          teacherName={profile?.full_name || undefined}
-        />
-      )}
+          {/* Class Report View */}
+          {showClassReport && filteredAssessments.length > 0 && (
+            <ClassReport assessments={filteredAssessments} filterClass={filterClass} filterSection={filterSection} teacherName={profile?.full_name || undefined} userRole={profile?.role} />
+          )}
+
+          {/* Individual Reports Table */}
+          {!showClassReport && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Student Assessments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-12">
+                    <LoadingSpinner />
+                  </div>
+                ) : filteredAssessments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h2 className="text-xl font-semibold text-foreground mb-2">No Assessments Found</h2>
+                    <p className="text-muted-foreground max-w-md">
+                      {assessments && assessments.length > 0
+                        ? "No students match the selected filters. Try changing the class or section."
+                        : "Student assessment data will appear here once students complete their assessments and select you as their teacher."}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Student Name</TableHead>
+                        <TableHead>Age</TableHead>
+                        <TableHead>Class</TableHead>
+                        <TableHead>Section</TableHead>
+                        <TableHead>Age Group</TableHead>
+                        <TableHead>Answered</TableHead>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead>Report</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedAssessments.map((assessment, index) => {
+                        const responseCount = assessment.responses
+                          ? Object.keys(assessment.responses).length
+                          : 0;
+                        const classLabel = CLASS_OPTIONS.find(c => c.value === assessment.student_class)?.label || assessment.student_class || "—";
+                        const globalIndex = (currentPage - 1) * rowsPerPage + index;
+                        return (
+                          <TableRow key={assessment.id}>
+                            <TableCell className="font-medium">{globalIndex + 1}</TableCell>
+                            <TableCell className="font-medium">{assessment.student_name}</TableCell>
+                            <TableCell>{assessment.student_age}</TableCell>
+                            <TableCell>{classLabel}</TableCell>
+                            <TableCell>{assessment.section || "—"}</TableCell>
+                            <TableCell>{assessment.age_group}+</TableCell>
+                            <TableCell>{responseCount}</TableCell>
+                            <TableCell>
+                              {new Date(assessment.created_at).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedAssessment(assessment)}
+                                className="gap-1"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                  {filteredAssessments.length > rowsPerPage && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {(currentPage - 1) * rowsPerPage + 1}–{Math.min(currentPage * rowsPerPage, filteredAssessments.length)} of {filteredAssessments.length}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={currentPage <= 1}
+                          onClick={() => setCurrentPage(p => p - 1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                          .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                            if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                            acc.push(p);
+                            return acc;
+                          }, [])
+                          .map((p, i) =>
+                            typeof p === "string" ? (
+                              <span key={`e${i}`} className="px-1 text-muted-foreground text-sm">…</span>
+                            ) : (
+                              <Button
+                                key={p}
+                                variant={p === currentPage ? "default" : "outline"}
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setCurrentPage(p)}
+                              >
+                                {p}
+                              </Button>
+                            )
+                          )}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setCurrentPage(p => p + 1)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {selectedAssessment && (
+            <StudentReport
+              open={!!selectedAssessment}
+              onOpenChange={(open) => !open && setSelectedAssessment(null)}
+              studentName={selectedAssessment.student_name}
+              studentAge={selectedAssessment.student_age}
+              ageGroup={selectedAssessment.age_group}
+              responses={selectedAssessment.responses}
+              submittedAt={selectedAssessment.created_at}
+              studentClass={selectedAssessment.student_class || undefined}
+              teacherName={profile?.full_name || undefined}
+            />
+          )}
+        </TabsContent>
+
+        {/* ===== REQUESTS TAB ===== */}
+        <TabsContent value="requests">
+          <TeacherRequestForm />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 };
