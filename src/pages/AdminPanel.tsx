@@ -260,10 +260,10 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-6" : "grid-cols-3")}>
+          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-6" : "grid-cols-1")}>
             <TabsTrigger value="classes">Classes</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            {isMasterAdmin && <TabsTrigger value="students">Students</TabsTrigger>}
+            {isMasterAdmin && <TabsTrigger value="teachers">Teachers</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="questions">Questions</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="config">Config</TabsTrigger>}
