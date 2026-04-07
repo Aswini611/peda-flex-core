@@ -385,9 +385,16 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                     const currentAnswered = answers[question.id] !== undefined;
                     if (!isLastQuestion && currentAnswered) {
                       return (
-                        <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                          Next <ArrowRight className="h-4 w-4 ml-1" />
-                        </Button>
+                        <>
+                          <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                            Next <ArrowRight className="h-4 w-4 ml-1" />
+                          </Button>
+                          {canSubmit && (
+                            <Button variant="outline" onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting}>
+                              {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
+                            </Button>
+                          )}
+                        </>
                       );
                     }
                     if (isLastQuestion && currentAnswered) {
@@ -722,9 +729,16 @@ const DiagnosticTeacher = () => {
               </Button>
               <div className="flex gap-2">
                 {!isLastQuestion && answers[question.id] !== undefined && (
-                  <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                    Next <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                    {canSubmit && (
+                      <Button variant="outline" onClick={handleSubmit} disabled={submitting}>
+                        {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {isLastQuestion && answers[question.id] !== undefined && (
                   <div className="flex flex-col items-end gap-1">
