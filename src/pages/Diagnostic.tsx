@@ -125,6 +125,9 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     const cfg = getAgeGroupConfig(ageGroup);
     if (!cfg) return;
 
+    // Materialize the flat questions list from the getter so spread works correctly
+    const allCfgQuestions = cfg.dimensions.flatMap(d => d.questions);
+
     // Check for teacher-assigned diagnostic questions for this class/section
     const classLabel = CLASS_OPTIONS.find(o => o.value === studentClass)?.label || studentClass;
     try {
@@ -132,13 +135,19 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         .from("diagnostic_requests")
         .select("questions, question_distribution, class_name, approved_count")
         .in("status", ["assigned", "approved"])
-        .eq("teacher_id", teacherId)
-        .eq("section", section.trim());
+        .eq("teacher_id", teacherId);
 
-      // Filter by class name (could be "Class 3" or "3")
+      // Match by class name and section (flexible matching)
+      const sectionTrimmed = section.trim().toUpperCase();
       const matchingRequest = (assignedRequests || []).find((r: any) => {
-        const reqClass = (r as any).class_name || "";
-        return reqClass === classLabel || reqClass === studentClass || reqClass.toLowerCase() === classLabel.toLowerCase();
+        const reqClass = ((r as any).class_name || "").trim();
+        const reqSection = ((r as any).section || "").trim().toUpperCase();
+        const classMatches =
+          reqClass === classLabel ||
+          reqClass === studentClass ||
+          reqClass.toLowerCase() === classLabel.toLowerCase() ||
+          reqClass.replace(/\D/g, "") === studentClass.replace(/\D/g, "");
+        return classMatches && reqSection === sectionTrimmed;
       });
 
       if (matchingRequest) {
@@ -158,7 +167,6 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
               d => d.name.toLowerCase() === category.toLowerCase()
             );
             if (dimension) {
-              // Pick 'count' random questions from this dimension
               const shuffled = [...dimension.questions].sort(() => Math.random() - 0.5);
               builtIds.push(...shuffled.slice(0, Math.min(count, dimension.questions.length)).map(q => q.id));
             }
@@ -169,16 +177,23 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         }
 
         if (assignedIds && assignedIds.size > 0) {
-          const filteredQuestions = cfg.questions.filter(q => assignedIds!.has(q.id));
           const filteredDimensions = cfg.dimensions.map(dim => ({
             ...dim,
             questions: dim.questions.filter(q => assignedIds!.has(q.id)),
           })).filter(dim => dim.questions.length > 0);
 
+          const filteredQuestions = filteredDimensions.flatMap(d => d.questions);
+
           const filteredConfig: AgeGroupConfig = {
-            ...cfg,
-            questions: filteredQuestions,
+            ageGroup: cfg.ageGroup,
+            label: cfg.label,
+            model: cfg.model,
+            respondent: cfg.respondent,
+            totalQuestions: filteredQuestions.length,
+            maxScorePerDimension: cfg.maxScorePerDimension,
+            options: cfg.options,
             dimensions: filteredDimensions,
+            questions: filteredQuestions,
           };
           setConfig(filteredConfig);
           setAnswers({});
@@ -193,7 +208,18 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     }
 
     // Fallback: use all questions
-    setConfig(cfg);
+    const fallbackConfig: AgeGroupConfig = {
+      ageGroup: cfg.ageGroup,
+      label: cfg.label,
+      model: cfg.model,
+      respondent: cfg.respondent,
+      totalQuestions: allCfgQuestions.length,
+      maxScorePerDimension: cfg.maxScorePerDimension,
+      options: cfg.options,
+      dimensions: cfg.dimensions.map(d => ({ ...d })),
+      questions: allCfgQuestions,
+    };
+    setConfig(fallbackConfig);
     setAnswers({});
     setCurrentQ(0);
     setPhase("quiz");
