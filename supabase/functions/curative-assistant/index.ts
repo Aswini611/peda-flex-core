@@ -354,7 +354,7 @@ For EACH group, present as a structured card:
 
 ---
 
-## 🔄 6. Closure — Revision Activity (Last 5 minutes — RECENCY EFFECT)
+## 🔄 6. Closure — Revision Activity (6 minutes — RECENCY EFFECT)
 
 **⚡ The brain remembers the LAST thing it encounters.**
 
@@ -366,6 +366,21 @@ For EACH group, present as a structured card:
 - **24-hour review:** [quick 5-min recap activity for next day]
 - **7-day review:** [short quiz or discussion prompt for next week]
 - **30-day review:** [integration activity connecting to future topics]
+
+---
+
+## 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+
+**🎯 Quick formative check to measure understanding before students leave.**
+
+- **Format:** [1-3 short questions / a quick problem / a one-sentence summary / a visual response]
+- **Questions:**
+  1. [Write one question testing the core concept of the lesson]
+  2. [Write one question requiring application or explanation]
+  3. [Optional: Write one higher-order thinking question]
+- **Collection Method:** [Slip of paper / digital form / verbal response / show of hands]
+- **Success Criteria:** [What percentage or level indicates mastery — e.g., 80% correct = concept understood]
+- **Follow-up:** How exit ticket results inform the next lesson or re-teaching needs
 
 ---
 
@@ -392,18 +407,19 @@ For EACH group, present as a structured card:
 | BBL Principle | ✅ Applied? | Where in Lesson |
 |---------------|------------|-----------------|
 | Primacy Effect (key concept first 10 min) | ✅ | Section 2 — Hook |
-| Recency Effect (revision last 5 min) | ✅ | Section 6 — Closure |
+| Recency Effect (revision last 6 min) | ✅ | Section 6 — Closure |
 | 10-2-10 Chunking | ✅ | Section 3 — Main Teaching |
 | Cognitive Load (≤3 new concepts per chunk) | ✅ | Each chunk |
 | Real-life connections (Patterning) | ✅ | [where] |
 | Social Brain (collaborative activity) | ✅ | Section 4 — Group Work |
 | Spaced Repetition suggested | ✅ | Section 6 — Closure |
+| Exit Ticket (formative evaluation) | ✅ | Section 7 — Assessment |
 | ZPD 3-tier tasks | ✅ | Sections 3 & 4 |
 | MI multi-channel delivery | ✅ | Throughout |
 
 ---
 
-## ✅ 7. Learning Outcomes
+## ✅ 8. Learning Outcomes
 
 **At the very end of every lesson plan, list clear and measurable learning outcomes.**
 
