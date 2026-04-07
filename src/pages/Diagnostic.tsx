@@ -538,7 +538,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                                     : "bg-muted text-muted-foreground hover:bg-muted-foreground/20"
                                 }`}
                               >
-                                {q.id}
+                                {flatIdx + 1}
                               </button>
                             );
                           })}
