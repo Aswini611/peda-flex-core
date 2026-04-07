@@ -42,7 +42,15 @@ interface ClassStudent {
   id: string;
   class_id: string;
   student_id: string;
-  students: { id: string; profiles: { full_name: string | null } | null; grade: string | null } | null;
+  students: {
+    id: string;
+    profiles: { full_name: string | null } | null;
+    grade: string | null;
+    age: number | null;
+    roll_number: string | null;
+    parent_phone: string | null;
+    parent_email: string | null;
+  } | null;
 }
 
 interface ClassTeacher {
@@ -80,6 +88,7 @@ const AdminPanel = () => {
   const [questionAssignments, setQuestionAssignments] = useState<any[]>([]);
   const [createClassOpen, setCreateClassOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedClassDetailsId, setSelectedClassDetailsId] = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -87,7 +96,7 @@ const AdminPanel = () => {
       supabase.from("classes").select("*").order("name"),
       supabase.from("students").select("id, profile_id, grade, age, profiles!inner(full_name, role)").eq("profiles.role", "student"),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
-      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, profiles(full_name))"),
+      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, age, roll_number, parent_phone, parent_email, profiles(full_name))"),
       supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
       supabase.from("teacher_question_assignments").select("*"),
     ]);
@@ -213,6 +222,10 @@ const AdminPanel = () => {
     return t?.full_name || "Unknown";
   };
 
+  const selectedClass = classes.find((c) => c.id === selectedClassDetailsId) || null;
+  const selectedClassMembers = classStudents.filter((cs) => cs.class_id === selectedClassDetailsId);
+  const selectedClassTeachers = classTeachers.filter((ct) => ct.class_id === selectedClassDetailsId);
+
   if (loading) {
     return (
       <AppLayout>
@@ -319,13 +332,24 @@ const AdminPanel = () => {
                     </TableHeader>
                     <TableBody>
                       {classes.map(c => (
-                        <TableRow key={c.id}>
+                        <TableRow
+                          key={c.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => setSelectedClassDetailsId(c.id)}
+                        >
                           <TableCell className="font-medium">{c.name}</TableCell>
                           <TableCell><Badge variant="secondary">{c.section}</Badge></TableCell>
                           <TableCell>{classStudents.filter(cs => cs.class_id === c.id).length}</TableCell>
                           <TableCell>{classTeachers.filter(ct => ct.class_id === c.id).length}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteClass(c.id)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDeleteClass(c.id);
+                              }}
+                            >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </TableCell>
@@ -336,6 +360,84 @@ const AdminPanel = () => {
                 )}
               </CardContent>
             </Card>
+
+            <Dialog open={Boolean(selectedClassDetailsId)} onOpenChange={(open) => !open && setSelectedClassDetailsId(null)}>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedClass ? `${selectedClass.name} - ${selectedClass.section}` : "Class details"}
+                  </DialogTitle>
+                </DialogHeader>
+
+                {selectedClass && (
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-xs text-muted-foreground">Students</p>
+                        <p className="mt-1 text-2xl font-semibold text-foreground">{selectedClassMembers.length}</p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-xs text-muted-foreground">Teachers</p>
+                        <p className="mt-1 text-2xl font-semibold text-foreground">{selectedClassTeachers.length}</p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-xs text-muted-foreground">Created</p>
+                        <p className="mt-1 text-sm font-medium text-foreground">{new Date(selectedClass.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Assigned Teachers</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedClassTeachers.length > 0 ? (
+                          selectedClassTeachers.map((teacher) => (
+                            <Badge key={teacher.id} variant={teacher.teacher_role === "primary" ? "default" : "secondary"}>
+                              {(teacher.profiles as any)?.full_name || "Unnamed"}
+                              {teacher.teacher_role === "primary" ? " • Primary" : ` • ${teacher.subject || "Subject"}`}
+                            </Badge>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground">No teachers assigned yet.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Class Members</Label>
+                      <div className="max-h-[360px] overflow-auto rounded-lg border border-border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Student Name</TableHead>
+                              <TableHead>Grade</TableHead>
+                              <TableHead>Roll No.</TableHead>
+                              <TableHead>Parent Phone</TableHead>
+                              <TableHead>Parent Email</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {selectedClassMembers.map((member) => (
+                              <TableRow key={member.id}>
+                                <TableCell className="font-medium">{member.students?.profiles?.full_name || "Unnamed"}</TableCell>
+                                <TableCell>{member.students?.grade || "—"}</TableCell>
+                                <TableCell>{member.students?.roll_number || "—"}</TableCell>
+                                <TableCell>{member.students?.parent_phone || "—"}</TableCell>
+                                <TableCell>{member.students?.parent_email || "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                            {selectedClassMembers.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center text-muted-foreground">No students assigned yet.</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* ===== STUDENT ALLOTMENT TAB (Master Admin only) ===== */}

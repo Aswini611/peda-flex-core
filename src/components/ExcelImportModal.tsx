@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,9 @@ type Step = "upload" | "preview" | "importing" | "class-setup" | "done";
 
 export function ExcelImportModal({ open, onOpenChange, onImportComplete }: ExcelImportModalProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+  const classStudentMapRef = useRef<Map<string, { studentIds: string[]; teacherName: string }>>(new Map());
   const [step, setStep] = useState<Step>("upload");
   const [parsed, setParsed] = useState<ParsedRow[]>([]);
   const [validations, setValidations] = useState<ValidationResult[]>([]);
@@ -70,6 +73,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     setCreatedClasses([]);
     setImportedCount(0);
     setImportErrors([]);
+    classStudentMapRef.current = new Map();
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -269,8 +273,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     setImportErrors(errors);
     setCreatedClasses(classSetup);
 
-    // Store student mapping for class assignment
-    (window as any).__importClassStudentMap = classStudentMap;
+    classStudentMapRef.current = classStudentMap;
 
     setStep("class-setup");
   };
@@ -281,46 +284,74 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   const handleCreateClasses = async () => {
     setSavingClasses(true);
-    const classStudentMap = (window as any).__importClassStudentMap as Map<string, { studentIds: string[]; teacherName: string }>;
+    const classStudentMap = classStudentMapRef.current;
+    const classErrors: string[] = [];
 
     // Get existing classes
-    const { data: existingClasses } = await supabase.from("classes").select("id, name, section");
+    const { data: existingClasses, error: existingClassesError } = await supabase.from("classes").select("id, name, section");
+    if (existingClassesError) {
+      setImportErrors((prev) => [...prev, existingClassesError.message]);
+      toast({ title: "Unable to load classes", description: existingClassesError.message, variant: "destructive" });
+      setSavingClasses(false);
+      return;
+    }
+
     const existingMap = new Map<string, string>();
     existingClasses?.forEach((c) => existingMap.set(`${c.name} - ${c.section}`, c.id));
 
-    const { data: existingClassStudents } = await supabase.from("class_students").select("student_id, class_id");
+    const { data: existingClassStudents, error: existingClassStudentsError } = await supabase.from("class_students").select("student_id, class_id");
+    if (existingClassStudentsError) {
+      setImportErrors((prev) => [...prev, existingClassStudentsError.message]);
+      toast({ title: "Unable to load class members", description: existingClassStudentsError.message, variant: "destructive" });
+      setSavingClasses(false);
+      return;
+    }
 
     for (const cls of createdClasses) {
       const key = `${cls.className} - ${cls.section}`;
       let classId = existingMap.get(key);
+      let classFailed = false;
+
+      if (cls.teacherRole === "subject" && !cls.teacherSubject) {
+        classErrors.push(`Class "${key}": subject is required for subject teachers`);
+        classFailed = true;
+      }
 
       // Create class if not exists
-      if (!classId) {
+      if (!classId && !classFailed) {
         const { data, error } = await supabase
           .from("classes")
           .insert({ name: cls.className, section: cls.section, created_by: user?.id })
           .select("id").single();
         if (error) {
-          setImportErrors((prev) => [...prev, `Class "${key}": ${error.message}`]);
+          classErrors.push(`Class "${key}": ${error.message}`);
           continue;
         }
         classId = data.id;
+        existingMap.set(key, classId);
       }
 
       // Assign students to class
+      if (!classId || classFailed) continue;
+
       const studentIds = classStudentMap.get(cls.classKey)?.studentIds || [];
       for (const sid of studentIds) {
         const alreadyAssigned = existingClassStudents?.some(
           (cs) => cs.student_id === sid && cs.class_id === classId
         );
         if (alreadyAssigned) continue;
-        await supabase.from("class_students").insert({
+        const { error } = await supabase.from("class_students").insert({
           class_id: classId, student_id: sid, assigned_by: user?.id,
         });
+        if (error) {
+          classErrors.push(`Class "${key}": ${error.message}`);
+          classFailed = true;
+          break;
+        }
       }
 
       // Assign teacher if selected
-      if (cls.teacherId) {
+      if (cls.teacherId && !classFailed) {
         const { data: existingCT } = await supabase
           .from("class_teachers")
           .select("id")
@@ -328,19 +359,33 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
           .eq("teacher_id", cls.teacherId);
 
         if (!existingCT?.length) {
-          await supabase.from("class_teachers").insert({
+          const { error } = await supabase.from("class_teachers").insert({
             class_id: classId,
             teacher_id: cls.teacherId,
             teacher_role: cls.teacherRole,
             subject: cls.teacherRole === "subject" ? cls.teacherSubject : null,
             assigned_by: user?.id,
           });
+          if (error) {
+            classErrors.push(`Class "${key}": ${error.message}`);
+          }
         }
       }
     }
 
-    delete (window as any).__importClassStudentMap;
     setSavingClasses(false);
+    setImportErrors((prev) => [...prev, ...classErrors]);
+
+    if (classErrors.length > 0) {
+      toast({
+        title: "Some classes need attention",
+        description: "The import stayed open so you can review the class setup errors.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    classStudentMapRef.current = new Map();
     setStep("done");
     onImportComplete();
   };
@@ -350,7 +395,15 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
+      <DialogContent
+        className="max-w-5xl max-h-[85vh] flex flex-col"
+        onInteractOutside={(event) => {
+          if (step !== "done") event.preventDefault();
+        }}
+        onEscapeKeyDown={(event) => {
+          if (step !== "done") event.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
@@ -669,7 +722,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
                 Skip (Create Later)
               </Button>
               <Button onClick={handleCreateClasses} disabled={savingClasses || createdClasses.length === 0}>
-                {savingClasses ? "Creating..." : `Create ${createdClasses.length} Class(es) & Assign`}
+                {savingClasses ? "Saving..." : `Save ${createdClasses.length} Class(es) & Assign`}
               </Button>
             </div>
           </div>
