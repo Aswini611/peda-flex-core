@@ -310,6 +310,7 @@ export type Database = {
           created_at: string
           id: string
           purpose: string
+          question_distribution: Json | null
           questions: Json | null
           section: string
           status: string
@@ -329,6 +330,7 @@ export type Database = {
           created_at?: string
           id?: string
           purpose: string
+          question_distribution?: Json | null
           questions?: Json | null
           section?: string
           status?: string
@@ -348,6 +350,7 @@ export type Database = {
           created_at?: string
           id?: string
           purpose?: string
+          question_distribution?: Json | null
           questions?: Json | null
           section?: string
           status?: string
