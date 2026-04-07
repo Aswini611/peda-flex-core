@@ -170,7 +170,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     XLSX.writeFile(wb, "student_import_template.xlsx");
   };
 
-  // Step 3: Import students only (profiles + students table), then move to class setup
+  // Step 3: Import students via edge function (bypasses RLS), then move to class setup
   const handleImport = async () => {
     setStep("importing");
     const errors: string[] = [];
@@ -181,14 +181,16 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     // Track which students belong to which class-section
     const classStudentMap = new Map<string, { studentIds: string[]; teacherName: string }>();
 
+    // Check for existing students first
     const { data: existingStudents } = await supabase
       .from("students")
       .select("id, roll_number, grade, profiles(full_name)");
 
+    // Separate existing vs new students
+    const newStudents: { rowNum: number; student_name: string; class: string; roll_number: string; parent_phone: string; parent_email: string; teacher_name: string; section: string }[] = [];
+
     for (const v of validRows) {
       const classKey = `${v.row.class} - ${v.row.section}`;
-
-      // Check if student already exists
       const existing = existingStudents?.find(
         (s) =>
           (s as any).profiles?.full_name?.toLowerCase() === v.row.student_name.toLowerCase() &&
@@ -196,47 +198,51 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
           s.grade === v.row.class
       );
 
-      let studentId: string;
-
       if (existing) {
-        studentId = existing.id;
+        imported++;
+        if (!classStudentMap.has(classKey)) {
+          classStudentMap.set(classKey, { studentIds: [], teacherName: v.row.teacher_name });
+        }
+        classStudentMap.get(classKey)!.studentIds.push(existing.id);
       } else {
-        // Create profile + student
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .insert({ id: crypto.randomUUID(), full_name: v.row.student_name, role: "student" })
-          .select("id").single();
-
-        if (profileError) {
-          errors.push(`Row ${v.row.rowNum}: ${profileError.message}`);
-          continue;
-        }
-
-        const { data: studentData, error: studentError } = await supabase
-          .from("students")
-          .insert({
-            profile_id: profileData.id,
-            grade: v.row.class,
-            roll_number: v.row.roll_number || null,
-            parent_phone: v.row.parent_phone || null,
-            parent_email: v.row.parent_email || null,
-          })
-          .select("id").single();
-
-        if (studentError) {
-          errors.push(`Row ${v.row.rowNum}: ${studentError.message}`);
-          continue;
-        }
-        studentId = studentData.id;
+        newStudents.push({
+          rowNum: v.row.rowNum,
+          student_name: v.row.student_name,
+          class: v.row.class,
+          section: v.row.section,
+          roll_number: v.row.roll_number,
+          parent_phone: v.row.parent_phone,
+          parent_email: v.row.parent_email,
+          teacher_name: v.row.teacher_name,
+        });
       }
+    }
 
-      imported++;
+    // Batch create new students via edge function (uses service role, bypasses RLS)
+    if (newStudents.length > 0) {
+      const { data, error } = await supabase.functions.invoke("create-students-batch", {
+        body: { students: newStudents, mode: "import" },
+      });
 
-      // Group by class
-      if (!classStudentMap.has(classKey)) {
-        classStudentMap.set(classKey, { studentIds: [], teacherName: v.row.teacher_name });
+      if (error) {
+        errors.push(`Batch import error: ${error.message}`);
+      } else if (data?.results) {
+        for (const r of data.results) {
+          if (r.success) {
+            imported++;
+            const row = newStudents.find((s) => s.rowNum === r.rowNum);
+            if (row) {
+              const classKey = `${row.class} - ${row.section}`;
+              if (!classStudentMap.has(classKey)) {
+                classStudentMap.set(classKey, { studentIds: [], teacherName: row.teacher_name });
+              }
+              classStudentMap.get(classKey)!.studentIds.push(r.studentId);
+            }
+          } else {
+            errors.push(`Row ${r.rowNum}: ${r.error}`);
+          }
+        }
       }
-      classStudentMap.get(classKey)!.studentIds.push(studentId);
     }
 
     // Build class setup list
