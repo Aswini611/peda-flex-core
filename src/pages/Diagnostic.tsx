@@ -350,9 +350,6 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                             key={opt.value}
                             onClick={() => {
                               handleAnswer(question.id, opt.value);
-                              if (!isLastQuestion) {
-                                setTimeout(() => setCurrentQ((q) => q + 1), 350);
-                              }
                             }}
                             className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all ${
                               selected
@@ -699,9 +696,6 @@ const DiagnosticTeacher = () => {
                           key={opt.value}
                           onClick={() => {
                             handleAnswer(question.id, opt.value);
-                            if (!isLastQuestion) {
-                              setTimeout(() => setCurrentQ((q) => q + 1), 350);
-                            }
                           }}
                           className={`flex items-center gap-3 rounded-lg border p-4 text-left text-sm font-medium transition-all ${
                             selected
