@@ -757,34 +757,10 @@ const DiagnosticTeacher = () => {
                 <ArrowLeft className="h-4 w-4 mr-1" /> Previous
               </Button>
               <div className="flex gap-2">
-                {!isLastQuestion && answers[question.id] !== undefined && (
-                  <div className="flex gap-2">
-                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                      Next <ArrowRight className="h-4 w-4 ml-1" />
-                    </Button>
-                    {canSubmit && (
-                      <Button variant="outline" onClick={handleSubmit} disabled={submitting}>
-                        {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {isLastQuestion && answers[question.id] !== undefined && (
-                  <div className="flex flex-col items-end gap-1">
-                    <Button onClick={handleSubmit} disabled={submitting || !canSubmit}>
-                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
-                    </Button>
-                    {!canSubmit && (
-                      <span className="text-xs text-destructive">
-                        Answer at least {MIN_REQUIRED} questions ({MIN_REQUIRED - answeredCount} more needed)
-                      </span>
-                    )}
-                    {canSubmit && answeredCount < totalQuestions && (
-                      <span className="text-xs text-muted-foreground">
-                        {answeredCount}/{totalQuestions} answered — you can submit now or continue
-                      </span>
-                    )}
-                  </div>
+                {answers[question.id] !== undefined && !isLastQuestion && (
+                  <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                    Next <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
                 )}
               </div>
             </div>
