@@ -13,6 +13,52 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, XCircle, Clock, Eye, ClipboardList, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AGE_GROUPS, type AgeGroupConfig, type Dimension } from "@/data/assessmentQuestions";
+
+/** Map class name to the appropriate age group in the question bank */
+function getAgeGroupForClass(className: string): number {
+  const lower = className.toLowerCase().trim();
+  if (["nursery", "lkg", "ukg"].includes(lower)) return 3;
+  const num = parseInt(lower.replace(/\D/g, ""));
+  if (!isNaN(num)) {
+    if (num <= 4) return 5;
+    if (num <= 9) return 10;
+    return 15;
+  }
+  return 5; // default
+}
+
+/** Pick N random questions from an array */
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(n, arr.length));
+}
+
+/** Build the question set from the question bank based on distribution */
+function buildQuestionSet(
+  className: string,
+  distribution: Record<string, number>
+): { id: number; text: string; category: string; modality?: string }[] {
+  const ageGroup = getAgeGroupForClass(className);
+  const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
+  if (!config) return [];
+
+  const result: { id: number; text: string; category: string; modality?: string }[] = [];
+
+  for (const [category, count] of Object.entries(distribution)) {
+    if (count <= 0) continue;
+    // Find matching dimension by name (case-insensitive partial match)
+    const dimension = config.dimensions.find(
+      d => d.name.toLowerCase() === category.toLowerCase()
+    );
+    if (dimension) {
+      const picked = pickRandom(dimension.questions, count);
+      result.push(...picked.map(q => ({ id: q.id, text: q.text, category: dimension.name, modality: q.modality })));
+    }
+  }
+
+  return result;
+}
 
 interface DiagnosticRequest {
   id: string;
@@ -79,32 +125,52 @@ export const DiagnosticApprovalPanel = () => {
     }
 
     setProcessing(true);
+
+    let assignedQuestions: any[] | null = null;
+
+    if (action === "approved" && reviewRequest.question_distribution) {
+      // Build the question set from the pre-stored question bank
+      assignedQuestions = buildQuestionSet(
+        reviewRequest.class_name,
+        reviewRequest.question_distribution
+      );
+
+      if (assignedQuestions.length === 0) {
+        toast.error("No matching questions found in the question bank for this class and categories.");
+        setProcessing(false);
+        return;
+      }
+
+      toast.info(`Assigning ${assignedQuestions.length} questions to ${reviewRequest.class_name} - ${reviewRequest.section} students.`);
+    }
+
+    const updatePayload: any = {
+      status: action === "approved" ? "assigned" : "rejected",
+      approved_count: action === "approved" ? count : null,
+      admin_notes: adminNotes.trim() || null,
+      approved_by: user.id,
+      approved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (assignedQuestions) {
+      updatePayload.questions = assignedQuestions;
+      updatePayload.assigned_at = new Date().toISOString();
+    }
+
     const { error } = await supabase
       .from("diagnostic_requests")
-      .update({
-        status: action,
-        approved_count: action === "approved" ? count : null,
-        admin_notes: adminNotes.trim() || null,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as any)
+      .update(updatePayload)
       .eq("id", reviewRequest.id);
 
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success(`Request ${action}!`);
-      // Insert notification alert
-      await supabase.from("mismatch_alerts").insert({
-        student_group: `Teacher: ${(reviewRequest.profiles as any)?.full_name || "Unknown"}`,
-        lesson_type: `Diagnostic Request ${action}`,
-        trigger_condition: `${reviewRequest.class_name} ${reviewRequest.section} - ${reviewRequest.subject}`,
-        recommendation: action === "approved"
-          ? `Approved ${count} questions. Teacher may now assign.`
-          : `Request rejected. ${adminNotes.trim() || "No notes provided."}`,
-        status: "flagged",
-      });
+      toast.success(
+        action === "approved"
+          ? `Request approved! ${assignedQuestions?.length || 0} questions assigned to ${reviewRequest.class_name} - ${reviewRequest.section} students.`
+          : "Request rejected."
+      );
       setReviewRequest(null);
       queryClient.invalidateQueries({ queryKey: ["admin-diagnostic-requests"] });
     }

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, ClipboardList } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { getAgeGroupConfig } from "@/data/assessmentQuestions";
 
 interface DiagnosticRequest {
   id: string;
@@ -20,42 +21,47 @@ interface DiagnosticRequest {
   assigned_at: string | null;
 }
 
-interface Question {
+/** Assessment-style question from the question bank */
+interface AssessmentQuestion {
   id: number;
-  question: string;
-  options: Record<string, string>;
-  correct: string;
-  explanation: string;
+  text: string;
+  category: string;
+  modality?: string;
 }
+
+/** Map class to age group for fetching rating options */
+function getAgeGroupForClass(className: string): number {
+  const lower = className.toLowerCase().trim();
+  if (["nursery", "lkg", "ukg"].includes(lower)) return 3;
+  const num = parseInt(lower.replace(/\D/g, ""));
+  if (!isNaN(num)) {
+    if (num <= 4) return 5;
+    if (num <= 9) return 10;
+    return 15;
+  }
+  return 5;
+}
+
+const RATING_OPTIONS = [
+  { label: "Always", emoji: "😊", value: 4 },
+  { label: "Sometimes", emoji: "🙂", value: 3 },
+  { label: "Rarely", emoji: "😐", value: 2 },
+  { label: "Never", emoji: "😶", value: 1 },
+  { label: "Not yet observed", emoji: "🤷", value: 0 },
+];
 
 export const StudentDiagnosticTest = () => {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [activeTest, setActiveTest] = useState<DiagnosticRequest | null>(null);
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [score, setScore] = useState(0);
 
-  // Fetch assigned diagnostic tests for this student's class
   const { data: availableTests, isLoading } = useQuery({
     queryKey: ["student-diagnostic-tests", user?.id],
     queryFn: async () => {
-      // Get student's class info
-      const { data: studentData } = await supabase
-        .from("students")
-        .select("grade")
-        .eq("profile_id", user!.id)
-        .maybeSingle();
-
-      // Get class_students to find student's class and section
-      const { data: classStudentData } = await supabase
-        .from("class_students")
-        .select("classes(name, section)")
-        .eq("student_id", (await supabase.from("students").select("id").eq("profile_id", user!.id).maybeSingle()).data?.id || "");
-
-      // Get all assigned diagnostic requests
       const { data: requests, error } = await supabase
         .from("diagnostic_requests")
         .select("id, class_name, section, subject, questions, approved_count, assigned_at")
@@ -72,7 +78,6 @@ export const StudentDiagnosticTest = () => {
 
       const submittedIds = new Set((submissions || []).map((s: any) => s.request_id));
 
-      // Filter: only show tests the student hasn't already taken
       return ((requests || []) as DiagnosticRequest[]).filter(
         r => !submittedIds.has(r.id) && r.questions && r.questions.length > 0
       );
@@ -85,11 +90,10 @@ export const StudentDiagnosticTest = () => {
     setCurrentQ(0);
     setAnswers({});
     setShowResults(false);
-    setScore(0);
   };
 
-  const handleAnswer = (questionIdx: number, optionKey: string) => {
-    setAnswers(prev => ({ ...prev, [questionIdx]: optionKey }));
+  const handleAnswer = (questionIdx: number, value: number) => {
+    setAnswers(prev => ({ ...prev, [questionIdx]: value }));
   };
 
   const handleSubmit = async () => {
@@ -97,28 +101,25 @@ export const StudentDiagnosticTest = () => {
     setSubmitting(true);
 
     try {
-      const questions = activeTest.questions as Question[];
-      let correct = 0;
-      questions.forEach((q, idx) => {
-        if (answers[idx] === q.correct) correct++;
-      });
+      const questions = activeTest.questions as AssessmentQuestion[];
+      const totalScore = Object.values(answers).reduce((sum, v) => sum + v, 0);
+      const maxPossible = questions.length * 4;
 
       const { error } = await supabase.from("diagnostic_submissions").insert({
         request_id: activeTest.id,
         student_id: user.id,
         answers: answers,
-        score: correct,
+        score: totalScore,
         total_questions: questions.length,
       } as any);
 
       if (error) throw error;
 
-      setScore(correct);
       setShowResults(true);
-      toast.success("Diagnostic test submitted successfully!");
+      toast.success("Diagnostic assessment submitted successfully!");
       queryClient.invalidateQueries({ queryKey: ["student-diagnostic-tests"] });
     } catch (e: any) {
-      toast.error(e.message || "Failed to submit test");
+      toast.error(e.message || "Failed to submit assessment");
     } finally {
       setSubmitting(false);
     }
@@ -126,20 +127,31 @@ export const StudentDiagnosticTest = () => {
 
   // Results view
   if (showResults && activeTest) {
-    const questions = activeTest.questions as Question[];
-    const percentage = Math.round((score / questions.length) * 100);
+    const questions = activeTest.questions as AssessmentQuestion[];
+    const totalScore = Object.values(answers).reduce((sum, v) => sum + v, 0);
+    const maxPossible = questions.length * 4;
+    const percentage = Math.round((totalScore / maxPossible) * 100);
+
+    // Group by category
+    const categoryScores: Record<string, { total: number; max: number; count: number }> = {};
+    questions.forEach((q, idx) => {
+      if (!categoryScores[q.category]) categoryScores[q.category] = { total: 0, max: 0, count: 0 };
+      categoryScores[q.category].total += answers[idx] ?? 0;
+      categoryScores[q.category].max += 4;
+      categoryScores[q.category].count++;
+    });
 
     return (
       <div className="space-y-6">
         <Card className="max-w-lg mx-auto">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-            <h2 className="text-2xl font-bold text-foreground mb-2">Diagnostic Complete!</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Assessment Complete!</h2>
             <p className="text-muted-foreground mb-4">
               {activeTest.subject} — {activeTest.class_name} {activeTest.section}
             </p>
             <div className="text-4xl font-bold text-primary mb-2">
-              {score}/{questions.length}
+              {totalScore}/{maxPossible}
             </div>
             <Badge variant={percentage >= 70 ? "default" : percentage >= 40 ? "secondary" : "destructive"}>
               {percentage}%
@@ -150,44 +162,19 @@ export const StudentDiagnosticTest = () => {
           </CardContent>
         </Card>
 
-        {/* Review answers */}
+        {/* Category breakdown */}
         <Card>
-          <CardContent className="p-6 space-y-4">
-            <h3 className="font-semibold text-foreground">Review Your Answers</h3>
-            {questions.map((q, idx) => {
-              const studentAnswer = answers[idx];
-              const isCorrect = studentAnswer === q.correct;
+          <CardContent className="p-6 space-y-3">
+            <h3 className="font-semibold text-foreground mb-2">Category Breakdown</h3>
+            {Object.entries(categoryScores).map(([cat, data]) => {
+              const pct = Math.round((data.total / data.max) * 100);
               return (
-                <div key={idx} className="border border-border rounded-lg p-4">
-                  <p className="font-medium text-sm text-foreground mb-2">
-                    <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold mr-2 ${
-                      isCorrect ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
-                    }`}>
-                      {idx + 1}
-                    </span>
-                    {q.question}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 ml-8 mb-2">
-                    {Object.entries(q.options).map(([key, val]) => (
-                      <div
-                        key={key}
-                        className={`text-xs px-3 py-1.5 rounded border ${
-                          key === q.correct
-                            ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
-                            : key === studentAnswer && key !== q.correct
-                            ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-                            : "border-border text-muted-foreground"
-                        }`}
-                      >
-                        <span className="font-semibold mr-1">{key}.</span> {val}
-                      </div>
-                    ))}
+                <div key={cat} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-foreground">{cat}</span>
+                    <span className="font-medium text-foreground">{data.total}/{data.max} ({pct}%)</span>
                   </div>
-                  {q.explanation && (
-                    <p className="text-xs text-muted-foreground ml-8 mt-1">
-                      💡 {q.explanation}
-                    </p>
-                  )}
+                  <Progress value={pct} className="h-2" />
                 </div>
               );
             })}
@@ -197,9 +184,9 @@ export const StudentDiagnosticTest = () => {
     );
   }
 
-  // Active test - quiz view
+  // Active test - assessment view
   if (activeTest) {
-    const questions = activeTest.questions as Question[];
+    const questions = activeTest.questions as AssessmentQuestion[];
     const totalQuestions = questions.length;
     const question = questions[currentQ];
     const answeredCount = Object.keys(answers).length;
@@ -207,12 +194,17 @@ export const StudentDiagnosticTest = () => {
     const isLastQuestion = currentQ === totalQuestions - 1;
     const allAnswered = answeredCount === totalQuestions;
 
+    // Get appropriate rating options
+    const ageGroup = getAgeGroupForClass(activeTest.class_name);
+    const config = getAgeGroupConfig(ageGroup);
+    const options = config?.options || RATING_OPTIONS;
+
     return (
       <div className="w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-foreground">Diagnostic Test</h1>
+            <h1 className="text-xl font-bold text-foreground">Diagnostic Assessment</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               {activeTest.subject} — {activeTest.class_name} {activeTest.section} · {answeredCount} of {totalQuestions} answered
             </p>
@@ -225,6 +217,11 @@ export const StudentDiagnosticTest = () => {
           </div>
         </div>
 
+        {/* Category badge */}
+        {question.category && (
+          <Badge variant="outline" className="mb-4">{question.category}</Badge>
+        )}
+
         <div className="flex gap-6">
           {/* Question area */}
           <div className="flex-1 min-w-0">
@@ -236,17 +233,17 @@ export const StudentDiagnosticTest = () => {
                       {currentQ + 1}
                     </span>
                     <p className="text-base sm:text-lg font-medium text-foreground leading-relaxed pt-0.5">
-                      {question.question}
+                      {question.text}
                     </p>
                   </div>
-                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                    {Object.entries(question.options).map(([key, val]) => {
-                      const selected = answers[currentQ] === key;
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {options.map((opt) => {
+                      const selected = answers[currentQ] === opt.value;
                       return (
                         <button
-                          key={key}
+                          key={opt.value}
                           onClick={() => {
-                            handleAnswer(currentQ, key);
+                            handleAnswer(currentQ, opt.value);
                             if (!isLastQuestion) {
                               setTimeout(() => setCurrentQ(q => q + 1), 350);
                             }
@@ -257,8 +254,8 @@ export const StudentDiagnosticTest = () => {
                               : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-muted/50"
                           }`}
                         >
-                          <span className="font-bold text-sm shrink-0">{key}.</span>
-                          <span>{val}</span>
+                          <span className="text-lg">{opt.emoji}</span>
+                          <span>{opt.label}</span>
                         </button>
                       );
                     })}
@@ -285,7 +282,7 @@ export const StudentDiagnosticTest = () => {
                 {isLastQuestion && answers[currentQ] !== undefined && (
                   <div className="flex flex-col items-end gap-1">
                     <Button onClick={handleSubmit} disabled={submitting || !allAnswered}>
-                      {submitting ? "Submitting..." : "Submit Test"} <CheckCircle className="h-4 w-4 ml-1" />
+                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
                     </Button>
                     {!allAnswered && (
                       <span className="text-xs text-destructive">
@@ -332,7 +329,7 @@ export const StudentDiagnosticTest = () => {
     );
   }
 
-  // List view - available diagnostic tests
+  // List view
   if (isLoading) {
     return <div className="flex justify-center py-12"><LoadingSpinner /></div>;
   }
