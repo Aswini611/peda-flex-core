@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search, BookOpen } from "lucide-react";
+import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search, BookOpen, AlertTriangle } from "lucide-react";
 import { getAgeGroupConfig, getDimensionStartIndex, type AgeGroupConfig } from "@/data/assessmentQuestions";
 import { getTeacherAgeGroupConfig, type TeacherAgeGroupConfig } from "@/data/teacherAssessmentQuestions";
 import { Progress } from "@/components/ui/progress";
