@@ -741,6 +741,12 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>}
 
+          {/* ===== NOTIFICATIONS TAB (School Admin + Master Admin) ===== */}
+          {(isMasterAdmin || isSchoolAdmin) && (
+            <TabsContent value="notifications">
+              <DiagnosticApprovalPanel />
+            </TabsContent>
+          )}
 
           {/* ===== APPROVALS TAB ===== */}
           <TabsContent value="approvals">
