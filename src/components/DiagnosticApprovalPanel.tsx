@@ -23,6 +23,7 @@ interface DiagnosticRequest {
   purpose: string;
   suggested_count: number;
   approved_count: number | null;
+  question_distribution: Record<string, number> | null;
   status: string;
   admin_notes: string | null;
   created_at: string;
