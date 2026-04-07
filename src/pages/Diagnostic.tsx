@@ -13,12 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search, BookOpen } from "lucide-react";
+import { ClipboardList, ArrowRight, ArrowLeft, CheckCircle, Search, BookOpen, AlertTriangle } from "lucide-react";
 import { getAgeGroupConfig, getDimensionStartIndex, type AgeGroupConfig } from "@/data/assessmentQuestions";
 import { getTeacherAgeGroupConfig, type TeacherAgeGroupConfig } from "@/data/teacherAssessmentQuestions";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -289,8 +290,6 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     const question = allQuestions[currentQ];
     if (!question) return null;
     const isLastQuestion = currentQ === totalQuestions - 1;
-    const MIN_REQUIRED = 15;
-    const canSubmit = totalAnswered >= MIN_REQUIRED;
     const displayNum = currentQ + 1;
 
     const dimInfo = getCurrentDimensionInfo(config, currentQ);
@@ -314,11 +313,42 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
             </div>
           </div>
 
-          {/* Two-column layout */}
+          {/* Submit button above questions */}
           <div className="flex gap-6">
-            {/* Left: Question area */}
             <div className="flex-1 min-w-0">
-              {/* Dimension indicator */}
+              <div className="flex justify-end mb-4">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" className="gap-1.5">
+                      <CheckCircle className="h-4 w-4" />
+                      Submit Assessment ({totalAnswered}/{totalQuestions} answered)
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                        Are you sure you want to submit?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You have answered {totalAnswered} out of {totalQuestions} questions.
+                        {totalAnswered < totalQuestions && (
+                          <span className="block mt-1 font-medium text-foreground">
+                            {totalQuestions - totalAnswered} question{totalQuestions - totalAnswered > 1 ? "s" : ""} are still unanswered.
+                          </span>
+                        )}
+                        Once submitted, you cannot change your answers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting}>
+                        {submitting ? "Submitting..." : "Yes, Submit"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
               {dimInfo && (
                 <div className="mb-3 flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold uppercase tracking-wider text-accent">
@@ -378,43 +408,16 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                 </Button>
 
                 <div className="flex gap-2">
-                  {(() => {
-                    const currentAnswered = answers[question.id] !== undefined;
-                    if (!isLastQuestion && currentAnswered) {
-                      return (
-                        <>
-                          <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                            Next <ArrowRight className="h-4 w-4 ml-1" />
-                          </Button>
-                          {canSubmit && (
-                            <Button variant="outline" onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting}>
-                              {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
-                            </Button>
-                          )}
-                        </>
-                      );
-                    }
-                    if (isLastQuestion && currentAnswered) {
-                      return (
-                        <div className="flex flex-col items-end gap-1">
-                          <Button onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting || !canSubmit}>
-                            {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
-                          </Button>
-                          {!canSubmit && (
-                            <span className="text-xs text-destructive">
-                              Answer at least {MIN_REQUIRED} questions ({MIN_REQUIRED - totalAnswered} more needed)
-                            </span>
-                          )}
-                          {canSubmit && totalAnswered < totalQuestions && (
-                            <span className="text-xs text-muted-foreground">
-                              {totalAnswered}/{totalQuestions} answered — you can submit now or continue
-                            </span>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                  {answers[question.id] !== undefined && !isLastQuestion && (
+                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
+                  {answers[question.id] !== undefined && !isLastQuestion && (
+                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -655,8 +658,6 @@ const DiagnosticTeacher = () => {
   if (!config) return null;
   const question = config.questions[currentQ];
   const isLastQuestion = currentQ === totalQuestions - 1;
-  const MIN_REQUIRED = 15;
-  const canSubmit = answeredCount >= MIN_REQUIRED;
 
   return (
     <AppLayout>
@@ -679,6 +680,40 @@ const DiagnosticTeacher = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Left: Question */}
           <div>
+            {/* Submit button above questions */}
+            <div className="flex justify-end mb-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" className="gap-1.5">
+                    <CheckCircle className="h-4 w-4" />
+                    Submit Assessment ({answeredCount}/{totalQuestions} answered)
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      Are you sure you want to submit?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You have answered {answeredCount} out of {totalQuestions} questions.
+                      {answeredCount < totalQuestions && (
+                        <span className="block mt-1 font-medium text-foreground">
+                          {totalQuestions - answeredCount} question{totalQuestions - answeredCount > 1 ? "s" : ""} are still unanswered.
+                        </span>
+                      )}
+                      Once submitted, you cannot change your answers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSubmit} disabled={submitting}>
+                      {submitting ? "Submitting..." : "Yes, Submit"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
             <Card className="mb-5 shadow-sm">
               <CardContent className="p-8">
                 <div className="animate-fade-in" key={currentQ}>
@@ -722,34 +757,10 @@ const DiagnosticTeacher = () => {
                 <ArrowLeft className="h-4 w-4 mr-1" /> Previous
               </Button>
               <div className="flex gap-2">
-                {!isLastQuestion && answers[question.id] !== undefined && (
-                  <div className="flex gap-2">
-                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                      Next <ArrowRight className="h-4 w-4 ml-1" />
-                    </Button>
-                    {canSubmit && (
-                      <Button variant="outline" onClick={handleSubmit} disabled={submitting}>
-                        {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {isLastQuestion && answers[question.id] !== undefined && (
-                  <div className="flex flex-col items-end gap-1">
-                    <Button onClick={handleSubmit} disabled={submitting || !canSubmit}>
-                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
-                    </Button>
-                    {!canSubmit && (
-                      <span className="text-xs text-destructive">
-                        Answer at least {MIN_REQUIRED} questions ({MIN_REQUIRED - answeredCount} more needed)
-                      </span>
-                    )}
-                    {canSubmit && answeredCount < totalQuestions && (
-                      <span className="text-xs text-muted-foreground">
-                        {answeredCount}/{totalQuestions} answered — you can submit now or continue
-                      </span>
-                    )}
-                  </div>
+                {answers[question.id] !== undefined && !isLastQuestion && (
+                  <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                    Next <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
                 )}
               </div>
             </div>
