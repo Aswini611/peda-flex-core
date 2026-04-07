@@ -413,8 +413,8 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                       Next <ArrowRight className="h-4 w-4 ml-1" />
                     </Button>
                   )}
-                  {answers[question.id] !== undefined && isLastQuestion && (
-                    <Button onClick={() => setCurrentQ((q) => q + 1)} disabled>
+                  {answers[question.id] !== undefined && !isLastQuestion && (
+                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
                       Next <ArrowRight className="h-4 w-4 ml-1" />
                     </Button>
                   )}
