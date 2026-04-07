@@ -313,11 +313,42 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
             </div>
           </div>
 
-          {/* Two-column layout */}
+          {/* Submit button above questions */}
           <div className="flex gap-6">
-            {/* Left: Question area */}
             <div className="flex-1 min-w-0">
-              {/* Dimension indicator */}
+              <div className="flex justify-end mb-4">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" className="gap-1.5">
+                      <CheckCircle className="h-4 w-4" />
+                      Submit Assessment ({totalAnswered}/{totalQuestions} answered)
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                        Are you sure you want to submit?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You have answered {totalAnswered} out of {totalQuestions} questions.
+                        {totalAnswered < totalQuestions && (
+                          <span className="block mt-1 font-medium text-foreground">
+                            {totalQuestions - totalAnswered} question{totalQuestions - totalAnswered > 1 ? "s" : ""} are still unanswered.
+                          </span>
+                        )}
+                        Once submitted, you cannot change your answers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting}>
+                        {submitting ? "Submitting..." : "Yes, Submit"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
               {dimInfo && (
                 <div className="mb-3 flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold uppercase tracking-wider text-accent">
