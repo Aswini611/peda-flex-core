@@ -658,7 +658,6 @@ const DiagnosticTeacher = () => {
   if (!config) return null;
   const question = config.questions[currentQ];
   const isLastQuestion = currentQ === totalQuestions - 1;
-    const isLastQuestion = currentQ === totalQuestions - 1;
 
   return (
     <AppLayout>
