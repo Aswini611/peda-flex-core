@@ -289,7 +289,8 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     const question = allQuestions[currentQ];
     if (!question) return null;
     const isLastQuestion = currentQ === totalQuestions - 1;
-    const allAnswered = totalAnswered === totalQuestions;
+    const MIN_REQUIRED = 15;
+    const canSubmit = totalAnswered >= MIN_REQUIRED;
     const displayNum = currentQ + 1;
 
     const dimInfo = getCurrentDimensionInfo(config, currentQ);
@@ -384,20 +385,32 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                     const currentAnswered = answers[question.id] !== undefined;
                     if (!isLastQuestion && currentAnswered) {
                       return (
-                        <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                          Next <ArrowRight className="h-4 w-4 ml-1" />
-                        </Button>
+                        <>
+                          <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                            Next <ArrowRight className="h-4 w-4 ml-1" />
+                          </Button>
+                          {canSubmit && (
+                            <Button variant="outline" onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting}>
+                              {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
+                            </Button>
+                          )}
+                        </>
                       );
                     }
                     if (isLastQuestion && currentAnswered) {
                       return (
                         <div className="flex flex-col items-end gap-1">
-                          <Button onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting || !allAnswered}>
+                          <Button onClick={() => handleSubmitWithAnswers(answers)} disabled={submitting || !canSubmit}>
                             {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
                           </Button>
-                          {!allAnswered && (
+                          {!canSubmit && (
                             <span className="text-xs text-destructive">
-                              {totalQuestions - totalAnswered} question{totalQuestions - totalAnswered > 1 ? "s" : ""} unanswered
+                              Answer at least {MIN_REQUIRED} questions ({MIN_REQUIRED - totalAnswered} more needed)
+                            </span>
+                          )}
+                          {canSubmit && totalAnswered < totalQuestions && (
+                            <span className="text-xs text-muted-foreground">
+                              {totalAnswered}/{totalQuestions} answered — you can submit now or continue
                             </span>
                           )}
                         </div>
@@ -645,7 +658,8 @@ const DiagnosticTeacher = () => {
   if (!config) return null;
   const question = config.questions[currentQ];
   const isLastQuestion = currentQ === totalQuestions - 1;
-  const allAnswered = answeredCount === totalQuestions;
+  const MIN_REQUIRED = 15;
+  const canSubmit = answeredCount >= MIN_REQUIRED;
 
   return (
     <AppLayout>
@@ -715,18 +729,30 @@ const DiagnosticTeacher = () => {
               </Button>
               <div className="flex gap-2">
                 {!isLastQuestion && answers[question.id] !== undefined && (
-                  <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                    Next <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setCurrentQ((q) => q + 1)}>
+                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                    {canSubmit && (
+                      <Button variant="outline" onClick={handleSubmit} disabled={submitting}>
+                        {submitting ? "Submitting..." : "Submit Now"} <CheckCircle className="h-4 w-4 ml-1" />
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {isLastQuestion && answers[question.id] !== undefined && (
                   <div className="flex flex-col items-end gap-1">
-                    <Button onClick={handleSubmit} disabled={submitting || !allAnswered}>
+                    <Button onClick={handleSubmit} disabled={submitting || !canSubmit}>
                       {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
                     </Button>
-                    {!allAnswered && (
+                    {!canSubmit && (
                       <span className="text-xs text-destructive">
-                        {totalQuestions - answeredCount} unanswered
+                        Answer at least {MIN_REQUIRED} questions ({MIN_REQUIRED - answeredCount} more needed)
+                      </span>
+                    )}
+                    {canSubmit && answeredCount < totalQuestions && (
+                      <span className="text-xs text-muted-foreground">
+                        {answeredCount}/{totalQuestions} answered — you can submit now or continue
                       </span>
                     )}
                   </div>
