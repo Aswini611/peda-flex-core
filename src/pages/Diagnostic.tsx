@@ -130,11 +130,10 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     try {
       const { data: assignedRequests } = await supabase
         .from("diagnostic_requests")
-        .select("questions, class_name")
-        .eq("status", "assigned")
+        .select("questions, question_distribution, class_name, approved_count")
+        .in("status", ["assigned", "approved"])
         .eq("teacher_id", teacherId)
-        .eq("section", section.trim())
-        .not("questions", "is", null);
+        .eq("section", section.trim());
 
       // Filter by class name (could be "Class 3" or "3")
       const matchingRequest = (assignedRequests || []).find((r: any) => {
@@ -142,16 +141,38 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         return reqClass === classLabel || reqClass === studentClass || reqClass.toLowerCase() === classLabel.toLowerCase();
       });
 
-      if (matchingRequest && Array.isArray(matchingRequest.questions) && matchingRequest.questions.length > 0) {
-        // Use only the assigned question IDs
-        const assignedIds = new Set((matchingRequest.questions as any[]).map((q: any) => q.id));
-        const filteredQuestions = cfg.questions.filter(q => assignedIds.has(q.id));
-        
-        if (filteredQuestions.length > 0) {
-          // Build a filtered config with only assigned questions
+      if (matchingRequest) {
+        let assignedIds: Set<number> | null = null;
+
+        // Option 1: Use pre-built questions if available
+        if (Array.isArray(matchingRequest.questions) && matchingRequest.questions.length > 0) {
+          assignedIds = new Set((matchingRequest.questions as any[]).map((q: any) => q.id));
+        }
+        // Option 2: Build from question_distribution on-the-fly
+        else if (matchingRequest.question_distribution && typeof matchingRequest.question_distribution === "object") {
+          const distribution = matchingRequest.question_distribution as Record<string, number>;
+          const builtIds: number[] = [];
+          for (const [category, count] of Object.entries(distribution)) {
+            if (typeof count !== "number" || count <= 0) continue;
+            const dimension = cfg.dimensions.find(
+              d => d.name.toLowerCase() === category.toLowerCase()
+            );
+            if (dimension) {
+              // Pick 'count' random questions from this dimension
+              const shuffled = [...dimension.questions].sort(() => Math.random() - 0.5);
+              builtIds.push(...shuffled.slice(0, Math.min(count, dimension.questions.length)).map(q => q.id));
+            }
+          }
+          if (builtIds.length > 0) {
+            assignedIds = new Set(builtIds);
+          }
+        }
+
+        if (assignedIds && assignedIds.size > 0) {
+          const filteredQuestions = cfg.questions.filter(q => assignedIds!.has(q.id));
           const filteredDimensions = cfg.dimensions.map(dim => ({
             ...dim,
-            questions: dim.questions.filter(q => assignedIds.has(q.id)),
+            questions: dim.questions.filter(q => assignedIds!.has(q.id)),
           })).filter(dim => dim.questions.length > 0);
 
           const filteredConfig: AgeGroupConfig = {
