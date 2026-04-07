@@ -336,12 +336,14 @@ export const StudentDiagnosticTest = () => {
 
   if (!availableTests || availableTests.length === 0) {
     return (
-      <Card className="max-w-lg mx-auto">
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">No Diagnostic Tests Available</h2>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            Your teacher will assign diagnostic tests when ready. Check back later!
+      <Card className="max-w-lg mx-auto border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-14 text-center">
+          <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-5">
+            <ClipboardList className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">No tests assigned yet</h2>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Your teacher will assign tests soon. You'll see them here when they're ready.
           </p>
         </CardContent>
       </Card>
@@ -349,30 +351,28 @@ export const StudentDiagnosticTest = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-        <BookOpen className="h-5 w-5" />
-        Available Diagnostic Tests
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {availableTests.map(test => (
-          <Card key={test.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-foreground">{test.subject}</h3>
+          <Card key={test.id} className="hover:shadow-md transition-shadow border-border/60">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground truncate">{test.subject}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {test.class_name} - {test.section}
+                    {test.class_name} · Section {test.section}
                   </p>
                 </div>
-                <Badge variant="outline">{test.questions.length} Qs</Badge>
               </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                Assigned: {test.assigned_at ? new Date(test.assigned_at).toLocaleDateString() : "—"}
-              </p>
-              <Button className="w-full gap-1.5" onClick={() => handleStartTest(test)}>
-                <BookOpen className="h-4 w-4" />
-                Start Diagnostic Test
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-5">
+                <span>{test.questions.length} questions</span>
+                <span>{test.assigned_at ? new Date(test.assigned_at).toLocaleDateString() : ""}</span>
+              </div>
+              <Button className="w-full gap-2" size="lg" onClick={() => handleStartTest(test)}>
+                Start Test
               </Button>
             </CardContent>
           </Card>
