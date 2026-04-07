@@ -119,11 +119,59 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     return 15;
   };
 
-  const startQuiz = () => {
+  const startQuiz = async () => {
     const ageNum = parseInt(age);
     const ageGroup = getAgeGroupFromAge(ageNum);
     const cfg = getAgeGroupConfig(ageGroup);
     if (!cfg) return;
+
+    // Check for teacher-assigned diagnostic questions for this class/section
+    const classLabel = CLASS_OPTIONS.find(o => o.value === studentClass)?.label || studentClass;
+    try {
+      const { data: assignedRequests } = await supabase
+        .from("diagnostic_requests")
+        .select("questions, class_name")
+        .eq("status", "assigned")
+        .eq("teacher_id", teacherId)
+        .eq("section", section.trim())
+        .not("questions", "is", null);
+
+      // Filter by class name (could be "Class 3" or "3")
+      const matchingRequest = (assignedRequests || []).find((r: any) => {
+        const reqClass = (r as any).class_name || "";
+        return reqClass === classLabel || reqClass === studentClass || reqClass.toLowerCase() === classLabel.toLowerCase();
+      });
+
+      if (matchingRequest && Array.isArray(matchingRequest.questions) && matchingRequest.questions.length > 0) {
+        // Use only the assigned question IDs
+        const assignedIds = new Set((matchingRequest.questions as any[]).map((q: any) => q.id));
+        const filteredQuestions = cfg.questions.filter(q => assignedIds.has(q.id));
+        
+        if (filteredQuestions.length > 0) {
+          // Build a filtered config with only assigned questions
+          const filteredDimensions = cfg.dimensions.map(dim => ({
+            ...dim,
+            questions: dim.questions.filter(q => assignedIds.has(q.id)),
+          })).filter(dim => dim.questions.length > 0);
+
+          const filteredConfig: AgeGroupConfig = {
+            ...cfg,
+            questions: filteredQuestions,
+            dimensions: filteredDimensions,
+          };
+          setConfig(filteredConfig);
+          setAnswers({});
+          setCurrentQ(0);
+          setPhase("quiz");
+          toast.info(`Loaded ${filteredQuestions.length} teacher-assigned questions`);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Error checking assigned questions:", e);
+    }
+
+    // Fallback: use all questions
     setConfig(cfg);
     setAnswers({});
     setCurrentQ(0);
