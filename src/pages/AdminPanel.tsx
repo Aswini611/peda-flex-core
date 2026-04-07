@@ -338,8 +338,8 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
 
-          {/* ===== STUDENT ALLOTMENT TAB ===== */}
-          <TabsContent value="students">
+          {/* ===== STUDENT ALLOTMENT TAB (Master Admin only) ===== */}
+          {isMasterAdmin && <TabsContent value="students">
             <Card>
               <CardHeader>
                 <CardTitle>Student Allotment</CardTitle>
@@ -410,10 +410,10 @@ const AdminPanel = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent>}
 
-          {/* ===== TEACHER ALLOTMENT TAB ===== */}
-          <TabsContent value="teachers">
+          {/* ===== TEACHER ALLOTMENT TAB (Master Admin only) ===== */}
+          {isMasterAdmin && <TabsContent value="teachers">
             <Card>
               <CardHeader>
                 <CardTitle>Teacher-to-Class Assignment</CardTitle>
@@ -635,7 +635,7 @@ const AdminPanel = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent>}
 
 
           {/* ===== APPROVALS TAB ===== */}
