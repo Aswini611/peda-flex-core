@@ -418,7 +418,7 @@ For EACH group, present as a structured card:
 
 ---
 
-## ✅ 7. Learning Outcomes
+## ✅ 8. Learning Outcomes
 
 **At the very end of every lesson plan, list clear and measurable learning outcomes.**
 
