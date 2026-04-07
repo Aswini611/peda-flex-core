@@ -264,7 +264,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   if (phase === "form") {
     return (
       <AppLayout>
-        <PageHeader title="Student Diagnostic" subtitle="Complete assessments and diagnostic tests" />
+        <PageHeader title="My Assessments" subtitle="View and complete your assigned tests" />
         <div className="space-y-8">
           {/* Diagnostic Tests Section */}
           <StudentDiagnosticTest />
