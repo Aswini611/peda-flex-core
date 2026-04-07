@@ -66,6 +66,7 @@ const AdminPanel = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const isMasterAdmin = profile?.role === "admin";
+  const isSchoolAdmin = profile?.role === "school_admin";
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
