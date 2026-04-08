@@ -427,18 +427,22 @@ const Curative = () => {
             try {
               const classLabel = getClassLabel(selectedClass);
               const subjectLabel = selectedSubject || "General";
+              const topicLabel = topicValue.trim() || null;
               const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || selectedCurriculum || "";
-              const title = `${classLabel} ${subjectLabel} Lesson Plan${curriculumLabel ? ` (${curriculumLabel})` : ""}`;
+              const title = `${classLabel} ${subjectLabel}${topicLabel ? ` – ${topicLabel}` : ""} Lesson Plan${curriculumLabel ? ` (${curriculumLabel})` : ""}`;
               
-              // Check if a lesson with same class+section+subject+curriculum exists
-              const { data: existing } = await supabase
+              // Check if a lesson with same class+subject+topic exists (override logic)
+              let query = supabase
                 .from("lessons")
                 .select("id")
                 .eq("class_level", selectedClass)
-                .eq("section", selectedSection)
-                .eq("subject", subjectLabel)
-                .eq("curriculum", selectedCurriculum || "")
-                .maybeSingle();
+                .eq("subject", subjectLabel);
+              if (topicLabel) {
+                query = query.eq("topic", topicLabel);
+              } else {
+                query = query.is("topic", null);
+              }
+              const { data: existing } = await query.maybeSingle();
 
               if (existing) {
                 // Override existing lesson
@@ -446,6 +450,9 @@ const Curative = () => {
                   title,
                   lesson_content: assistantSoFar,
                   ai_generated: true,
+                  section: selectedSection,
+                  curriculum: selectedCurriculum || "",
+                  topic: topicLabel,
                 } as any).eq("id", existing.id);
               } else {
                 // Create new lesson
@@ -457,7 +464,8 @@ const Curative = () => {
                   section: selectedSection,
                   lesson_content: assistantSoFar,
                   ai_generated: true,
-                });
+                  topic: topicLabel,
+                } as any);
               }
             } catch (err) {
               console.error("Failed to save lesson plan:", err);

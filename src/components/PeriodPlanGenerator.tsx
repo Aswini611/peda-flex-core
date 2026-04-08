@@ -4,16 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Sparkles, Loader2, Calendar, Clock, Edit3, Save, Lock, Unlock,
+  Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
   RefreshCw, Plus, ChevronDown, ChevronUp, CalendarDays, Target,
-  BookOpen, ClipboardCheck, Package, Pencil, X, Check
+  BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText
 } from "lucide-react";
 
 interface PeriodPlan {
@@ -25,6 +24,16 @@ interface PeriodPlan {
   materials: string;
   assessment: string;
   duration_minutes: number;
+}
+
+interface LessonOption {
+  id: string;
+  title: string;
+  subject: string | null;
+  topic: string | null;
+  lesson_content: string | null;
+  class_level: string | null;
+  section: string | null;
 }
 
 interface PeriodPlanGeneratorProps {
@@ -56,45 +65,57 @@ const PeriodPlanGenerator = ({
   const [savedPlanId, setSavedPlanId] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState<string>("");
   const [manualForm, setManualForm] = useState<PeriodPlan>({
     day: 1, period: 1, topic: "", objective: "", activity: "",
     materials: "", assessment: "", duration_minutes: 40,
   });
 
-  // Fetch existing lesson for this class/section/subject
-  const { data: lesson } = useQuery({
-    queryKey: ["period-plan-lesson", selectedClass, selectedSection, selectedSubject],
+  // Fetch all lessons for the selected class
+  const { data: classLessons = [] } = useQuery<LessonOption[]>({
+    queryKey: ["class-lessons", selectedClass],
     queryFn: async () => {
-      if (!selectedClass || !selectedSection) return null;
-      const query = supabase
+      if (!selectedClass) return [];
+      const { data } = await supabase
         .from("lessons")
-        .select("id, title, lesson_content, subject")
+        .select("id, title, subject, lesson_content, class_level, section")
         .eq("class_level", selectedClass)
-        .eq("section", selectedSection);
-      if (selectedSubject) query.eq("subject", selectedSubject);
-      const { data } = await query.order("created_at", { ascending: false }).limit(1).maybeSingle();
-      return data;
+        .order("created_at", { ascending: false });
+      // topic column exists in DB but not in generated types yet, so cast
+      return (data || []).map((d: any) => ({ ...d, topic: d.topic || null }));
     },
-    enabled: !!selectedClass && !!selectedSection,
+    enabled: !!selectedClass,
   });
 
-  // Fetch saved period plan
+  // Selected lesson object
+  const selectedLesson = classLessons.find((l) => l.id === selectedLessonId) || null;
+
+  // Fetch saved period plan for selected lesson
   const { data: savedPlan } = useQuery({
-    queryKey: ["saved-period-plan", lesson?.id],
+    queryKey: ["saved-period-plan", selectedLessonId],
     queryFn: async () => {
-      if (!lesson?.id) return null;
+      if (!selectedLessonId) return null;
       const { data } = await supabase
         .from("period_plans")
         .select("*")
-        .eq("lesson_id", lesson.id)
+        .eq("lesson_id", selectedLessonId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       return data;
     },
-    enabled: !!lesson?.id,
+    enabled: !!selectedLessonId,
   });
 
+  // When class changes, reset lesson selection
+  useEffect(() => {
+    setSelectedLessonId("");
+    setPeriodPlans([]);
+    setSavedPlanId(null);
+    setIsLocked(false);
+  }, [selectedClass]);
+
+  // Load saved plan data
   useEffect(() => {
     if (savedPlan) {
       const planData = savedPlan.plan_data as unknown;
@@ -104,16 +125,21 @@ const PeriodPlanGenerator = ({
       setPeriodsPerWeek(String(savedPlan.periods_per_week));
       setPeriodDuration(String(savedPlan.period_duration));
       setTotalTeachingDays(String(savedPlan.total_teaching_days));
+    } else if (selectedLessonId) {
+      // Reset when switching to a lesson with no saved plan
+      setPeriodPlans([]);
+      setSavedPlanId(null);
+      setIsLocked(false);
     }
-  }, [savedPlan]);
+  }, [savedPlan, selectedLessonId]);
 
   useEffect(() => {
-    if (lesson?.id) setCurrentLessonId(lesson.id);
-  }, [lesson]);
+    if (selectedLessonId) setCurrentLessonId(selectedLessonId);
+  }, [selectedLessonId]);
 
   const handleGenerate = async () => {
-    if (!lesson?.lesson_content) {
-      toast.error("No lesson plan found. Please generate a lesson plan first.");
+    if (!selectedLesson?.lesson_content) {
+      toast.error("Selected lesson plan has no content.");
       return;
     }
     setIsGenerating(true);
@@ -127,10 +153,10 @@ const PeriodPlanGenerator = ({
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            lessonContent: lesson.lesson_content,
+            lessonContent: selectedLesson.lesson_content,
             classLevel: selectedClass,
             section: selectedSection,
-            subject: selectedSubject,
+            subject: selectedLesson.subject || selectedSubject,
             periodsPerWeek: parseInt(periodsPerWeek),
             periodDuration: parseInt(periodDuration),
             totalTeachingDays: parseInt(totalTeachingDays),
@@ -155,7 +181,7 @@ const PeriodPlanGenerator = ({
   };
 
   const handleRegenerate = async (index: number) => {
-    if (!lesson?.lesson_content) return;
+    if (!selectedLesson?.lesson_content) return;
     setIsRegenerating(index);
     try {
       const resp = await fetch(
@@ -167,10 +193,10 @@ const PeriodPlanGenerator = ({
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            lessonContent: lesson.lesson_content,
+            lessonContent: selectedLesson.lesson_content,
             classLevel: selectedClass,
             section: selectedSection,
-            subject: selectedSubject,
+            subject: selectedLesson.subject || selectedSubject,
             periodsPerWeek: parseInt(periodsPerWeek),
             periodDuration: parseInt(periodDuration),
             totalTeachingDays: parseInt(totalTeachingDays),
@@ -199,7 +225,7 @@ const PeriodPlanGenerator = ({
       teacher_id: user.id,
       class_level: selectedClass,
       section: selectedSection,
-      subject: selectedSubject || null,
+      subject: selectedLesson?.subject || selectedSubject || null,
       periods_per_week: parseInt(periodsPerWeek),
       period_duration: parseInt(periodDuration),
       total_teaching_days: parseInt(totalTeachingDays),
@@ -260,6 +286,13 @@ const PeriodPlanGenerator = ({
 
   const days = Object.keys(groupedByDay).map(Number).sort((a, b) => a - b);
 
+  // Build dropdown label for each lesson
+  const getLessonLabel = (l: LessonOption) => {
+    const sub = l.subject || "General";
+    const topic = l.topic ? ` – ${l.topic}` : "";
+    return `${sub}${topic}`;
+  };
+
   if (!selectedClass || !selectedSection) return null;
 
   return (
@@ -286,80 +319,112 @@ const PeriodPlanGenerator = ({
         </div>
       </CardHeader>
       <CardContent className="p-5 space-y-5">
-        {/* Timetable Config */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-              Periods / Week
-            </label>
-            <Select value={periodsPerWeek} onValueChange={setPeriodsPerWeek} disabled={isLocked}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n} periods</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-              Period Duration
-            </label>
-            <Select value={periodDuration} onValueChange={setPeriodDuration} disabled={isLocked}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[25, 30, 35, 40, 45, 50, 55, 60].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n} minutes</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-              Teaching Days
-            </label>
-            <Select value={totalTeachingDays} onValueChange={setTotalTeachingDays} disabled={isLocked}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[5, 10, 15, 20, 25, 30].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n} days</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Lesson Plan Dropdown */}
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            Select Lesson Plan
+          </label>
+          <Select value={selectedLessonId} onValueChange={setSelectedLessonId}>
+            <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+              <SelectValue placeholder={classLessons.length === 0 ? "No lesson plans found for this class" : "Choose a lesson plan..."} />
+            </SelectTrigger>
+            <SelectContent>
+              {classLessons.map((l) => (
+                <SelectItem key={l.id} value={l.id}>
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-3.5 w-3.5 text-primary" />
+                    {getLessonLabel(l)}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {classLessons.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Generate a lesson plan above first, then it will appear here.
+            </p>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || isLocked || !lesson?.lesson_content}
-            className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg"
-          >
-            {isGenerating ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Generating...</>
-            ) : (
-              <><Sparkles className="h-4 w-4" /> Generate Period Plan (AI)</>
+        {/* Show config & actions only when a lesson is selected */}
+        {selectedLessonId && (
+          <>
+            {/* Timetable Config */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                  Periods / Week
+                </label>
+                <Select value={periodsPerWeek} onValueChange={setPeriodsPerWeek} disabled={isLocked}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} periods</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                  Period Duration
+                </label>
+                <Select value={periodDuration} onValueChange={setPeriodDuration} disabled={isLocked}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[25, 30, 35, 40, 45, 50, 55, 60].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} minutes</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                  Teaching Days
+                </label>
+                <Select value={totalTeachingDays} onValueChange={setTotalTeachingDays} disabled={isLocked}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[5, 10, 15, 20, 25, 30].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} days</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating || isLocked || !selectedLesson?.lesson_content}
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg"
+              >
+                {isGenerating ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Generating...</>
+                ) : (
+                  <><Sparkles className="h-4 w-4" /> Generate Period Plan (AI)</>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowManualAdd(!showManualAdd)}
+                disabled={isLocked}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" /> Create / Edit Manually
+              </Button>
+            </div>
+
+            {!selectedLesson?.lesson_content && (
+              <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4 border border-dashed border-border">
+                ⚠️ The selected lesson plan has no content. Please regenerate the lesson plan first.
+              </div>
             )}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowManualAdd(!showManualAdd)}
-            disabled={isLocked}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" /> Create / Edit Manually
-          </Button>
-        </div>
-
-        {!lesson?.lesson_content && (
-          <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4 border border-dashed border-border">
-            ⚠️ No lesson plan found for this class/section/subject. Generate a lesson plan above first, then come back to create period-wise plans.
-          </div>
+          </>
         )}
 
         {/* Manual Add Form */}
-        {showManualAdd && !isLocked && (
+        {showManualAdd && !isLocked && selectedLessonId && (
           <Card className="border-dashed border-2 border-primary/20 bg-primary/5">
             <CardContent className="p-4 space-y-3">
               <h4 className="text-sm font-semibold flex items-center gap-2">
@@ -457,144 +522,135 @@ const PeriodPlanGenerator = ({
               <Card key={day} className="border border-border/60 overflow-hidden">
                 <button
                   onClick={() => setExpandedDay(expandedDay === day ? null : day)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center justify-between p-3.5 hover:bg-muted/30 transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-bold text-primary">{day}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
+                      {day}
                     </div>
                     <span className="text-sm font-medium">Day {day}</span>
                     <Badge variant="secondary" className="text-xs">
                       {groupedByDay[day].length} period{groupedByDay[day].length !== 1 ? "s" : ""}
                     </Badge>
                   </div>
-                  {expandedDay === day ? (
-                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {expandedDay === day ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                 </button>
 
                 {expandedDay === day && (
                   <div className="border-t border-border/50">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="w-[60px]">Period</TableHead>
-                          <TableHead>Topic</TableHead>
-                          <TableHead className="hidden md:table-cell">Objective</TableHead>
-                          <TableHead className="hidden lg:table-cell">Activity</TableHead>
-                          <TableHead className="hidden lg:table-cell">Assessment</TableHead>
-                          <TableHead className="w-[90px] text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {groupedByDay[day].map((plan) => {
-                          const globalIndex = periodPlans.indexOf(plan);
-                          const isEditing = editingIndex === globalIndex;
+                    {groupedByDay[day].map((plan, localIdx) => {
+                      const globalIdx = periodPlans.findIndex(
+                        (p) => p.day === plan.day && p.period === plan.period && p.topic === plan.topic
+                      );
+                      const isEditing = editingIndex === globalIdx;
 
-                          if (isEditing && editForm) {
-                            return (
-                              <TableRow key={globalIndex} className="bg-primary/5">
-                                <TableCell className="font-medium">P{plan.period}</TableCell>
-                                <TableCell>
-                                  <Input
-                                    value={editForm.topic}
-                                    onChange={(e) => setEditForm({ ...editForm, topic: e.target.value })}
-                                    className="h-8 text-xs"
-                                  />
-                                </TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                  <Input
-                                    value={editForm.objective}
-                                    onChange={(e) => setEditForm({ ...editForm, objective: e.target.value })}
-                                    className="h-8 text-xs"
-                                  />
-                                </TableCell>
-                                <TableCell className="hidden lg:table-cell">
-                                  <Input
-                                    value={editForm.activity}
-                                    onChange={(e) => setEditForm({ ...editForm, activity: e.target.value })}
-                                    className="h-8 text-xs"
-                                  />
-                                </TableCell>
-                                <TableCell className="hidden lg:table-cell">
-                                  <Input
-                                    value={editForm.assessment}
-                                    onChange={(e) => setEditForm({ ...editForm, assessment: e.target.value })}
-                                    className="h-8 text-xs"
-                                  />
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex gap-1 justify-end">
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleSaveEdit(globalIndex)}>
-                                      <Save className="h-3.5 w-3.5 text-green-600" />
+                      return (
+                        <div key={localIdx} className="p-4 border-b border-border/30 last:border-0">
+                          {isEditing && editForm ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="text-xs text-muted-foreground">Topic</label>
+                                  <Input value={editForm.topic} onChange={(e) => setEditForm({ ...editForm, topic: e.target.value })} />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-muted-foreground">Objective</label>
+                                  <Input value={editForm.objective} onChange={(e) => setEditForm({ ...editForm, objective: e.target.value })} />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground">Activity</label>
+                                <Textarea value={editForm.activity} onChange={(e) => setEditForm({ ...editForm, activity: e.target.value })} rows={2} />
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="text-xs text-muted-foreground">Materials</label>
+                                  <Input value={editForm.materials} onChange={(e) => setEditForm({ ...editForm, materials: e.target.value })} />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-muted-foreground">Assessment</label>
+                                  <Input value={editForm.assessment} onChange={(e) => setEditForm({ ...editForm, assessment: e.target.value })} />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={() => handleSaveEdit(globalIdx)} className="gap-1.5">
+                                  <Check className="h-3.5 w-3.5" /> Save
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => { setEditingIndex(null); setEditForm(null); }}>
+                                  <X className="h-3.5 w-3.5" /> Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
+                                    Period {plan.period}
+                                  </Badge>
+                                  <h4 className="font-medium text-sm text-foreground">{plan.topic}</h4>
+                                </div>
+                                {!isLocked && (
+                                  <div className="flex gap-1.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => { setEditingIndex(globalIdx); setEditForm({ ...plan }); }}
+                                      className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingIndex(null); setEditForm(null); }}>
-                                      <X className="h-3.5 w-3.5" />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleRegenerate(globalIdx)}
+                                      disabled={isRegenerating === globalIdx}
+                                      className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                                    >
+                                      {isRegenerating === globalIdx ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <RefreshCw className="h-3.5 w-3.5" />
+                                      )}
                                     </Button>
                                   </div>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          }
-
-                          return (
-                            <TableRow key={globalIndex} className="hover:bg-muted/20">
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs font-medium">
-                                  P{plan.period}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <p className="text-sm font-medium">{plan.topic}</p>
-                                  <p className="text-xs text-muted-foreground md:hidden mt-1">{plan.objective}</p>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                                <div className="flex gap-2">
+                                  <Target className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                                  <div>
+                                    <span className="font-medium text-muted-foreground">Objective:</span>
+                                    <p className="text-foreground/80">{plan.objective}</p>
+                                  </div>
                                 </div>
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                <p className="text-xs text-muted-foreground line-clamp-2">{plan.objective}</p>
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell">
-                                <p className="text-xs text-muted-foreground line-clamp-2">{plan.activity}</p>
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell">
-                                <p className="text-xs text-muted-foreground line-clamp-2">{plan.assessment}</p>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex gap-1 justify-end">
-                                  {!isLocked && (
-                                    <>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7"
-                                        onClick={() => { setEditingIndex(globalIndex); setEditForm({ ...plan }); }}
-                                      >
-                                        <Edit3 className="h-3.5 w-3.5" />
-                                      </Button>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7"
-                                        disabled={isRegenerating === globalIndex}
-                                        onClick={() => handleRegenerate(globalIndex)}
-                                      >
-                                        {isRegenerating === globalIndex ? (
-                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        ) : (
-                                          <RefreshCw className="h-3.5 w-3.5" />
-                                        )}
-                                      </Button>
-                                    </>
-                                  )}
+                                <div className="flex gap-2">
+                                  <BookOpen className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                                  <div>
+                                    <span className="font-medium text-muted-foreground">Activity:</span>
+                                    <p className="text-foreground/80">{plan.activity}</p>
+                                  </div>
                                 </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                                <div className="flex gap-2">
+                                  <Package className="h-3.5 w-3.5 text-orange-500 mt-0.5 shrink-0" />
+                                  <div>
+                                    <span className="font-medium text-muted-foreground">Materials:</span>
+                                    <p className="text-foreground/80">{plan.materials}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <ClipboardCheck className="h-3.5 w-3.5 text-purple-500 mt-0.5 shrink-0" />
+                                  <div>
+                                    <span className="font-medium text-muted-foreground">Assessment:</span>
+                                    <p className="text-foreground/80">{plan.assessment}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </Card>

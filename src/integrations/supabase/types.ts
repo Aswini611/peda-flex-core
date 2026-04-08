@@ -566,6 +566,7 @@ export type Database = {
           section: string | null
           subject: string | null
           title: string
+          topic: string | null
           vark_target: string | null
         }
         Insert: {
@@ -583,6 +584,7 @@ export type Database = {
           section?: string | null
           subject?: string | null
           title: string
+          topic?: string | null
           vark_target?: string | null
         }
         Update: {
@@ -600,6 +602,7 @@ export type Database = {
           section?: string | null
           subject?: string | null
           title?: string
+          topic?: string | null
           vark_target?: string | null
         }
         Relationships: []
