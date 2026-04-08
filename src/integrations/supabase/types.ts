@@ -688,6 +688,62 @@ export type Database = {
           },
         ]
       }
+      period_plans: {
+        Row: {
+          class_level: string
+          created_at: string
+          id: string
+          is_locked: boolean
+          lesson_id: string
+          period_duration: number
+          periods_per_week: number
+          plan_data: Json
+          section: string
+          subject: string | null
+          teacher_id: string
+          total_teaching_days: number
+          updated_at: string
+        }
+        Insert: {
+          class_level: string
+          created_at?: string
+          id?: string
+          is_locked?: boolean
+          lesson_id: string
+          period_duration?: number
+          periods_per_week?: number
+          plan_data?: Json
+          section: string
+          subject?: string | null
+          teacher_id: string
+          total_teaching_days?: number
+          updated_at?: string
+        }
+        Update: {
+          class_level?: string
+          created_at?: string
+          id?: string
+          is_locked?: boolean
+          lesson_id?: string
+          period_duration?: number
+          periods_per_week?: number
+          plan_data?: Json
+          section?: string
+          subject?: string | null
+          teacher_id?: string
+          total_teaching_days?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "period_plans_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
