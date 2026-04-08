@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import PeriodPlanGenerator from "@/components/PeriodPlanGenerator";
 import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
