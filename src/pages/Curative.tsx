@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import PeriodPlanGenerator from "@/components/PeriodPlanGenerator";
 import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -833,6 +834,16 @@ Also, whenever you use any advanced or technical word (like ZPD, Bloom's Taxonom
           )}
         </CardContent>
       </Card>
+
+      {/* Period-wise Plan Generator */}
+      <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+        <PeriodPlanGenerator
+          selectedClass={selectedClass}
+          selectedSection={selectedSection}
+          selectedSubject={selectedSubject}
+          getClassLabel={getClassLabel}
+        />
+      </div>
 
       {/* AI Teaching Assistant */}
       <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
