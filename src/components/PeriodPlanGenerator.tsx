@@ -364,7 +364,52 @@ const PeriodPlanGenerator = ({
               Generate a lesson plan above first, then it will appear here.
             </p>
           )}
+          {/* View & Download buttons */}
+          {selectedLesson && (
+            <div className="flex items-center gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowLessonPreview(true)}
+                disabled={!selectedLesson.lesson_content}
+              >
+                <Eye className="h-3.5 w-3.5" /> View Lesson Plan
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={handleDownloadLesson}
+                disabled={!selectedLesson.lesson_content}
+              >
+                <Download className="h-3.5 w-3.5" /> Download
+              </Button>
+            </div>
+          )}
         </div>
+
+        {/* Lesson Plan Preview Dialog */}
+        <Dialog open={showLessonPreview} onOpenChange={setShowLessonPreview}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                {selectedLesson ? getLessonLabel(selectedLesson) : "Lesson Plan"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="prose prose-sm max-w-none dark:prose-invert mt-2">
+              <ReactMarkdown>
+                {selectedLesson?.lesson_content || "No content available."}
+              </ReactMarkdown>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-border">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadLesson}>
+                <Download className="h-3.5 w-3.5" /> Download
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Show config & actions only when a lesson is selected */}
         {selectedLessonId && (
