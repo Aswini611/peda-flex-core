@@ -240,7 +240,7 @@ const PeriodPlanGenerator = () => {
       teacher_id: user.id,
       class_level: selectedClass,
       section: selectedSection,
-      subject: selectedLesson?.subject || selectedLesson?.subject || null,
+      subject: selectedLesson?.subject || null,
       periods_per_week: parseInt(periodsPerWeek),
       period_duration: parseInt(periodDuration),
       total_teaching_days: parseInt(totalTeachingDays),
