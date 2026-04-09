@@ -501,6 +501,88 @@ export type Database = {
         }
         Relationships: []
       }
+      homework_assignments: {
+        Row: {
+          assigned_by: string
+          class_level: string
+          created_at: string
+          id: string
+          lesson_id: string
+          questions: Json
+          section: string
+          status: string
+          subject: string | null
+          title: string
+        }
+        Insert: {
+          assigned_by: string
+          class_level: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          questions?: Json
+          section: string
+          status?: string
+          subject?: string | null
+          title: string
+        }
+        Update: {
+          assigned_by?: string
+          class_level?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          questions?: Json
+          section?: string
+          status?: string
+          subject?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_submissions: {
+        Row: {
+          answers: Json
+          assignment_id: string
+          id: string
+          score: number | null
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          answers?: Json
+          assignment_id: string
+          id?: string
+          score?: number | null
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          answers?: Json
+          assignment_id?: string
+          id?: string
+          score?: number | null
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "homework_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_assignments: {
         Row: {
           assigned_at: string
