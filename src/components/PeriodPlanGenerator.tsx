@@ -593,7 +593,7 @@ const PeriodPlanGenerator = () => {
                 onClick={handleDownloadLesson}
                 disabled={!selectedLesson.lesson_content}
               >
-                <Download className="h-3.5 w-3.5" /> Download
+                <Download className="h-3.5 w-3.5" /> Download PDF
               </Button>
             </div>
           )}
