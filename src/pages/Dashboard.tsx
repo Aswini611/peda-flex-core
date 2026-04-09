@@ -25,6 +25,8 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { Json } from "@/integrations/supabase/types";
 import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StudentHomework from "@/components/StudentHomework";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 
 interface LessonContent {
