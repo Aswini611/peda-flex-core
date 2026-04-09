@@ -12,8 +12,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
   RefreshCw, Plus, ChevronDown, ChevronUp, CalendarDays, Target,
-  BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText
+  BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText,
+  Eye, Download
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import ReactMarkdown from "react-markdown";
 
 interface PeriodPlan {
   day: number;
@@ -66,6 +71,7 @@ const PeriodPlanGenerator = ({
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
+  const [showLessonPreview, setShowLessonPreview] = useState(false);
   const [manualForm, setManualForm] = useState<PeriodPlan>({
     day: 1, period: 1, topic: "", objective: "", activity: "",
     materials: "", assessment: "", duration_minutes: 40,
@@ -288,9 +294,23 @@ const PeriodPlanGenerator = ({
 
   // Build dropdown label for each lesson
   const getLessonLabel = (l: LessonOption) => {
+    const cls = getClassLabel(selectedClass);
     const sub = l.subject || "General";
     const topic = l.topic ? ` – ${l.topic}` : "";
-    return `${sub}${topic}`;
+    return `${cls} ${sub}${topic}`;
+  };
+
+  const handleDownloadLesson = () => {
+    if (!selectedLesson?.lesson_content) return;
+    const label = getLessonLabel(selectedLesson);
+    const blob = new Blob([selectedLesson.lesson_content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${label.replace(/[^a-zA-Z0-9 –-]/g, "")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Lesson plan downloaded!");
   };
 
   if (!selectedClass || !selectedSection) return null;
@@ -344,7 +364,52 @@ const PeriodPlanGenerator = ({
               Generate a lesson plan above first, then it will appear here.
             </p>
           )}
+          {/* View & Download buttons */}
+          {selectedLesson && (
+            <div className="flex items-center gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowLessonPreview(true)}
+                disabled={!selectedLesson.lesson_content}
+              >
+                <Eye className="h-3.5 w-3.5" /> View Lesson Plan
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={handleDownloadLesson}
+                disabled={!selectedLesson.lesson_content}
+              >
+                <Download className="h-3.5 w-3.5" /> Download
+              </Button>
+            </div>
+          )}
         </div>
+
+        {/* Lesson Plan Preview Dialog */}
+        <Dialog open={showLessonPreview} onOpenChange={setShowLessonPreview}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                {selectedLesson ? getLessonLabel(selectedLesson) : "Lesson Plan"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="prose prose-sm max-w-none dark:prose-invert mt-2">
+              <ReactMarkdown>
+                {selectedLesson?.lesson_content || "No content available."}
+              </ReactMarkdown>
+            </div>
+            <div className="flex justify-end pt-3 border-t border-border">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadLesson}>
+                <Download className="h-3.5 w-3.5" /> Download
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Show config & actions only when a lesson is selected */}
         {selectedLessonId && (
