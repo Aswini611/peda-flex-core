@@ -19,6 +19,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import ReactMarkdown from "react-markdown";
+import html2pdf from "html2pdf.js";
 
 interface PeriodPlan {
   day: number;
