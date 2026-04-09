@@ -5,7 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { GettingStartedBanner } from "@/components/GettingStartedBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText, BarChart3, ArrowRight, Sparkles, GraduationCap, Lightbulb, LineChart } from "lucide-react";
+import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText, BarChart3, ArrowRight, Sparkles, GraduationCap, Lightbulb, LineChart, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentReport } from "@/components/StudentReport";
@@ -25,6 +25,8 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { Json } from "@/integrations/supabase/types";
 import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StudentHomework from "@/components/StudentHomework";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 
 interface LessonContent {
@@ -222,7 +224,18 @@ const StudentDashboard = () => {
         </div>
       ) : null}
 
-      <h2 className="text-lg font-semibold text-foreground mb-4">Your Assigned Lesson Plans</h2>
+      <Tabs defaultValue="lessons" className="mb-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+          <TabsTrigger value="lessons" className="gap-2">
+            <BookOpen className="h-4 w-4" /> Lesson Plans
+          </TabsTrigger>
+          <TabsTrigger value="homework" className="gap-2">
+            <PenLine className="h-4 w-4" /> Homework
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="lessons">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Your Assigned Lesson Plans</h2>
 
       {isLoading ? (
         <LoadingSpinner />
@@ -357,6 +370,13 @@ const StudentDashboard = () => {
           })}
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="homework">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Your Homework</h2>
+          <StudentHomework />
+        </TabsContent>
+      </Tabs>
 
       {myAssessment && (
         <StudentReport

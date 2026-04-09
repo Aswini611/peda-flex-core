@@ -13,7 +13,7 @@ import {
   Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
   RefreshCw, Plus, ChevronDown, ChevronUp, CalendarDays, Target,
   BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText,
-  Eye, Download, GraduationCap, Users
+  Eye, Download, GraduationCap, Users, CheckCircle
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -149,6 +149,7 @@ const PeriodPlanGenerator = () => {
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
   const [showLessonPreview, setShowLessonPreview] = useState(false);
+  const [isMarkingCompleted, setIsMarkingCompleted] = useState(false);
   const [manualForm, setManualForm] = useState<PeriodPlan>({
     day: 1, period: 1, topic: "", objective: "", activity: "",
     materials: "", assessment: "", duration_minutes: 40,
@@ -358,6 +359,64 @@ const PeriodPlanGenerator = () => {
     });
     await savePlan(updated, isLocked);
     toast.success("Period added!");
+  };
+
+  // Extract exit ticket questions from lesson content markdown
+  const extractExitTicketQuestions = (content: string): string[] => {
+    const questions: string[] = [];
+    // Find exit ticket section
+    const exitTicketMatch = content.match(/(?:exit\s*ticket|assessment.*exit)/i);
+    if (!exitTicketMatch) return questions;
+    const startIdx = content.indexOf(exitTicketMatch[0]);
+    const section = content.substring(startIdx);
+    // Find next major heading to limit scope
+    const nextHeading = section.substring(exitTicketMatch[0].length).match(/^#{1,2}\s/m);
+    const endIdx = nextHeading ? section.indexOf(nextHeading[0], exitTicketMatch[0].length) : section.length;
+    const exitSection = section.substring(0, endIdx);
+    // Extract numbered or bulleted lines that look like questions
+    const lines = exitSection.split('\n');
+    for (const line of lines) {
+      const cleaned = line.replace(/^[\s*\->#\d.)+]+/, '').trim();
+      if (cleaned.length > 10 && (cleaned.includes('?') || /^\d/.test(line.trim()) || line.trim().startsWith('-') || line.trim().startsWith('*'))) {
+        if (!cleaned.toLowerCase().startsWith('exit') && !cleaned.toLowerCase().startsWith('assessment')) {
+          questions.push(cleaned);
+        }
+      }
+    }
+    return questions;
+  };
+
+  const handleMarkCompleted = async () => {
+    if (!selectedLesson?.lesson_content || !user?.id) return;
+
+    const questions = extractExitTicketQuestions(selectedLesson.lesson_content);
+    if (questions.length === 0) {
+      toast.error("No exit ticket questions found in this lesson plan. Please ensure the lesson has an Exit Ticket section.");
+      return;
+    }
+
+    setIsMarkingCompleted(true);
+    try {
+      const { error } = await supabase.from("homework_assignments").insert({
+        lesson_id: selectedLessonId,
+        class_level: selectedClass,
+        section: selectedSection,
+        subject: selectedLesson.subject || null,
+        title: `Exit Ticket: ${selectedLesson.subject || 'Lesson'} – ${selectedLesson.topic || selectedLesson.title}`,
+        questions: questions as any,
+        assigned_by: user.id,
+      });
+      if (error) throw error;
+      toast.success(`Teaching marked complete! ${questions.length} exit ticket question(s) assigned as homework to ${getClassLabel(selectedClass)} Section ${selectedSection}.`);
+    } catch (e: any) {
+      if (e.message?.includes("duplicate")) {
+        toast.error("Homework for this lesson has already been assigned.");
+      } else {
+        toast.error(e.message || "Failed to assign homework");
+      }
+    } finally {
+      setIsMarkingCompleted(false);
+    }
   };
 
   const groupedByDay = periodPlans.reduce<Record<number, PeriodPlan[]>>((acc, plan) => {
@@ -687,6 +746,18 @@ const PeriodPlanGenerator = () => {
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" /> Create / Edit Manually
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleMarkCompleted}
+                disabled={isMarkingCompleted || !selectedLesson?.lesson_content}
+                className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              >
+                {isMarkingCompleted ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Assigning...</>
+                ) : (
+                  <><CheckCircle className="h-4 w-4" /> Mark Teaching Completed</>
+                )}
               </Button>
             </div>
 
