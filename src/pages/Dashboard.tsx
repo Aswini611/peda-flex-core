@@ -224,7 +224,18 @@ const StudentDashboard = () => {
         </div>
       ) : null}
 
-      <h2 className="text-lg font-semibold text-foreground mb-4">Your Assigned Lesson Plans</h2>
+      <Tabs defaultValue="lessons" className="mb-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+          <TabsTrigger value="lessons" className="gap-2">
+            <BookOpen className="h-4 w-4" /> Lesson Plans
+          </TabsTrigger>
+          <TabsTrigger value="homework" className="gap-2">
+            <PenLine className="h-4 w-4" /> Homework
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="lessons">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Your Assigned Lesson Plans</h2>
 
       {isLoading ? (
         <LoadingSpinner />
