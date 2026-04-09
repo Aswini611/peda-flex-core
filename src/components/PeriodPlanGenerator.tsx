@@ -71,6 +71,7 @@ const PeriodPlanGenerator = ({
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
+  const [showLessonPreview, setShowLessonPreview] = useState(false);
   const [manualForm, setManualForm] = useState<PeriodPlan>({
     day: 1, period: 1, topic: "", objective: "", activity: "",
     materials: "", assessment: "", duration_minutes: 40,
