@@ -21,18 +21,52 @@ const StudentHomework = () => {
   const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
-  const { data: assignments, isLoading } = useQuery({
-    queryKey: ["student-homework", user?.id],
+  // First fetch the student's class/section assignments
+  const { data: studentClasses } = useQuery({
+    queryKey: ["student-classes", user?.id],
     queryFn: async () => {
+      // Get the student record for this profile
+      const { data: student } = await supabase
+        .from("students")
+        .select("id")
+        .eq("profile_id", user!.id)
+        .maybeSingle();
+      if (!student) return [];
+
       const { data, error } = await supabase
-        .from("homework_assignments")
-        .select("*")
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
+        .from("class_students")
+        .select("class_id, classes(name, section)")
+        .eq("student_id", student.id);
       if (error) throw error;
       return data || [];
     },
     enabled: !!user?.id,
+  });
+
+  const { data: assignments, isLoading } = useQuery({
+    queryKey: ["student-homework", user?.id, studentClasses],
+    queryFn: async () => {
+      if (!studentClasses || studentClasses.length === 0) return [];
+
+      // Build filter: fetch homework matching any of the student's class/section combos
+      let query = supabase
+        .from("homework_assignments")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
+      // Filter by class_level and section from student's enrolled classes
+      const conditions = studentClasses.map((sc: any) => {
+        const cls = sc.classes as any;
+        return `and(class_level.eq.${cls.name},section.eq.${cls.section})`;
+      });
+      query = query.or(conditions.join(","));
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id && !!studentClasses,
   });
 
   const { data: submissions } = useQuery({
