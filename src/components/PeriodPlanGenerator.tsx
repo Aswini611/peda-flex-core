@@ -397,10 +397,11 @@ const PeriodPlanGenerator = () => {
 
     setIsMarkingCompleted(true);
     try {
+      const classLabel = getClassLabel(selectedClass);
       const { error } = await supabase.from("homework_assignments").insert({
         lesson_id: selectedLessonId,
-        class_level: selectedClass,
-        section: selectedSection,
+        class_level: classLabel,
+        section: selectedSection.toUpperCase(),
         subject: selectedLesson.subject || null,
         title: `Exit Ticket: ${selectedLesson.subject || 'Lesson'} – ${selectedLesson.topic || selectedLesson.title}`,
         questions: questions as any,
