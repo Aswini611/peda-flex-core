@@ -765,6 +765,8 @@ const PeriodPlanGenerator = () => {
             ))}
           </div>
         )}
+        </>
+        )}
       </CardContent>
     </Card>
   );
