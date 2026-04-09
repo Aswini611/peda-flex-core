@@ -378,6 +378,7 @@ const StudentDashboard = () => {
         </TabsContent>
       </Tabs>
 
+      {myAssessment && (
         <StudentReport
           open={reportOpen}
           onOpenChange={setReportOpen}
