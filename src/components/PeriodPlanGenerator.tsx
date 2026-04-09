@@ -294,9 +294,23 @@ const PeriodPlanGenerator = ({
 
   // Build dropdown label for each lesson
   const getLessonLabel = (l: LessonOption) => {
+    const cls = getClassLabel(selectedClass);
     const sub = l.subject || "General";
     const topic = l.topic ? ` – ${l.topic}` : "";
-    return `${sub}${topic}`;
+    return `${cls} ${sub}${topic}`;
+  };
+
+  const handleDownloadLesson = () => {
+    if (!selectedLesson?.lesson_content) return;
+    const label = getLessonLabel(selectedLesson);
+    const blob = new Blob([selectedLesson.lesson_content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${label.replace(/[^a-zA-Z0-9 –-]/g, "")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Lesson plan downloaded!");
   };
 
   if (!selectedClass || !selectedSection) return null;
