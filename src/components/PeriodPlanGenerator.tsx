@@ -322,8 +322,6 @@ const PeriodPlanGenerator = () => {
     toast.success("Lesson plan downloaded!");
   };
 
-  if (!selectedClass || !selectedSection) return null;
-
   return (
     <Card className="border-2 border-primary/10 shadow-lg animate-fade-in">
       <CardHeader className="pb-3 border-b border-border/50">
@@ -348,6 +346,42 @@ const PeriodPlanGenerator = () => {
         </div>
       </CardHeader>
       <CardContent className="p-5 space-y-5">
+        {/* Class & Section Selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="group">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Class</label>
+            <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedSection(""); setSelectedLessonId(""); }}>
+              <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                <SelectValue placeholder="Choose a class..." />
+              </SelectTrigger>
+              <SelectContent>
+                {CLASS_OPTIONS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    <span className="flex items-center gap-2"><GraduationCap className="h-3.5 w-3.5" />{c.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="group">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Section</label>
+            <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedClass}>
+              <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                <SelectValue placeholder={!selectedClass ? "Select a class first..." : "Choose a section..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {DEFAULT_SECTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />Section {s}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {selectedClass && selectedSection && (
+          <>
         {/* Lesson Plan Dropdown */}
         <div>
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
