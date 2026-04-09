@@ -77,7 +77,7 @@ export const DiagnosticRequestForm = () => {
     const { error } = await supabase.from("diagnostic_requests").insert({
       teacher_id: user!.id,
       class_name: className,
-      section: section.trim() || "A",
+      section: (section.trim() || "A").toUpperCase(),
       subject,
       purpose: purpose.trim(),
       suggested_count: count,
@@ -145,7 +145,7 @@ export const DiagnosticRequestForm = () => {
             </div>
             <div className="space-y-1.5">
               <Label>Section</Label>
-              <Input value={section} onChange={e => setSection(e.target.value)} placeholder="e.g. A, B, C" />
+              <Input value={section} onChange={e => setSection(e.target.value.toUpperCase())} placeholder="e.g. A, B, C" />
             </div>
             <div className="space-y-1.5">
               <Label>Subject</Label>

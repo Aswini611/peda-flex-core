@@ -139,7 +139,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         rowNum: i + 2,
         student_name: String(r["student_name"] || r["Student Name"] || r["name"] || "").trim(),
         class: String(r["Class"] || r["class"] || r["grade"] || "").trim(),
-        section: String(r["section"] || r["Section"] || "A").trim(),
+        section: String(r["section"] || r["Section"] || "A").trim().toUpperCase(),
         roll_number: String(r["roll_number"] || r["Roll Number"] || r["roll"] || "").trim(),
         parent_phone: String(r["parent_phone"] || r["Parent Phone"] || r["phone"] || "").trim(),
         parent_email: String(r["parent_email"] || r["Parent Email"] || r["email"] || "").trim(),
@@ -154,7 +154,8 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
   };
 
   const updateRow = (rowNum: number, field: keyof ParsedRow, value: string) => {
-    const updated = parsed.map((r) => r.rowNum === rowNum ? { ...r, [field]: value } : r);
+    const normalizedValue = field === "section" ? value.toUpperCase() : value;
+    const updated = parsed.map((r) => r.rowNum === rowNum ? { ...r, [field]: normalizedValue } : r);
     setParsed(updated);
     revalidate(updated);
   };

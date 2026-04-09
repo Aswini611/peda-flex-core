@@ -295,7 +295,7 @@ const Curative = () => {
         .eq("student_class", selectedClass)
         .eq("teacher_id", user.id);
       if (!data || data.length === 0) return DEFAULT_SECTIONS;
-      const unique = [...new Set(data.map((d) => d.section).filter(Boolean))] as string[];
+      const unique = [...new Set(data.map((d) => (d.section || "").toUpperCase()).filter(Boolean))] as string[];
       return [...new Set([...unique, ...DEFAULT_SECTIONS])].sort();
     },
     enabled: !!selectedClass && !!user?.id,
