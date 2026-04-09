@@ -65,8 +65,6 @@ const PeriodPlanGenerator = () => {
 
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const [periodsPerWeek, setPeriodsPerWeek] = useState("5");
   const [periodDuration, setPeriodDuration] = useState("40");
