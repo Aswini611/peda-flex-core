@@ -1064,6 +1064,17 @@ REQUIREMENTS:
           </div>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="period-plan" className="mt-0">
+          <PeriodPlanGenerator
+            selectedClass={selectedClass}
+            selectedSection={selectedSection}
+            selectedSubject={selectedSubject}
+            getClassLabel={getClassLabel}
+          />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 };
