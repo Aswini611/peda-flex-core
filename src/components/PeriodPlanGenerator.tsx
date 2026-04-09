@@ -609,13 +609,13 @@ const PeriodPlanGenerator = () => {
               </DialogTitle>
             </DialogHeader>
             <div className="prose prose-sm max-w-none dark:prose-invert mt-2">
-              <ReactMarkdown>
+              <ReactMarkdown components={LessonMarkdownComponents}>
                 {selectedLesson?.lesson_content || "No content available."}
               </ReactMarkdown>
             </div>
             <div className="flex justify-end pt-3 border-t border-border">
               <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadLesson}>
-                <Download className="h-3.5 w-3.5" /> Download
+                <Download className="h-3.5 w-3.5" /> Download PDF
               </Button>
             </div>
           </DialogContent>
