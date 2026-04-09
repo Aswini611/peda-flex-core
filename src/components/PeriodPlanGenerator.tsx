@@ -21,7 +21,74 @@ import {
 import ReactMarkdown from "react-markdown";
 import html2pdf from "html2pdf.js";
 
-interface PeriodPlan {
+// ─── Custom Markdown Components (same as Lesson Plan tab) ─────────────
+const LessonMarkdownComponents = {
+  h1: ({ node, ...props }: any) => (
+    <h1 className="text-xl font-bold mt-6 mb-4 text-foreground border-b-2 border-primary/30 pb-2 flex items-center gap-2" {...props}>
+      <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary to-primary/60 rounded-sm"></span>
+      {props.children}
+    </h1>
+  ),
+  h2: ({ node, ...props }: any) => (
+    <h2 className="text-lg font-bold mt-5 mb-3 text-foreground flex items-center gap-2" {...props}>
+      <span className="inline-block w-1 h-5 bg-primary/70 rounded-sm"></span>
+      {props.children}
+    </h2>
+  ),
+  h3: ({ node, ...props }: any) => (
+    <h3 className="text-base font-semibold mt-4 mb-2 text-foreground/95" {...props}>• {props.children}</h3>
+  ),
+  h4: ({ node, ...props }: any) => (
+    <h4 className="text-sm font-semibold mt-3 mb-2 text-foreground/90" {...props}>{props.children}</h4>
+  ),
+  p: ({ node, ...props }: any) => (
+    <p className="text-sm leading-relaxed mb-3 text-foreground/85" {...props}>{props.children}</p>
+  ),
+  ul: ({ node, ...props }: any) => (
+    <ul className="space-y-2 mb-3 ml-4 list-none" {...props}>{props.children}</ul>
+  ),
+  ol: ({ node, ...props }: any) => (
+    <ol className="space-y-2 mb-3 ml-4 list-decimal list-inside" {...props}>{props.children}</ol>
+  ),
+  li: ({ node, ...props }: any) => (
+    <li className="text-sm text-foreground/85 flex gap-2 items-start">
+      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+      <span>{props.children}</span>
+    </li>
+  ),
+  blockquote: ({ node, ...props }: any) => (
+    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>{props.children}</blockquote>
+  ),
+  code: ({ node, inline, ...props }: any) =>
+    inline ? (
+      <code className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+    ) : (
+      <code className="block bg-foreground/5 border border-border rounded p-3 text-xs overflow-x-auto my-3 text-foreground/80 font-mono" {...props} />
+    ),
+  table: ({ node, ...props }: any) => (
+    <table className="w-full border-collapse text-sm my-4" {...props}>{props.children}</table>
+  ),
+  thead: ({ node, ...props }: any) => (
+    <thead className="bg-primary/10 border-b-2 border-primary/30" {...props}>{props.children}</thead>
+  ),
+  th: ({ node, ...props }: any) => (
+    <th className="text-left px-3 py-2 font-semibold text-foreground/90" {...props}>{props.children}</th>
+  ),
+  td: ({ node, ...props }: any) => (
+    <td className="px-3 py-2 border-b border-border text-foreground/85" {...props}>{props.children}</td>
+  ),
+  strong: ({ node, ...props }: any) => (
+    <strong className="font-bold text-foreground" {...props}>{props.children}</strong>
+  ),
+  em: ({ node, ...props }: any) => (
+    <em className="italic text-foreground/80" {...props}>{props.children}</em>
+  ),
+  hr: ({ node, ...props }: any) => (
+    <hr className="my-4 border-border" {...props} />
+  ),
+};
+
+
   day: number;
   period: number;
   topic: string;
