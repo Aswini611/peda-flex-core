@@ -370,8 +370,14 @@ const StudentDashboard = () => {
           })}
         </div>
       )}
+        </TabsContent>
 
-      {myAssessment && (
+        <TabsContent value="homework">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Your Homework</h2>
+          <StudentHomework />
+        </TabsContent>
+      </Tabs>
+
         <StudentReport
           open={reportOpen}
           onOpenChange={setReportOpen}
