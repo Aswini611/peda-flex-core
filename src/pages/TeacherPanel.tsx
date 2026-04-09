@@ -74,7 +74,7 @@ const TeacherPanel = () => {
   const availableSections = useMemo(() => {
     if (!assessments) return [];
     const filtered = filterClass === "all" ? assessments : assessments.filter(a => a.student_class === filterClass);
-    const sections = new Set(filtered.map(a => a.section).filter(Boolean) as string[]);
+    const sections = new Set(filtered.map(a => (a.section || "").toUpperCase()).filter(Boolean) as string[]);
     return Array.from(sections).sort();
   }, [assessments, filterClass]);
 
@@ -83,7 +83,7 @@ const TeacherPanel = () => {
     if (!assessments) return [];
     return assessments.filter(a => {
       if (filterClass !== "all" && a.student_class !== filterClass) return false;
-      if (filterSection !== "all" && a.section !== filterSection) return false;
+      if (filterSection !== "all" && (a.section || "").toUpperCase() !== filterSection.toUpperCase()) return false;
       return true;
     });
   }, [assessments, filterClass, filterSection]);
