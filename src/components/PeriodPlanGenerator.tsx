@@ -13,7 +13,7 @@ import {
   Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
   RefreshCw, Plus, ChevronDown, ChevronUp, CalendarDays, Target,
   BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText,
-  Eye, Download
+  Eye, Download, GraduationCap, Users
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -42,20 +42,29 @@ interface LessonOption {
 }
 
 interface PeriodPlanGeneratorProps {
-  selectedClass: string;
-  selectedSection: string;
-  selectedSubject: string;
-  getClassLabel: (val: string) => string;
+  // no longer requires parent class/section
 }
 
-const PeriodPlanGenerator = ({
-  selectedClass,
-  selectedSection,
-  selectedSubject,
-  getClassLabel,
-}: PeriodPlanGeneratorProps) => {
+const CLASS_OPTIONS = [
+  { value: "nursery", label: "Nursery" },
+  { value: "lkg", label: "LKG" },
+  { value: "ukg", label: "UKG" },
+  ...Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `Class ${i + 1}` })),
+];
+
+const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
+
+const getClassLabel = (val: string): string => {
+  const found = CLASS_OPTIONS.find((c) => c.value === val);
+  return found ? found.label : val;
+};
+
+const PeriodPlanGenerator = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
 
   const [periodsPerWeek, setPeriodsPerWeek] = useState("5");
   const [periodDuration, setPeriodDuration] = useState("40");
@@ -162,7 +171,7 @@ const PeriodPlanGenerator = ({
             lessonContent: selectedLesson.lesson_content,
             classLevel: selectedClass,
             section: selectedSection,
-            subject: selectedLesson.subject || selectedSubject,
+            subject: selectedLesson?.subject,
             periodsPerWeek: parseInt(periodsPerWeek),
             periodDuration: parseInt(periodDuration),
             totalTeachingDays: parseInt(totalTeachingDays),
@@ -202,7 +211,7 @@ const PeriodPlanGenerator = ({
             lessonContent: selectedLesson.lesson_content,
             classLevel: selectedClass,
             section: selectedSection,
-            subject: selectedLesson.subject || selectedSubject,
+            subject: selectedLesson?.subject,
             periodsPerWeek: parseInt(periodsPerWeek),
             periodDuration: parseInt(periodDuration),
             totalTeachingDays: parseInt(totalTeachingDays),
@@ -231,7 +240,7 @@ const PeriodPlanGenerator = ({
       teacher_id: user.id,
       class_level: selectedClass,
       section: selectedSection,
-      subject: selectedLesson?.subject || selectedSubject || null,
+      subject: selectedLesson?.subject || null,
       periods_per_week: parseInt(periodsPerWeek),
       period_duration: parseInt(periodDuration),
       total_teaching_days: parseInt(totalTeachingDays),
@@ -313,8 +322,6 @@ const PeriodPlanGenerator = ({
     toast.success("Lesson plan downloaded!");
   };
 
-  if (!selectedClass || !selectedSection) return null;
-
   return (
     <Card className="border-2 border-primary/10 shadow-lg animate-fade-in">
       <CardHeader className="pb-3 border-b border-border/50">
@@ -339,6 +346,42 @@ const PeriodPlanGenerator = ({
         </div>
       </CardHeader>
       <CardContent className="p-5 space-y-5">
+        {/* Class & Section Selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="group">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Class</label>
+            <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedSection(""); setSelectedLessonId(""); }}>
+              <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                <SelectValue placeholder="Choose a class..." />
+              </SelectTrigger>
+              <SelectContent>
+                {CLASS_OPTIONS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    <span className="flex items-center gap-2"><GraduationCap className="h-3.5 w-3.5" />{c.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="group">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Section</label>
+            <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedClass}>
+              <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                <SelectValue placeholder={!selectedClass ? "Select a class first..." : "Choose a section..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {DEFAULT_SECTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />Section {s}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {selectedClass && selectedSection && (
+          <>
         {/* Lesson Plan Dropdown */}
         <div>
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
@@ -721,6 +764,8 @@ const PeriodPlanGenerator = ({
               </Card>
             ))}
           </div>
+        )}
+        </>
         )}
       </CardContent>
     </Card>
