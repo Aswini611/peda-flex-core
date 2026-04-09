@@ -12,8 +12,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
   RefreshCw, Plus, ChevronDown, ChevronUp, CalendarDays, Target,
-  BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText
+  BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText,
+  Eye, Download
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import ReactMarkdown from "react-markdown";
 
 interface PeriodPlan {
   day: number;
