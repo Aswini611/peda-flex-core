@@ -13,7 +13,7 @@ import {
   Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
   RefreshCw, Plus, ChevronDown, ChevronUp, CalendarDays, Target,
   BookOpen, ClipboardCheck, Package, Pencil, X, Check, FileText,
-  Eye, Download, GraduationCap, Users
+  Eye, Download, GraduationCap, Users, CheckCircle
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
