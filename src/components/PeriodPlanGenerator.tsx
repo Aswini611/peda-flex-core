@@ -364,26 +364,68 @@ const PeriodPlanGenerator = () => {
   // Extract exit ticket questions from lesson content markdown
   const extractExitTicketQuestions = (content: string): string[] => {
     const questions: string[] = [];
-    // Find exit ticket section
+    // Find the exit ticket section
     const exitTicketMatch = content.match(/(?:exit\s*ticket|assessment.*exit)/i);
     if (!exitTicketMatch) return questions;
     const startIdx = content.indexOf(exitTicketMatch[0]);
     const section = content.substring(startIdx);
-    // Find next major heading to limit scope
-    const nextHeading = section.substring(exitTicketMatch[0].length).match(/^#{1,2}\s/m);
+    
+    // Find next major heading (## or #) to limit scope
+    const nextHeading = section.substring(exitTicketMatch[0].length).match(/^#{1,3}\s+\d+\./m);
     const endIdx = nextHeading ? section.indexOf(nextHeading[0], exitTicketMatch[0].length) : section.length;
     const exitSection = section.substring(0, endIdx);
-    // Extract numbered or bulleted lines that look like questions
-    const lines = exitSection.split('\n');
+    
+    // Look for "Questions:" label and extract everything after it
+    const questionsLabelMatch = exitSection.match(/questions\s*:/i);
+    const questionsBlock = questionsLabelMatch 
+      ? exitSection.substring(exitSection.indexOf(questionsLabelMatch[0]) + questionsLabelMatch[0].length)
+      : exitSection;
+    
+    // Stop at known non-question labels
+    const stopLabels = /^(collection\s*method|success\s*criteria|follow[\s-]*up|format|🎯)/im;
+    const lines = questionsBlock.split('\n');
+    
+    let currentQuestion = '';
     for (const line of lines) {
-      const cleaned = line.replace(/^[\s*\->#\d.)+]+/, '').trim();
-      if (cleaned.length > 10 && (cleaned.includes('?') || /^\d/.test(line.trim()) || line.trim().startsWith('-') || line.trim().startsWith('*'))) {
-        if (!cleaned.toLowerCase().startsWith('exit') && !cleaned.toLowerCase().startsWith('assessment')) {
-          questions.push(cleaned);
+      const trimmed = line.trim();
+      if (!trimmed) {
+        if (currentQuestion) {
+          questions.push(currentQuestion);
+          currentQuestion = '';
         }
+        continue;
+      }
+      // Stop if we hit a non-question section
+      if (stopLabels.test(trimmed)) {
+        if (currentQuestion) {
+          questions.push(currentQuestion);
+          currentQuestion = '';
+        }
+        break;
+      }
+      // Clean line of markdown bullets, numbers, bold markers
+      const cleaned = trimmed
+        .replace(/^[\s*\->#]+/, '')
+        .replace(/^\d+[.)]\s*/, '')
+        .replace(/\*\*/g, '')
+        .trim();
+      
+      if (cleaned.length < 5) continue;
+      // Skip meta-labels
+      if (/^(format|method|criteria|follow|exit|assessment|quick|slip)/i.test(cleaned)) continue;
+      
+      // If line starts with a bullet/number, it's a new question
+      if (/^[\d\-*]/.test(trimmed) || /^[A-Z]/.test(cleaned)) {
+        if (currentQuestion) questions.push(currentQuestion);
+        currentQuestion = cleaned;
+      } else {
+        // Continuation of previous question
+        currentQuestion = currentQuestion ? currentQuestion + ' ' + cleaned : cleaned;
       }
     }
-    return questions;
+    if (currentQuestion) questions.push(currentQuestion);
+    
+    return questions.filter(q => q.length >= 10);
   };
 
   const handleMarkCompleted = async () => {
