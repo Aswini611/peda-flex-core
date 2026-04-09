@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2 } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -707,151 +708,152 @@ Also, whenever you use any advanced or technical word (like ZPD, Bloom's Taxonom
         </div>
       </div>
 
-      {/* Configuration Card */}
-      <Card className="mb-6 border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <CardHeader className="pb-3 border-b border-border/50">
-          <CardTitle className="text-base flex items-center gap-2 text-primary">
-            <BookMarked className="h-5 w-5" />
-            Configure Your Lesson
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-5 pt-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="group">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Class</label>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger className="transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"><SelectValue placeholder="Choose a class..." /></SelectTrigger>
-                <SelectContent>
-                  {CLASS_OPTIONS.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      <span className="flex items-center gap-2"><GraduationCap className="h-3.5 w-3.5" />{c.label}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <Tabs defaultValue="lesson-plan" className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
+          <TabsTrigger value="lesson-plan" className="gap-2">
+            <Wand2 className="h-4 w-4" /> Lesson Plan
+          </TabsTrigger>
+          <TabsTrigger value="period-plan" className="gap-2">
+            <CalendarDays className="h-4 w-4" /> Period-wise Plan
+          </TabsTrigger>
+        </TabsList>
 
-            <div className="group">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Section</label>
-              <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedClass}>
-                <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder={!selectedClass ? "Select a class first..." : "Choose a section..."} /></SelectTrigger>
-                <SelectContent>
-                  {sections.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />Section {s}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <TabsContent value="lesson-plan" className="space-y-6 mt-0">
+          {/* Configuration Card */}
+          <Card className="border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <CardTitle className="text-base flex items-center gap-2 text-primary">
+                <BookMarked className="h-5 w-5" />
+                Configure Your Lesson
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 pt-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Class</label>
+                  <Select value={selectedClass} onValueChange={setSelectedClass}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"><SelectValue placeholder="Choose a class..." /></SelectTrigger>
+                    <SelectContent>
+                      {CLASS_OPTIONS.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          <span className="flex items-center gap-2"><GraduationCap className="h-3.5 w-3.5" />{c.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="group">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Subject</label>
-              <Select value={selectedSubject} onValueChange={setSelectedSubject} disabled={!selectedClass}>
-                <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
-                  <SelectValue placeholder={!selectedClass ? "Select a class first..." : subjects.length === 0 ? "No textbooks found" : "Choose a subject..."} />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" />{s.label}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Section</label>
+                  <Select value={selectedSection} onValueChange={setSelectedSection} disabled={!selectedClass}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder={!selectedClass ? "Select a class first..." : "Choose a section..."} /></SelectTrigger>
+                    <SelectContent>
+                      {sections.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />Section {s}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="group">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Curriculum</label>
-              <Select value={selectedCurriculum} onValueChange={setSelectedCurriculum}>
-                <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Choose curriculum..." /></SelectTrigger>
-                <SelectContent>
-                  {CURRICULUM_OPTIONS.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      <span className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" />{c.label}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Subject</label>
+                  <Select value={selectedSubject} onValueChange={setSelectedSubject} disabled={!selectedClass}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                      <SelectValue placeholder={!selectedClass ? "Select a class first..." : subjects.length === 0 ? "No textbooks found" : "Choose a subject..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" />{s.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {/* Topic & Duration row */}
-          <div className="mt-5 flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px] group">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
-                <BookOpen className="h-3 w-3" /> Topic (Optional)
-              </label>
-              <Input
-                value={topicValue}
-                onChange={(e) => setTopicValue(e.target.value)}
-                placeholder="e.g. Photosynthesis, Fractions, The Water Cycle..."
-                className="w-full transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"
-              />
-            </div>
-            <div className="w-[170px] group">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
-                <Clock className="h-3 w-3" /> Duration
-              </label>
-              <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-                <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Duration" /></SelectTrigger>
-                <SelectContent>
-                  {[20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90].map((d) => (
-                    <SelectItem key={d} value={String(d)}>{d} minutes</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Curriculum</label>
+                  <Select value={selectedCurriculum} onValueChange={setSelectedCurriculum}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Choose curriculum..." /></SelectTrigger>
+                    <SelectContent>
+                      {CURRICULUM_OPTIONS.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          <span className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" />{c.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          {/* Generate Button */}
-          <div className="mt-6 flex items-center gap-3">
-            <Button
-              onClick={handleGeneratePlan}
-              disabled={!isReady || isStreaming}
-              size="lg"
-              className="shrink-0 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-base px-8 py-3 rounded-xl"
-            >
-              {isStreaming ? (
-                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating...</>
-              ) : (
-                <><Sparkles className="h-5 w-5 mr-2" /> Generate Lesson Plan</>
+              {/* Topic & Duration row */}
+              <div className="mt-5 flex flex-wrap gap-4">
+                <div className="flex-1 min-w-[200px] group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
+                    <BookOpen className="h-3 w-3" /> Topic (Optional)
+                  </label>
+                  <Input
+                    value={topicValue}
+                    onChange={(e) => setTopicValue(e.target.value)}
+                    placeholder="e.g. Photosynthesis, Fractions, The Water Cycle..."
+                    className="w-full transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"
+                  />
+                </div>
+                <div className="w-[170px] group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" /> Duration
+                  </label>
+                  <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Duration" /></SelectTrigger>
+                    <SelectContent>
+                      {[20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90].map((d) => (
+                        <SelectItem key={d} value={String(d)}>{d} minutes</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <div className="mt-6 flex items-center gap-3">
+                <Button
+                  onClick={handleGeneratePlan}
+                  disabled={!isReady || isStreaming}
+                  size="lg"
+                  className="shrink-0 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-base px-8 py-3 rounded-xl"
+                >
+                  {isStreaming ? (
+                    <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating...</>
+                  ) : (
+                    <><Sparkles className="h-5 w-5 mr-2" /> Generate Lesson Plan</>
+                  )}
+                </Button>
+              </div>
+
+              {/* Status Badges */}
+              {isReady && (
+                <div className="mt-4 flex items-center gap-2 flex-wrap animate-fade-in">
+                  <Badge variant="secondary" className="text-xs gap-1 shadow-sm"><GraduationCap className="h-3 w-3" /> {getClassLabel(selectedClass)}</Badge>
+                  <Badge variant="outline" className="text-xs gap-1"><Users className="h-3 w-3" /> Section {selectedSection}</Badge>
+                  {selectedSubject && (
+                    <Badge variant="outline" className="text-xs gap-1"><BookOpen className="h-3 w-3" /> {selectedSubject}</Badge>
+                  )}
+                  {selectedCurriculum && (
+                    <Badge variant="outline" className="text-xs gap-1"><Globe className="h-3 w-3" /> {CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label}</Badge>
+                  )}
+                  {topicValue.trim() && (
+                    <Badge className="text-xs gap-1 bg-primary/10 text-primary border-primary/20"><BookMarked className="h-3 w-3" /> {topicValue.trim()}</Badge>
+                  )}
+                  <Badge variant="outline" className="text-xs gap-1"><Clock className="h-3 w-3" /> {selectedDuration} min</Badge>
+                  <span className="text-xs text-muted-foreground ml-2">
+                    {studentCount} student{studentCount !== 1 ? "s" : ""} found • AI will use assessment reports & textbook content
+                  </span>
+                </div>
               )}
-            </Button>
-          </div>
-
-          {/* Status Badges */}
-          {isReady && (
-            <div className="mt-4 flex items-center gap-2 flex-wrap animate-fade-in">
-              <Badge variant="secondary" className="text-xs gap-1 shadow-sm"><GraduationCap className="h-3 w-3" /> {getClassLabel(selectedClass)}</Badge>
-              <Badge variant="outline" className="text-xs gap-1"><Users className="h-3 w-3" /> Section {selectedSection}</Badge>
-              {selectedSubject && (
-                <Badge variant="outline" className="text-xs gap-1"><BookOpen className="h-3 w-3" /> {selectedSubject}</Badge>
-              )}
-              {selectedCurriculum && (
-                <Badge variant="outline" className="text-xs gap-1"><Globe className="h-3 w-3" /> {CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label}</Badge>
-              )}
-              {topicValue.trim() && (
-                <Badge className="text-xs gap-1 bg-primary/10 text-primary border-primary/20"><BookMarked className="h-3 w-3" /> {topicValue.trim()}</Badge>
-              )}
-              <Badge variant="outline" className="text-xs gap-1"><Clock className="h-3 w-3" /> {selectedDuration} min</Badge>
-              <span className="text-xs text-muted-foreground ml-2">
-                {studentCount} student{studentCount !== 1 ? "s" : ""} found • AI will use assessment reports & textbook content
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Period-wise Plan Generator */}
-      <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.15s' }}>
-        <PeriodPlanGenerator
-          selectedClass={selectedClass}
-          selectedSection={selectedSection}
-          selectedSubject={selectedSubject}
-          getClassLabel={getClassLabel}
-        />
-      </div>
+            </CardContent>
+          </Card>
 
       {/* AI Teaching Assistant */}
       <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -1062,6 +1064,17 @@ REQUIREMENTS:
           </div>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="period-plan" className="mt-0">
+          <PeriodPlanGenerator
+            selectedClass={selectedClass}
+            selectedSection={selectedSection}
+            selectedSubject={selectedSubject}
+            getClassLabel={getClassLabel}
+          />
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 };
