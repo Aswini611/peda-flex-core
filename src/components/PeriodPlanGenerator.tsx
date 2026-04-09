@@ -88,7 +88,7 @@ const LessonMarkdownComponents = {
   ),
 };
 
-
+interface PeriodPlan {
   day: number;
   period: number;
   topic: string;
