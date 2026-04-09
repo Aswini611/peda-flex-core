@@ -747,6 +747,18 @@ const PeriodPlanGenerator = () => {
               >
                 <Plus className="h-4 w-4" /> Create / Edit Manually
               </Button>
+              <Button
+                variant="outline"
+                onClick={handleMarkCompleted}
+                disabled={isMarkingCompleted || !selectedLesson?.lesson_content}
+                className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              >
+                {isMarkingCompleted ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Assigning...</>
+                ) : (
+                  <><CheckCircle className="h-4 w-4" /> Mark Teaching Completed</>
+                )}
+              </Button>
             </div>
 
             {!selectedLesson?.lesson_content && (
