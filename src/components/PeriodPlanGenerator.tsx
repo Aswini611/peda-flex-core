@@ -42,18 +42,29 @@ interface LessonOption {
 }
 
 interface PeriodPlanGeneratorProps {
-  selectedClass: string;
-  selectedSection: string;
-  selectedSubject: string;
-  getClassLabel: (val: string) => string;
+  // no longer requires parent class/section
 }
 
-const PeriodPlanGenerator = ({
-  selectedClass,
-  selectedSection,
-  selectedSubject,
-  getClassLabel,
-}: PeriodPlanGeneratorProps) => {
+const CLASS_OPTIONS = [
+  { value: "nursery", label: "Nursery" },
+  { value: "lkg", label: "LKG" },
+  { value: "ukg", label: "UKG" },
+  ...Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `Class ${i + 1}` })),
+];
+
+const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
+
+const getClassLabel = (val: string): string => {
+  const found = CLASS_OPTIONS.find((c) => c.value === val);
+  return found ? found.label : val;
+};
+
+const PeriodPlanGenerator = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
