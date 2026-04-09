@@ -19,6 +19,74 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import ReactMarkdown from "react-markdown";
+import html2pdf from "html2pdf.js";
+
+// ─── Custom Markdown Components (same as Lesson Plan tab) ─────────────
+const LessonMarkdownComponents = {
+  h1: ({ node, ...props }: any) => (
+    <h1 className="text-xl font-bold mt-6 mb-4 text-foreground border-b-2 border-primary/30 pb-2 flex items-center gap-2" {...props}>
+      <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary to-primary/60 rounded-sm"></span>
+      {props.children}
+    </h1>
+  ),
+  h2: ({ node, ...props }: any) => (
+    <h2 className="text-lg font-bold mt-5 mb-3 text-foreground flex items-center gap-2" {...props}>
+      <span className="inline-block w-1 h-5 bg-primary/70 rounded-sm"></span>
+      {props.children}
+    </h2>
+  ),
+  h3: ({ node, ...props }: any) => (
+    <h3 className="text-base font-semibold mt-4 mb-2 text-foreground/95" {...props}>• {props.children}</h3>
+  ),
+  h4: ({ node, ...props }: any) => (
+    <h4 className="text-sm font-semibold mt-3 mb-2 text-foreground/90" {...props}>{props.children}</h4>
+  ),
+  p: ({ node, ...props }: any) => (
+    <p className="text-sm leading-relaxed mb-3 text-foreground/85" {...props}>{props.children}</p>
+  ),
+  ul: ({ node, ...props }: any) => (
+    <ul className="space-y-2 mb-3 ml-4 list-none" {...props}>{props.children}</ul>
+  ),
+  ol: ({ node, ...props }: any) => (
+    <ol className="space-y-2 mb-3 ml-4 list-decimal list-inside" {...props}>{props.children}</ol>
+  ),
+  li: ({ node, ...props }: any) => (
+    <li className="text-sm text-foreground/85 flex gap-2 items-start">
+      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+      <span>{props.children}</span>
+    </li>
+  ),
+  blockquote: ({ node, ...props }: any) => (
+    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>{props.children}</blockquote>
+  ),
+  code: ({ node, inline, ...props }: any) =>
+    inline ? (
+      <code className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
+    ) : (
+      <code className="block bg-foreground/5 border border-border rounded p-3 text-xs overflow-x-auto my-3 text-foreground/80 font-mono" {...props} />
+    ),
+  table: ({ node, ...props }: any) => (
+    <table className="w-full border-collapse text-sm my-4" {...props}>{props.children}</table>
+  ),
+  thead: ({ node, ...props }: any) => (
+    <thead className="bg-primary/10 border-b-2 border-primary/30" {...props}>{props.children}</thead>
+  ),
+  th: ({ node, ...props }: any) => (
+    <th className="text-left px-3 py-2 font-semibold text-foreground/90" {...props}>{props.children}</th>
+  ),
+  td: ({ node, ...props }: any) => (
+    <td className="px-3 py-2 border-b border-border text-foreground/85" {...props}>{props.children}</td>
+  ),
+  strong: ({ node, ...props }: any) => (
+    <strong className="font-bold text-foreground" {...props}>{props.children}</strong>
+  ),
+  em: ({ node, ...props }: any) => (
+    <em className="italic text-foreground/80" {...props}>{props.children}</em>
+  ),
+  hr: ({ node, ...props }: any) => (
+    <hr className="my-4 border-border" {...props} />
+  ),
+};
 
 interface PeriodPlan {
   day: number;
@@ -312,14 +380,113 @@ const PeriodPlanGenerator = () => {
   const handleDownloadLesson = () => {
     if (!selectedLesson?.lesson_content) return;
     const label = getLessonLabel(selectedLesson);
-    const blob = new Blob([selectedLesson.lesson_content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${label.replace(/[^a-zA-Z0-9 –-]/g, "")}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Lesson plan downloaded!");
+    const timestamp = new Date().toLocaleString('en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    }).replace(/[/:]/g, '-');
+    const filename = `APAS-LessonPlan-${label.replace(/[^a-zA-Z0-9 –-]/g, '')}-${timestamp}.pdf`;
+
+    let html = selectedLesson.lesson_content;
+    // Tables
+    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)*)/gm, (_match: string, header: string, _sep: string, body: string) => {
+      const headerCells = header.split('|').filter((c: string) => c.trim()).map((c: string) => `<th>${c.trim()}</th>`).join('');
+      const rows = body.trim().split('\n').map((row: string) => {
+        const cells = row.split('|').filter((c: string) => c.trim()).map((c: string) => `<td>${c.trim()}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
+    });
+    html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
+    html = html.replace(/^---$/gm, '<hr>');
+    html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
+    html = html.replace(/^(\d+)\. (.*?)$/gm, '<li>$1. $2</li>');
+    html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+    html = html.split('\n\n').map(para => {
+      const trimmed = para.trim();
+      if (!trimmed || trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || trimmed.startsWith('<table') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) return trimmed;
+      return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
+    }).join('\n');
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = `
+      <div class="report">
+        <div class="header">
+          <div class="header-left">
+            <div class="brand">APAS <span>Lesson Plan</span></div>
+            <div class="report-label">Differentiated Lesson Plan</div>
+          </div>
+          <div class="header-right">
+            <div class="report-date">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div class="status-badge">AI Generated</div>
+          </div>
+        </div>
+        <div class="learner-card">
+          <div class="lc-field"><label>Class</label><value>${getClassLabel(selectedClass)}</value><small>Section ${selectedSection}</small></div>
+          <div class="lc-field"><label>Subject</label><value>${selectedLesson.subject || 'General'}</value><small>${selectedLesson.topic || ''}</small></div>
+          <div class="lc-field"><label>Report Type</label><value>Lesson Plan</value><small>Differentiated</small></div>
+        </div>
+        <div class="content">${html}</div>
+        <div class="footer">
+          <div class="footer-note">This report is auto-generated by the APAS AI engine. For academic use only.</div>
+          <div class="footer-apas">APAS · ${new Date().getFullYear()}</div>
+        </div>
+      </div>`;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; }
+      .brand { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; color: #1a1a2e; letter-spacing: -0.5px; }
+      .brand span { color: #0e9a7b; font-style: italic; }
+      .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; }
+      .header-right { text-align: right; }
+      .report-date { font-size: 12px; font-weight: 500; color: #3a3a5c; }
+      .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; }
+      .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+      .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; }
+      .lc-field value { font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; color: white; display: block; }
+      .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); }
+      .content h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; }
+      .content h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; }
+      .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; }
+      .content h4 { font-size: 12px; font-weight: 600; color: #6b6b8a; margin: 12px 0 4px 0; }
+      .content p { margin: 6px 0; text-align: justify; color: #3a3a5c; }
+      .content strong { color: #1a1a2e; font-weight: 600; }
+      .content em { font-style: italic; color: #6b6b8a; }
+      .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
+      .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
+      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
+      .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
+      .content table td { padding: 7px 10px; border-bottom: 1px solid #e2e0d8; color: #3a3a5c; vertical-align: top; }
+      .content table tr:last-child td { border-bottom: none; }
+      .content blockquote { background: linear-gradient(135deg, #fff1ee 0%, #fffbeb 100%); border-left: 4px solid #e55a3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 12px; color: #3a3a5c; }
+      .content hr { border: none; border-top: 1px solid #e2e0d8; margin: 16px 0; }
+      .footer { border-top: 1px solid #e2e0d8; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+      .footer-note { font-size: 10px; color: #6b6b8a; }
+      .footer-apas { font-family: 'DM Serif Display', Georgia, serif; font-size: 13px; color: #3a3a5c; font-style: italic; }
+    `;
+    tempDiv.appendChild(style);
+
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#f7f5f0' },
+      jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' as const, compress: true },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    };
+
+    html2pdf().set(opt).from(tempDiv).save();
+    toast.success("PDF downloaded successfully!");
   };
 
   return (
@@ -426,7 +593,7 @@ const PeriodPlanGenerator = () => {
                 onClick={handleDownloadLesson}
                 disabled={!selectedLesson.lesson_content}
               >
-                <Download className="h-3.5 w-3.5" /> Download
+                <Download className="h-3.5 w-3.5" /> Download PDF
               </Button>
             </div>
           )}
@@ -442,13 +609,13 @@ const PeriodPlanGenerator = () => {
               </DialogTitle>
             </DialogHeader>
             <div className="prose prose-sm max-w-none dark:prose-invert mt-2">
-              <ReactMarkdown>
+              <ReactMarkdown components={LessonMarkdownComponents}>
                 {selectedLesson?.lesson_content || "No content available."}
               </ReactMarkdown>
             </div>
             <div className="flex justify-end pt-3 border-t border-border">
               <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadLesson}>
-                <Download className="h-3.5 w-3.5" /> Download
+                <Download className="h-3.5 w-3.5" /> Download PDF
               </Button>
             </div>
           </DialogContent>
