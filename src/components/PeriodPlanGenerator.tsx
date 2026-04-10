@@ -812,10 +812,12 @@ const PeriodPlanGenerator = () => {
               <Button
                 variant="outline"
                 onClick={handleMarkCompleted}
-                disabled={isMarkingCompleted || !selectedLesson?.lesson_content}
-                className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                disabled={isMarkingCompleted || !selectedLesson?.lesson_content || homeworkAlreadyAssigned}
+                className={`gap-2 ${homeworkAlreadyAssigned ? 'border-muted text-muted-foreground cursor-not-allowed' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
               >
-                {isMarkingCompleted ? (
+                {homeworkAlreadyAssigned ? (
+                  <><CheckCircle className="h-4 w-4" /> Teaching Completed ✓</>
+                ) : isMarkingCompleted ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Assigning...</>
                 ) : (
                   <><CheckCircle className="h-4 w-4" /> Mark Teaching Completed</>
