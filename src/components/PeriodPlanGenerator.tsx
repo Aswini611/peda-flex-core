@@ -469,6 +469,7 @@ const PeriodPlanGenerator = () => {
       });
       if (error) throw error;
       toast.success(`Teaching marked complete! ${questions.length} exit ticket question(s) assigned as homework to ${getClassLabel(selectedClass)} Section ${selectedSection}.`);
+      queryClient.invalidateQueries({ queryKey: ["homework-exists", selectedLessonId] });
     } catch (e: any) {
       if (e.message?.includes("duplicate")) {
         toast.error("Homework for this lesson has already been assigned.");
