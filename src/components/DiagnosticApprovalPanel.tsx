@@ -22,7 +22,7 @@ function getAgeGroupForClass(className: string): number {
   const num = parseInt(lower.replace(/\D/g, ""));
   if (!isNaN(num)) {
     if (num <= 4) return 5;
-    if (num <= 9) return 10;
+    if (num <= 10) return 10;
     return 15;
   }
   return 5; // default
