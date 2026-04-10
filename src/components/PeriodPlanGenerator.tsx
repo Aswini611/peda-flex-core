@@ -471,12 +471,13 @@ const PeriodPlanGenerator = () => {
 
   const days = Object.keys(groupedByDay).map(Number).sort((a, b) => a - b);
 
-  // Build dropdown label for each lesson
+  // Build dropdown label for each lesson: "Class Section Subject Topic"
   const getLessonLabel = (l: LessonOption) => {
     const cls = getClassLabel(selectedClass);
+    const sec = selectedSection || l.section || "";
     const sub = l.subject || "General";
-    const topic = l.topic ? ` – ${l.topic}` : "";
-    return `${cls} ${sub}${topic}`;
+    const topic = l.topic ? ` ${l.topic}` : "";
+    return `${cls} ${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
   };
 
   const handleDownloadLesson = () => {
