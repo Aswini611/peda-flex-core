@@ -171,6 +171,24 @@ const PeriodPlanGenerator = () => {
     enabled: !!selectedClass,
   });
 
+  // Check if homework already assigned for selected lesson
+  const { data: existingHomework } = useQuery({
+    queryKey: ["homework-exists", selectedLessonId],
+    queryFn: async () => {
+      if (!selectedLessonId) return null;
+      const { data } = await supabase
+        .from("homework_assignments")
+        .select("id")
+        .eq("lesson_id", selectedLessonId)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!selectedLessonId,
+  });
+
+  const homeworkAlreadyAssigned = !!existingHomework;
+
   // Selected lesson object
   const selectedLesson = classLessons.find((l) => l.id === selectedLessonId) || null;
 
@@ -451,6 +469,7 @@ const PeriodPlanGenerator = () => {
       });
       if (error) throw error;
       toast.success(`Teaching marked complete! ${questions.length} exit ticket question(s) assigned as homework to ${getClassLabel(selectedClass)} Section ${selectedSection}.`);
+      queryClient.invalidateQueries({ queryKey: ["homework-exists", selectedLessonId] });
     } catch (e: any) {
       if (e.message?.includes("duplicate")) {
         toast.error("Homework for this lesson has already been assigned.");
@@ -471,12 +490,13 @@ const PeriodPlanGenerator = () => {
 
   const days = Object.keys(groupedByDay).map(Number).sort((a, b) => a - b);
 
-  // Build dropdown label for each lesson
+  // Build dropdown label for each lesson: "Class Section Subject Topic"
   const getLessonLabel = (l: LessonOption) => {
     const cls = getClassLabel(selectedClass);
+    const sec = selectedSection || l.section || "";
     const sub = l.subject || "General";
-    const topic = l.topic ? ` – ${l.topic}` : "";
-    return `${cls} ${sub}${topic}`;
+    const topic = l.topic ? ` ${l.topic}` : "";
+    return `${cls} ${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
   };
 
   const handleDownloadLesson = () => {
@@ -793,10 +813,12 @@ const PeriodPlanGenerator = () => {
               <Button
                 variant="outline"
                 onClick={handleMarkCompleted}
-                disabled={isMarkingCompleted || !selectedLesson?.lesson_content}
-                className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                disabled={isMarkingCompleted || !selectedLesson?.lesson_content || homeworkAlreadyAssigned}
+                className={`gap-2 ${homeworkAlreadyAssigned ? 'border-muted text-muted-foreground cursor-not-allowed' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
               >
-                {isMarkingCompleted ? (
+                {homeworkAlreadyAssigned ? (
+                  <><CheckCircle className="h-4 w-4" /> Teaching Completed ✓</>
+                ) : isMarkingCompleted ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Assigning...</>
                 ) : (
                   <><CheckCircle className="h-4 w-4" /> Mark Teaching Completed</>
