@@ -102,10 +102,20 @@ export const TeacherRequestForm = () => {
     }
 
     setSubmitting(true);
+    const sectionVal = section.trim() || "A";
+
+    // Delete any existing request for the same class+section by this teacher (override with latest)
+    await supabase
+      .from("diagnostic_requests")
+      .delete()
+      .eq("teacher_id", user!.id)
+      .eq("class_name", className)
+      .eq("section", sectionVal);
+
     const { error } = await supabase.from("diagnostic_requests").insert({
       teacher_id: user!.id,
       class_name: className,
-      section: section.trim() || "A",
+      section: sectionVal,
       subject: "Diagnostic Test",
       purpose: purpose.trim(),
       suggested_count: totalQuestions,
@@ -115,7 +125,7 @@ export const TeacherRequestForm = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Request submitted! Awaiting School Admin approval.");
+      toast.success("Request submitted! Any previous request for this class has been replaced.");
       setClassName("");
       setSection("A");
       setPurpose("");
