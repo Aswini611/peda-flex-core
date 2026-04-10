@@ -171,6 +171,24 @@ const PeriodPlanGenerator = () => {
     enabled: !!selectedClass,
   });
 
+  // Check if homework already assigned for selected lesson
+  const { data: existingHomework } = useQuery({
+    queryKey: ["homework-exists", selectedLessonId],
+    queryFn: async () => {
+      if (!selectedLessonId) return null;
+      const { data } = await supabase
+        .from("homework_assignments")
+        .select("id")
+        .eq("lesson_id", selectedLessonId)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!selectedLessonId,
+  });
+
+  const homeworkAlreadyAssigned = !!existingHomework;
+
   // Selected lesson object
   const selectedLesson = classLessons.find((l) => l.id === selectedLessonId) || null;
 
