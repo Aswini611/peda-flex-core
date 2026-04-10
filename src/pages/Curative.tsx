@@ -430,7 +430,7 @@ const Curative = () => {
               const subjectLabel = selectedSubject || "General";
               const topicLabel = topicValue.trim() || null;
               const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || selectedCurriculum || "";
-              const title = `${classLabel} ${selectedSection} ${subjectLabel}${topicLabel ? ` ${topicLabel}` : ""}`;
+              const title = `${classLabel} - ${selectedSection} ${subjectLabel}${topicLabel ? ` ${topicLabel}` : ""}`;
               
               // Check if a lesson with same class+subject+topic exists (override logic)
               let query = supabase

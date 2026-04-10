@@ -492,11 +492,15 @@ const PeriodPlanGenerator = () => {
 
   // Build dropdown label for each lesson: "Class Section Subject Topic"
   const getLessonLabel = (l: LessonOption) => {
-    const cls = getClassLabel(selectedClass);
-    const sec = selectedSection || l.section || "";
+    // Use stored title if it already has the correct format
+    if (l.title && /class\s*\d+\s*-\s*[a-z]/i.test(l.title)) {
+      return l.title;
+    }
+    const cls = l.class_level ? getClassLabel(l.class_level) : getClassLabel(selectedClass);
+    const sec = l.section || selectedSection || "";
     const sub = l.subject || "General";
     const topic = l.topic ? ` ${l.topic}` : "";
-    return `${cls} ${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
+    return `${cls} - ${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
   };
 
   const handleDownloadLesson = () => {
