@@ -7,16 +7,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { User, Lock, Loader2 } from "lucide-react";
+import { User, Lock, Loader2, Globe } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { languages, Language } from "@/i18n/translations";
 
 const SettingsPage = () => {
   const { user, profile } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
   const [nameSaving, setNameSaving] = useState(false);
 
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pwSaving, setPwSaving] = useState(false);
@@ -59,36 +62,40 @@ const SettingsPage = () => {
       toast.error(error.message);
     } else {
       toast.success("Password changed successfully");
-      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     }
   };
 
+  const handleLanguageChange = async (lang: string) => {
+    await setLanguage(lang as Language);
+    toast.success("Language updated");
+  };
+
   return (
     <AppLayout>
-      <PageHeader title="Settings" subtitle="Manage your account preferences" />
+      <PageHeader title={t.settings} subtitle={t.updateDisplayName} />
 
       <div className="grid gap-6 max-w-2xl">
         {/* Profile Info */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5" /> Profile Information
+              <User className="h-5 w-5" /> {t.profileInformation}
             </CardTitle>
-            <CardDescription>Update your display name</CardDescription>
+            <CardDescription>{t.updateDisplayName}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{t.email}</Label>
               <Input value={user?.email ?? ""} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>{t.role}</Label>
               <Input value={profile?.role ?? ""} disabled className="capitalize" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="fullName">{t.fullName}</Label>
               <Input
                 id="fullName"
                 value={fullName}
@@ -98,8 +105,32 @@ const SettingsPage = () => {
             </div>
             <Button onClick={handleNameUpdate} disabled={nameSaving}>
               {nameSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Name
+              {t.saveName}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Language */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Globe className="h-5 w-5" /> {t.language}
+            </CardTitle>
+            <CardDescription>{t.selectLanguage}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={language} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map(lang => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.nativeLabel} ({lang.label})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
 
@@ -107,13 +138,13 @@ const SettingsPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Lock className="h-5 w-5" /> Change Password
+              <Lock className="h-5 w-5" /> {t.changePassword}
             </CardTitle>
-            <CardDescription>Update your account password</CardDescription>
+            <CardDescription>{t.updatePassword}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">{t.newPassword}</Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -123,7 +154,7 @@ const SettingsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword">{t.confirmPassword}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -134,7 +165,7 @@ const SettingsPage = () => {
             </div>
             <Button onClick={handlePasswordChange} disabled={pwSaving}>
               {pwSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Change Password
+              {t.changePassword}
             </Button>
           </CardContent>
         </Card>
