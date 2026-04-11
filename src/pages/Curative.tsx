@@ -435,7 +435,7 @@ const Curative = () => {
               // Always create a new lesson plan (no override)
               await supabase.from("lessons").insert({
                 title,
-                subject: subjectLabel,
+                subject: cleanSubject,
                 curriculum: selectedCurriculum || "",
                 class_level: selectedClass,
                 section: selectedSection,
