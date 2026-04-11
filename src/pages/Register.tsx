@@ -53,17 +53,35 @@ const Register = () => {
 
     const email = isStudent ? `${identifier.trim().toLowerCase()}@student.apas.local` : identifier;
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName.trim(), role } },
-    });
+    if (isStudent) {
+      // Students use generated emails — register via edge function (auto-confirmed)
+      const { data, error } = await supabase.functions.invoke("register-student", {
+        body: { email, password, full_name: fullName.trim(), role },
+      });
 
-    if (error) {
-      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+      if (error || data?.error) {
+        toast({ title: "Registration failed", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        toast({ title: "Account created!", description: "You can now sign in." });
+        navigate("/login");
+      }
     } else {
-      toast({ title: "Account created!", description: "You can now sign in." });
-      navigate("/login");
+      // Teachers & Admins — normal signup, requires email verification
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName.trim(), role } },
+      });
+
+      if (error) {
+        toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({
+          title: "Verification email sent!",
+          description: "Please check your inbox and verify your email before signing in.",
+        });
+        navigate("/login");
+      }
     }
     setLoading(false);
   };

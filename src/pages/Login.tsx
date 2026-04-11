@@ -24,10 +24,13 @@ const Login = () => {
       ? `${identifier.trim().toLowerCase()}@student.apas.local`
       : identifier;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      const msg = error.message === "Email not confirmed"
+        ? "Please verify your email before signing in. Check your inbox for the verification link."
+        : error.message;
+      toast({ title: "Login failed", description: msg, variant: "destructive" });
       setLoading(false);
       return;
     }
