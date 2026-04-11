@@ -579,6 +579,43 @@ const AdminHome = () => {
         ))}
       </div>
 
+      {/* At-Risk Students Widget */}
+      {atRiskStudents && atRiskStudents.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Students At Risk
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">AI-predicted high-risk students requiring immediate attention.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {atRiskStudents.map((s, i) => (
+              <Card key={i} className="border-destructive/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="destructive" className="text-xs">HIGH RISK</Badge>
+                    <span className="text-xs text-muted-foreground">{s.subject}</span>
+                  </div>
+                  <p className="text-sm text-foreground mb-1">
+                    Predicted: <strong>{Number(s.predicted_score_next_test).toFixed(0)}%</strong>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Dropout Risk: {Number(s.dropout_risk_percentage).toFixed(0)}%
+                  </p>
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {(s.contributing_factors as string[] || []).slice(0, 2).map((f, j) => (
+                      <Badge key={j} variant="outline" className="text-xs">{f}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Link to="/school-analytics" className="inline-flex items-center gap-1 mt-3 text-sm text-primary hover:underline">
+            View Full Analytics <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      )}
+
       {/* About APAS */}
       <div className="mb-10">
         <h2 className="text-xl font-bold text-foreground mb-1">About APAS</h2>
