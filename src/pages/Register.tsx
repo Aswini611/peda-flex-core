@@ -70,7 +70,10 @@ const Register = () => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName.trim(), role } },
+        options: {
+          data: { full_name: fullName.trim(), role },
+          emailRedirectTo: `${window.location.origin}/verify-email`,
+        },
       });
 
       if (error) {
