@@ -255,10 +255,10 @@ const SchoolAnalytics = () => {
             )}
 
             {medRiskStudents.length > 0 && (
-              <Card className="border-yellow-300/50">
+              <Card className="border-accent">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingDown className="h-5 w-5 text-yellow-600" />
+                    <TrendingDown className="h-5 w-5 text-muted-foreground" />
                     Medium Risk Students ({medRiskStudents.length})
                   </CardTitle>
                 </CardHeader>
@@ -271,7 +271,7 @@ const SchoolAnalytics = () => {
                           Predicted: {Number(p.predicted_score_next_test).toFixed(0)}%
                         </p>
                       </div>
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">MEDIUM</Badge>
+                      <Badge variant="secondary">MEDIUM</Badge>
                     </div>
                   ))}
                 </CardContent>
