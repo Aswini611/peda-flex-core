@@ -274,7 +274,7 @@ const AIKnowledgeHub = () => {
                 </Button>
 
                 {embedResult && (
-                  <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 p-4 text-sm">
+                  <div className="rounded-lg bg-accent p-4 text-sm">
                     <p className="font-semibold text-primary">✅ Embedding Complete</p>
                     {embedResult.results?.map((r: any, i: number) => (
                       <p key={i} className="mt-1 text-muted-foreground">
