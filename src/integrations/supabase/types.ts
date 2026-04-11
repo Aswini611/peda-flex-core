@@ -89,6 +89,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_embeddings: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       alert_reads: {
         Row: {
           alert_id: string
@@ -579,6 +603,47 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "homework_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_chunks: {
+        Row: {
+          chunk_text: string
+          class_level: string | null
+          created_at: string
+          curriculum: string | null
+          embedding_id: string | null
+          file_name: string
+          id: string
+          subject: string | null
+        }
+        Insert: {
+          chunk_text: string
+          class_level?: string | null
+          created_at?: string
+          curriculum?: string | null
+          embedding_id?: string | null
+          file_name: string
+          id?: string
+          subject?: string | null
+        }
+        Update: {
+          chunk_text?: string
+          class_level?: string | null
+          created_at?: string
+          curriculum?: string | null
+          embedding_id?: string | null
+          file_name?: string
+          id?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunks_embedding_id_fkey"
+            columns: ["embedding_id"]
+            isOneToOne: false
+            referencedRelation: "ai_embeddings"
             referencedColumns: ["id"]
           },
         ]
@@ -1218,6 +1283,19 @@ export type Database = {
     }
     Functions: {
       get_user_role: { Args: { _user_id: string }; Returns: string }
+      match_embeddings: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
