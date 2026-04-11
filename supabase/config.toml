@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.curative-assistant]
 verify_jwt = false
+
+[functions.embed-knowledge]
+verify_jwt = false
+
+[functions.search-context]
+verify_jwt = false
