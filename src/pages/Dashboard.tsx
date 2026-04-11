@@ -513,6 +513,20 @@ const AdminHome = () => {
     },
   });
 
+  const { data: atRiskStudents } = useQuery({
+    queryKey: ["at-risk-students-dashboard"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_predictions")
+        .select("student_id, subject, predicted_score_next_test, risk_level, dropout_risk_percentage, contributing_factors")
+        .eq("risk_level", "high")
+        .order("dropout_risk_percentage", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   return (
     <AppLayout>
       {/* Hero Section */}
