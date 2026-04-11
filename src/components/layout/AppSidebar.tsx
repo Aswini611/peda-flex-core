@@ -31,7 +31,9 @@ const navItems = [
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "school_admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
+  { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student"] },
   { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin", "teacher"] },
+  { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "school_admin"] },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
