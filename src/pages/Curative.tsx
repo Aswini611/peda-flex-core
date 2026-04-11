@@ -430,44 +430,19 @@ const Curative = () => {
               const subjectLabel = selectedSubject || "General";
               const topicLabel = topicValue.trim() || null;
               const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || selectedCurriculum || "";
-              const title = `${classLabel} - ${selectedSection} ${subjectLabel}${topicLabel ? ` ${topicLabel}` : ""}`;
+              const title = `${classLabel}-${selectedSection} ${subjectLabel}${topicLabel ? ` ${topicLabel}` : ""}`;
               
-              // Check if a lesson with same class+subject+topic exists (override logic)
-              let query = supabase
-                .from("lessons")
-                .select("id")
-                .eq("class_level", selectedClass)
-                .eq("subject", subjectLabel);
-              if (topicLabel) {
-                query = query.eq("topic", topicLabel);
-              } else {
-                query = query.is("topic", null);
-              }
-              const { data: existing } = await query.maybeSingle();
-
-              if (existing) {
-                // Override existing lesson
-                await supabase.from("lessons").update({
-                  title,
-                  lesson_content: assistantSoFar,
-                  ai_generated: true,
-                  section: selectedSection,
-                  curriculum: selectedCurriculum || "",
-                  topic: topicLabel,
-                } as any).eq("id", existing.id);
-              } else {
-                // Create new lesson
-                await supabase.from("lessons").insert({
-                  title,
-                  subject: subjectLabel,
-                  curriculum: selectedCurriculum || "",
-                  class_level: selectedClass,
-                  section: selectedSection,
-                  lesson_content: assistantSoFar,
-                  ai_generated: true,
-                  topic: topicLabel,
-                } as any);
-              }
+              // Always create a new lesson plan (no override)
+              await supabase.from("lessons").insert({
+                title,
+                subject: subjectLabel,
+                curriculum: selectedCurriculum || "",
+                class_level: selectedClass,
+                section: selectedSection,
+                lesson_content: assistantSoFar,
+                ai_generated: true,
+                topic: topicLabel,
+              } as any);
             } catch (err) {
               console.error("Failed to save lesson plan:", err);
             }

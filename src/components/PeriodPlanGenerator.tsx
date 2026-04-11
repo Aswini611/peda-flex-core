@@ -490,17 +490,17 @@ const PeriodPlanGenerator = () => {
 
   const days = Object.keys(groupedByDay).map(Number).sort((a, b) => a - b);
 
-  // Build dropdown label for each lesson: "Class Section Subject Topic"
+  // Build dropdown label: "Class 2-A English Fun with friends"
   const getLessonLabel = (l: LessonOption) => {
-    // Use stored title if it already has the correct format
-    if (l.title && /class\s*\d+\s*-\s*[a-z]/i.test(l.title)) {
+    // Use stored title if it already has the correct format (e.g. "Class 2-A English Topic")
+    if (l.title && /class\s*\d+-[a-z]/i.test(l.title)) {
       return l.title;
     }
     const cls = l.class_level ? getClassLabel(l.class_level) : getClassLabel(selectedClass);
     const sec = l.section || selectedSection || "";
     const sub = l.subject || "General";
     const topic = l.topic ? ` ${l.topic}` : "";
-    return `${cls} - ${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
+    return `${cls}-${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
   };
 
   const handleDownloadLesson = () => {
