@@ -44,7 +44,7 @@ const SecurityCenter = () => {
         </Card>
         <Card>
           <CardContent className="pt-4 flex items-center gap-3">
-            <Activity className="h-8 w-8 text-emerald-500" />
+            <Activity className="h-8 w-8 text-primary" />
             <div>
               <p className="text-2xl font-bold">{Object.keys(actionStats).length}</p>
               <p className="text-xs text-muted-foreground">Action Types</p>
@@ -53,7 +53,7 @@ const SecurityCenter = () => {
         </Card>
         <Card>
           <CardContent className="pt-4 flex items-center gap-3">
-            <AlertTriangle className="h-8 w-8 text-amber-500" />
+            <AlertTriangle className="h-8 w-8 text-destructive" />
             <div>
               <p className="text-2xl font-bold">{suspiciousLogs.length}</p>
               <p className="text-xs text-muted-foreground">Suspicious Actions</p>
@@ -62,7 +62,7 @@ const SecurityCenter = () => {
         </Card>
         <Card>
           <CardContent className="pt-4 flex items-center gap-3">
-            <Download className="h-8 w-8 text-blue-500" />
+            <Download className="h-8 w-8 text-accent" />
             <div>
               <p className="text-2xl font-bold">{auditLogs?.filter(l => l.action.includes("export")).length || 0}</p>
               <p className="text-xs text-muted-foreground">Data Exports</p>

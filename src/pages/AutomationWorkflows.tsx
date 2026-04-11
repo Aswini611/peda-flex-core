@@ -68,13 +68,13 @@ const AutomationWorkflows = () => {
       if (actionType === "notify" && actionMessage) {
         actionJson.params = { title: "Automation Alert", message: actionMessage };
       }
-      const { error } = await supabase.from("automation_rules").insert({
+      const { error } = await supabase.from("automation_rules").insert([{
         name,
         description,
         trigger_event: triggerEvent,
-        action_json: actionJson,
+        action_json: actionJson as any,
         created_by: user!.id,
-      });
+      }]);
       if (error) throw error;
     },
     onSuccess: () => {
