@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.search-context]
 verify_jwt = false
+
+[functions.predict-performance]
+verify_jwt = false
+
+[functions.student-tutor-chat]
+verify_jwt = false
+
+[functions.detect-learning-issues]
+verify_jwt = false
