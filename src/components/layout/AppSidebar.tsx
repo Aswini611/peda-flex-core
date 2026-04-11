@@ -15,6 +15,9 @@ import {
   Send,
   Bot,
   LineChart,
+  Zap,
+  Lock,
+  CreditCard,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +37,9 @@ const navItems = [
   { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student"] },
   { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin", "teacher"] },
   { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "school_admin"] },
+  { title: "Automation", icon: Zap, path: "/automation", roles: ["admin", "school_admin"] },
+  { title: "Security Center", icon: Lock, path: "/security", roles: ["admin"] },
+  { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "school_admin"] },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 

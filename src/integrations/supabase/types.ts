@@ -192,6 +192,119 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      automation_logs: {
+        Row: {
+          error_message: string | null
+          executed_at: string
+          id: string
+          result: Json
+          rule_id: string
+          status: string
+          trigger_data: Json
+        }
+        Insert: {
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          result?: Json
+          rule_id: string
+          status?: string
+          trigger_data?: Json
+        }
+        Update: {
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          result?: Json
+          rule_id?: string
+          status?: string
+          trigger_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          action_json: Json
+          condition_json: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          action_json?: Json
+          condition_json?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          action_json?: Json
+          condition_json?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       class_students: {
         Row: {
           assigned_at: string
@@ -607,6 +720,50 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          due_date: string
+          id: string
+          invoice_date: string
+          paid_at: string | null
+          status: string
+          subscription_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          paid_at?: string | null
+          status?: string
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          paid_at?: string | null
+          status?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_chunks: {
         Row: {
           chunk_text: string
@@ -894,23 +1051,71 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean
+          max_ai_generations: number
+          max_storage_mb: number
+          max_students: number
+          max_teachers: number
+          name: string
+          price_monthly: number
+          price_yearly: number
+          tier: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_ai_generations?: number
+          max_storage_mb?: number
+          max_students?: number
+          max_teachers?: number
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          tier?: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_ai_generations?: number
+          max_storage_mb?: number
+          max_students?: number
+          max_teachers?: number
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          tier?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           full_name: string | null
           id: string
+          preferred_language: string
           role: string
         }
         Insert: {
           created_at?: string
           full_name?: string | null
           id: string
+          preferred_language?: string
           role?: string
         }
         Update: {
           created_at?: string
           full_name?: string | null
           id?: string
+          preferred_language?: string
           role?: string
         }
         Relationships: []
@@ -1162,6 +1367,53 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          billing_cycle: string
+          created_at: string
+          created_by: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan_id: string
+          school_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          created_at?: string
+          created_by: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id: string
+          school_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          created_at?: string
+          created_by?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id?: string
+          school_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_assessments: {
         Row: {
           age_group: number
@@ -1245,6 +1497,38 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_metrics: {
+        Row: {
+          id: string
+          metric_type: string
+          metric_value: number
+          recorded_at: string
+          subscription_id: string | null
+        }
+        Insert: {
+          id?: string
+          metric_type: string
+          metric_value?: number
+          recorded_at?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          id?: string
+          metric_type?: string
+          metric_value?: number
+          recorded_at?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_metrics_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
