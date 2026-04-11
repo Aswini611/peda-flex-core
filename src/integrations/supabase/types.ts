@@ -915,6 +915,51 @@ export type Database = {
         }
         Relationships: []
       }
+      school_metrics: {
+        Row: {
+          ai_usage_count: number | null
+          created_at: string
+          curriculum_coverage_pct: number | null
+          id: string
+          learning_gain_index: number | null
+          risk_summary: Json | null
+          snapshot_date: string
+          subject_breakdown: Json | null
+          teacher_rankings: Json | null
+          teaching_effectiveness_score: number | null
+          total_students: number | null
+          total_teachers: number | null
+        }
+        Insert: {
+          ai_usage_count?: number | null
+          created_at?: string
+          curriculum_coverage_pct?: number | null
+          id?: string
+          learning_gain_index?: number | null
+          risk_summary?: Json | null
+          snapshot_date?: string
+          subject_breakdown?: Json | null
+          teacher_rankings?: Json | null
+          teaching_effectiveness_score?: number | null
+          total_students?: number | null
+          total_teachers?: number | null
+        }
+        Update: {
+          ai_usage_count?: number | null
+          created_at?: string
+          curriculum_coverage_pct?: number | null
+          id?: string
+          learning_gain_index?: number | null
+          risk_summary?: Json | null
+          snapshot_date?: string
+          subject_breakdown?: Json | null
+          teacher_rankings?: Json | null
+          teaching_effectiveness_score?: number | null
+          total_students?: number | null
+          total_teachers?: number | null
+        }
+        Relationships: []
+      }
       student_assessments: {
         Row: {
           age_group: number
@@ -1021,6 +1066,45 @@ export type Database = {
           surprise_reward_available?: boolean
           total_games_played?: number
           total_time_played?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_predictions: {
+        Row: {
+          confidence_score: number | null
+          contributing_factors: Json | null
+          created_at: string
+          dropout_risk_percentage: number | null
+          id: string
+          predicted_score_next_test: number | null
+          risk_level: string
+          student_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          contributing_factors?: Json | null
+          created_at?: string
+          dropout_risk_percentage?: number | null
+          id?: string
+          predicted_score_next_test?: number | null
+          risk_level?: string
+          student_id: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          contributing_factors?: Json | null
+          created_at?: string
+          dropout_risk_percentage?: number | null
+          id?: string
+          predicted_score_next_test?: number | null
+          risk_level?: string
+          student_id?: string
+          subject?: string
           updated_at?: string
         }
         Relationships: []
