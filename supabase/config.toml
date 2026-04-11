@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.detect-learning-issues]
 verify_jwt = false
+
+[functions.run-automation-engine]
+verify_jwt = false
+
+[functions.log-audit]
+verify_jwt = false
