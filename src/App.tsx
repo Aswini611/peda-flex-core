@@ -111,6 +111,20 @@ const App = () => (
                   </RoleGuard>
                 </ProtectedRoute>
               } />
+              <Route path="/ai-tutor" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["student"]}>
+                    <AITutor />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
+              <Route path="/school-analytics" element={
+                <ProtectedRoute>
+                  <RoleGuard allowedRoles={["admin", "school_admin"]}>
+                    <SchoolAnalytics />
+                  </RoleGuard>
+                </ProtectedRoute>
+              } />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -13,6 +13,8 @@ import {
   ClipboardList,
   Shield,
   Send,
+  Bot,
+  LineChart,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
