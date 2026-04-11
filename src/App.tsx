@@ -23,6 +23,8 @@ import AcademicTests from "./pages/AcademicTests";
 import AdminPanel from "./pages/AdminPanel";
 import Requests from "./pages/Requests";
 import AIKnowledgeHub from "./pages/AIKnowledgeHub";
+import AITutor from "./pages/AITutor";
+import SchoolAnalytics from "./pages/SchoolAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
