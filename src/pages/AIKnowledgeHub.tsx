@@ -115,7 +115,6 @@ const AIKnowledgeHub = () => {
     <AppLayout>
       <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
         <PageHeader
-          icon={Brain}
           title="AI Knowledge Hub"
           subtitle="RAG-powered knowledge base — embed textbooks and search with AI"
         />
@@ -276,7 +275,7 @@ const AIKnowledgeHub = () => {
 
                 {embedResult && (
                   <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 p-4 text-sm">
-                    <p className="font-semibold text-emerald-700 dark:text-emerald-400">✅ Embedding Complete</p>
+                    <p className="font-semibold text-primary">✅ Embedding Complete</p>
                     {embedResult.results?.map((r: any, i: number) => (
                       <p key={i} className="mt-1 text-muted-foreground">
                         {r.file_name}: {r.processed}/{r.total_chunks} chunks processed
