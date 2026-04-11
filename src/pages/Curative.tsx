@@ -427,10 +427,10 @@ const Curative = () => {
             // Save lesson plan to database
             try {
               const classLabel = getClassLabel(selectedClass);
-              const subjectLabel = selectedSubject || "General";
+              const cleanSubject = selectedSubject ? extractSubjectName(selectedSubject) : "General";
               const topicLabel = topicValue.trim() || null;
               const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || selectedCurriculum || "";
-              const title = `${classLabel}-${selectedSection} ${subjectLabel}${topicLabel ? ` ${topicLabel}` : ""}`;
+              const title = `${classLabel}-${selectedSection} ${cleanSubject}${topicLabel ? ` ${topicLabel}` : ""}`;
               
               // Always create a new lesson plan (no override)
               await supabase.from("lessons").insert({
