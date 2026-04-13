@@ -34,6 +34,9 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
 
   if (!response.ok) {
     const err = await response.text();
+    if (response.status === 429) {
+      throw new Error("OPENAI_QUOTA_EXCEEDED");
+    }
     throw new Error(`OpenAI embedding error: ${response.status} - ${err}`);
   }
 
@@ -48,7 +51,12 @@ serve(async (req) => {
 
   try {
     const OPENAI_KEY = Deno.env.get("OPEN_AI_KEY");
-    if (!OPENAI_KEY) throw new Error("OPEN_AI_KEY not configured");
+    if (!OPENAI_KEY) {
+      return new Response(
+        JSON.stringify({ error: "OPEN_AI_KEY not configured. Please add your OpenAI API key to use embedding features." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -65,56 +73,66 @@ serve(async (req) => {
 
     console.log(`Processing "${file_name}": ${content.length} chars`);
 
-    // Split into chunks
     const chunks = chunkText(content);
     console.log(`Created ${chunks.length} chunks`);
 
     let processed = 0;
+    let skipped = 0;
     const results = [];
 
     for (const chunk of chunks) {
-      // Generate embedding
-      const embedding = await generateEmbedding(chunk, OPENAI_KEY);
+      try {
+        const embedding = await generateEmbedding(chunk, OPENAI_KEY);
 
-      // Store embedding
-      const { data: embData, error: embError } = await supabase
-        .from("ai_embeddings")
-        .insert({
-          content: chunk,
-          embedding: JSON.stringify(embedding),
-          metadata: { file_name, subject, class_level, curriculum },
-        })
-        .select("id")
-        .single();
+        const { data: embData, error: embError } = await supabase
+          .from("ai_embeddings")
+          .insert({
+            content: chunk,
+            embedding: JSON.stringify(embedding),
+            metadata: { file_name, subject, class_level, curriculum },
+          })
+          .select("id")
+          .single();
 
-      if (embError) {
-        console.error("Embedding insert error:", embError);
-        continue;
-      }
+        if (embError) {
+          console.error("Embedding insert error:", embError);
+          skipped++;
+          continue;
+        }
 
-      // Store knowledge chunk
-      const { error: chunkError } = await supabase
-        .from("knowledge_chunks")
-        .insert({
-          file_name,
-          chunk_text: chunk,
-          subject: subject || null,
-          class_level: class_level || null,
-          curriculum: curriculum || null,
-          embedding_id: embData.id,
-        });
+        const { error: chunkError } = await supabase
+          .from("knowledge_chunks")
+          .insert({
+            file_name,
+            chunk_text: chunk,
+            subject: subject || null,
+            class_level: class_level || null,
+            curriculum: curriculum || null,
+            embedding_id: embData.id,
+          });
 
-      if (chunkError) console.error("Chunk insert error:", chunkError);
+        if (chunkError) console.error("Chunk insert error:", chunkError);
 
-      processed++;
+        processed++;
 
-      // Small delay to avoid rate limits
-      if (processed % 10 === 0) {
-        await new Promise((r) => setTimeout(r, 500));
+        if (processed % 10 === 0) {
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      } catch (chunkErr: any) {
+        if (chunkErr.message === "OPENAI_QUOTA_EXCEEDED") {
+          console.error("OpenAI quota exceeded after processing", processed, "chunks");
+          results.push({ file_name, total_chunks: chunks.length, processed, skipped: chunks.length - processed, error: "OpenAI quota exceeded. Partial processing completed." });
+          return new Response(
+            JSON.stringify({ success: false, error: "OpenAI API quota exceeded. Only " + processed + " of " + chunks.length + " chunks were processed. Please check your OpenAI billing.", results }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        console.error("Chunk processing error:", chunkErr);
+        skipped++;
       }
     }
 
-    results.push({ file_name, total_chunks: chunks.length, processed });
+    results.push({ file_name, total_chunks: chunks.length, processed, skipped });
 
     return new Response(
       JSON.stringify({ success: true, results }),
