@@ -132,7 +132,7 @@ const DEFAULT_SECTIONS = ["A", "B", "C", "D", "E", "F"];
 
 const CURRICULUM_OPTIONS = [
   { value: "ib", label: "Inquiry-Based (IB)" },
-  { value: "cbse", label: "5E Instructional Model (CBSE)" },
+  { value: "cbse", label: "CBSE" },
   { value: "cambridge", label: "Project-Based Learning (Cambridge)" },
   { value: "ai", label: "AI (Auto-detect)" },
 ];
@@ -254,7 +254,7 @@ const Curative = () => {
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [topicValue, setTopicValue] = useState("");
-  const [selectedDuration, setSelectedDuration] = useState("40");
+  const [selectedPeriods, setSelectedPeriods] = useState("1");
   
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -457,12 +457,9 @@ const Curative = () => {
     }
   }, [selectedClass, selectedSection, selectedSubject, chatMessages, isStreaming]);
 
-  const getDurationBreakdown = (mins: number) => {
-    const hook = Math.max(3, Math.round(mins * 0.125));
-    const assessment = Math.max(3, Math.round(mins * 0.125));
-    const closure = Math.max(3, Math.round(mins * 0.15));
-    const main = mins - hook - assessment - closure;
-    return { hook, main, assessment, closure };
+  const getPeriodBreakdown = (periods: number) => {
+    if (periods === 1) return "a single period";
+    return `${periods} periods (spread across ${periods} teaching sessions)`;
   };
 
   const handleGeneratePlan = () => {
@@ -475,16 +472,19 @@ const Curative = () => {
     const topicText = topicValue.trim() ? `, Topic: "${topicValue.trim()}"` : "";
     const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
-    const duration = parseInt(selectedDuration) || 40;
-    const { hook, main, assessment, closure } = getDurationBreakdown(duration);
+    const periods = parseInt(selectedPeriods) || 1;
+    const periodDesc = getPeriodBreakdown(periods);
     sendMessage(
-      `Generate a ${duration}-MINUTE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.
+      `Generate a COMPLETE LESSON PLAN spanning ${periodDesc} for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.
 
-IMPORTANT: The lesson MUST be exactly ${duration} minutes. Structure the timing as:
-- Hook/Introduction: ${hook} minutes (Primacy Effect — deliver key concept here)
-- Main Teaching: ${main} minutes (use chunked delivery with processing breaks)
-- Assessment/Exit Ticket: ${assessment} minutes
-- Closure/Revision: ${closure} minutes (Recency Effect — recap here)
+IMPORTANT: The lesson plan MUST be structured across ${periods} period(s). For each period, clearly label it as "Period 1", "Period 2", etc. and include:
+- Period objective/focus
+- Hook/Introduction (Primacy Effect — deliver key concept here)
+- Main Teaching (use chunked delivery with processing breaks)
+- Assessment/Exit Ticket
+- Closure/Revision (Recency Effect — recap here)
+
+${periods > 1 ? `Distribute the content logically across all ${periods} periods, ensuring pedagogical flow and progressive complexity. Each period should build on the previous one.` : "Cover the complete topic within the single period."}
 
 Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs aligned with the topic and curriculum.
 
@@ -494,9 +494,11 @@ Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - Mismatch alerts for at-risk groups
 - Exit ticket design across Bloom's levels
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
-${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use 5E Instructional Model: Engage, Explore, Explain, Elaborate, Evaluate with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
+${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use CBSE pedagogical approach with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
 
 IMPORTANT: For each VARK learning style group (Visual, Auditory, Read/Write, Kinesthetic), LIST the actual student names that belong to that group based on their assessment data. This helps the teacher quickly assign students to the right group.
+
+IMPORTANT: You MUST complete the ENTIRE lesson plan including the final "Learning Outcomes" section. Do NOT stop early. The full structure must include all ${periods} period(s) plus: BBL Checklist, Assessment/Exit Ticket, and Learning Outcomes.
 
 Also, whenever you use any advanced or technical word (like ZPD, Bloom's Taxonomy, Primacy Effect, Scaffolding, etc.), ALWAYS add a simple "decode" explanation right after it so that anyone — students, parents, or volunteers — can understand it easily.`,
       "generate",
@@ -778,13 +780,13 @@ Also, whenever you use any advanced or technical word (like ZPD, Bloom's Taxonom
                 </div>
                 <div className="w-[170px] group">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" /> Duration
+                    <CalendarDays className="h-3 w-3" /> Periods
                   </label>
-                  <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Duration" /></SelectTrigger>
+                  <Select value={selectedPeriods} onValueChange={setSelectedPeriods}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Periods" /></SelectTrigger>
                     <SelectContent>
-                      {[20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90].map((d) => (
-                        <SelectItem key={d} value={String(d)}>{d} minutes</SelectItem>
+                      {Array.from({ length: 15 }, (_, i) => i + 1).map((p) => (
+                        <SelectItem key={p} value={String(p)}>{p} {p === 1 ? "Period" : "Periods"}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
