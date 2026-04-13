@@ -22,7 +22,13 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`OpenAI embedding error: ${response.status} - ${err}`);
+    const status = response.status;
+    
+    // Check for quota/rate limit errors
+    if (status === 429) {
+      throw new Error("OPENAI_QUOTA_EXCEEDED");
+    }
+    throw new Error(`OpenAI embedding error: ${status} - ${err}`);
   }
 
   const data = await response.json();
@@ -51,23 +57,49 @@ serve(async (req) => {
       });
     }
 
-    // Generate embedding for the query
-    const queryEmbedding = await generateEmbedding(query, OPENAI_KEY);
+    let results: any[] = [];
 
-    // Call the match_embeddings function
-    const { data, error } = await supabase.rpc("match_embeddings", {
-      query_embedding: JSON.stringify(queryEmbedding),
-      match_threshold: match_threshold,
-      match_count: match_count,
-    });
+    try {
+      // Try vector search first
+      const queryEmbedding = await generateEmbedding(query, OPENAI_KEY);
 
-    if (error) {
-      console.error("Match error:", error);
-      throw new Error(`Similarity search failed: ${error.message}`);
+      const { data, error } = await supabase.rpc("match_embeddings", {
+        query_embedding: JSON.stringify(queryEmbedding),
+        match_threshold: match_threshold,
+        match_count: match_count,
+      });
+
+      if (error) {
+        console.error("Match error:", error);
+        throw new Error(`Similarity search failed: ${error.message}`);
+      }
+
+      results = data || [];
+    } catch (embeddingError: any) {
+      // Graceful fallback: if OpenAI quota exceeded, do a text-based search instead
+      if (embeddingError.message === "OPENAI_QUOTA_EXCEEDED") {
+        console.warn("OpenAI quota exceeded, falling back to text search");
+
+        const { data: textResults, error: textError } = await supabase
+          .from("knowledge_chunks")
+          .select("id, chunk_text, subject, class_level, curriculum, file_name")
+          .ilike("chunk_text", `%${query.slice(0, 100)}%`)
+          .limit(match_count);
+
+        if (!textError && textResults) {
+          results = textResults.map((r: any) => ({
+            id: r.id,
+            content: r.chunk_text,
+            metadata: { subject: r.subject, class_level: r.class_level, curriculum: r.curriculum, file_name: r.file_name },
+            similarity: 0.5,
+          }));
+        }
+      } else {
+        throw embeddingError;
+      }
     }
 
-    // If filters provided, filter results by metadata
-    let results = data || [];
+    // Apply filters
     if (filters) {
       if (filters.subject) {
         results = results.filter((r: any) => r.metadata?.subject === filters.subject);
@@ -81,11 +113,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({
-        results,
-        query,
-        total: results.length,
-      }),
+      JSON.stringify({ results, query, total: results.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
