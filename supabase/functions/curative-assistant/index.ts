@@ -647,6 +647,7 @@ Make the plan specific, actionable, and based on actual assessment data.`,
         model: "google/gemini-2.5-flash",
         messages: openaiMessages,
         temperature: 0.7,
+        max_tokens: 65536,
         stream: true,
       }),
     });
