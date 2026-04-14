@@ -50,6 +50,7 @@ const TeacherPanel = () => {
   const [showClassReport, setShowClassReport] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [activeTab, setActiveTab] = useState<string>("student-reports");
 
   const { data: assessments, isLoading } = useQuery({
     queryKey: ["teacher-student-assessments", user?.id, profile?.role],
