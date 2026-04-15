@@ -15,6 +15,36 @@ import { CheckCircle, XCircle, Clock, Eye, ClipboardList, AlertTriangle } from "
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { AGE_GROUPS, type AgeGroupConfig, type Dimension } from "@/data/assessmentQuestions";
 
+const EXCELLENCIA_EMAILS = [
+  "excellencia1@gmail.com",
+  "excellencia2@gmail.com",
+  "excellencia3@gmail.com",
+  "excellencia4@gmail.com",
+  "excellencia5@gmail.com",
+  "excellencia6@gmail.com",
+];
+
+/** Build a 25-question distribution across all dimensions for a given class */
+function build25QuestionDistribution(className: string): Record<string, number> {
+  const ageGroup = getAgeGroupForClass(className);
+  const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
+  if (!config) return {};
+
+  const dims = config.dimensions;
+  const total = 25;
+  const base = Math.floor(total / dims.length);
+  let remainder = total - base * dims.length;
+
+  const distribution: Record<string, number> = {};
+  for (const dim of dims) {
+    const count = base + (remainder > 0 ? 1 : 0);
+    distribution[dim.name] = Math.min(count, dim.questions.length);
+    if (remainder > 0) remainder--;
+  }
+
+  return distribution;
+}
+
 /** Map class name to the appropriate age group in the question bank */
 function getAgeGroupForClass(className: string): number {
   const lower = className.toLowerCase().trim();
