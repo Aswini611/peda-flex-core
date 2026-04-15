@@ -81,6 +81,47 @@ interface Teacher {
   full_name: string;
 }
 
+const EXCELLENCIA_TEACHER_IDS = new Set([
+  "832f14a1-629d-4d8a-b0c2-d0c74b9d89cd", // excellencia1
+  "eddec8c8-33e3-404f-a8aa-4ebf5951abb8", // excellencia2
+  "55910396-9b6c-416d-a301-c58f885c67e1", // excellencia3
+  "5540ff1a-7f1d-4000-9f47-a749b94ab9bd", // excellencia4
+  "159857bc-0dd5-4411-bbac-5c384105b3be", // excellencia5
+  "bd536e10-5893-4a85-8465-738ff30c52e6", // excellencia6
+]);
+
+/** Build a 25-question subset distributed across all dimensions */
+function build25QuestionConfig(cfg: AgeGroupConfig): AgeGroupConfig {
+  const dims = cfg.dimensions;
+  const total = 25;
+  const base = Math.floor(total / dims.length);
+  let remainder = total - base * dims.length;
+
+  const filteredDimensions = dims.map(dim => {
+    const count = base + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder--;
+    const shuffled = [...dim.questions].sort(() => Math.random() - 0.5);
+    return {
+      ...dim,
+      questions: shuffled.slice(0, Math.min(count, dim.questions.length)),
+    };
+  }).filter(dim => dim.questions.length > 0);
+
+  const allQuestions = filteredDimensions.flatMap(d => d.questions);
+
+  return {
+    ageGroup: cfg.ageGroup,
+    label: cfg.label,
+    model: cfg.model,
+    respondent: cfg.respondent,
+    totalQuestions: allQuestions.length,
+    maxScorePerDimension: cfg.maxScorePerDimension,
+    options: cfg.options,
+    dimensions: filteredDimensions,
+    questions: allQuestions,
+  };
+}
+
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
   const { awardXp } = useGamification();
   const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
