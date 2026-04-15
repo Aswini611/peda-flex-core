@@ -166,6 +166,17 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     const cfg = getAgeGroupConfig(ageGroup);
     if (!cfg) return;
 
+    // If Excellencia teacher selected, directly give 25 questions — no request needed
+    if (EXCELLENCIA_TEACHER_IDS.has(teacherId)) {
+      const limited = build25QuestionConfig(cfg);
+      setConfig(limited);
+      setAnswers({});
+      setCurrentQ(0);
+      setPhase("quiz");
+      toast.info(`Loaded ${limited.totalQuestions} diagnostic questions`);
+      return;
+    }
+
     // Materialize the flat questions list from the getter so spread works correctly
     const allCfgQuestions = cfg.dimensions.flatMap(d => d.questions);
 
