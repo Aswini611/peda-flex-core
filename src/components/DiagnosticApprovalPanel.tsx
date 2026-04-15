@@ -15,6 +15,36 @@ import { CheckCircle, XCircle, Clock, Eye, ClipboardList, AlertTriangle } from "
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { AGE_GROUPS, type AgeGroupConfig, type Dimension } from "@/data/assessmentQuestions";
 
+const EXCELLENCIA_EMAILS = [
+  "excellencia1@gmail.com",
+  "excellencia2@gmail.com",
+  "excellencia3@gmail.com",
+  "excellencia4@gmail.com",
+  "excellencia5@gmail.com",
+  "excellencia6@gmail.com",
+];
+
+/** Build a 25-question distribution across all dimensions for a given class */
+function build25QuestionDistribution(className: string): Record<string, number> {
+  const ageGroup = getAgeGroupForClass(className);
+  const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
+  if (!config) return {};
+
+  const dims = config.dimensions;
+  const total = 25;
+  const base = Math.floor(total / dims.length);
+  let remainder = total - base * dims.length;
+
+  const distribution: Record<string, number> = {};
+  for (const dim of dims) {
+    const count = base + (remainder > 0 ? 1 : 0);
+    distribution[dim.name] = Math.min(count, dim.questions.length);
+    if (remainder > 0) remainder--;
+  }
+
+  return distribution;
+}
+
 /** Map class name to the appropriate age group in the question bank */
 function getAgeGroupForClass(className: string): number {
   const lower = className.toLowerCase().trim();
@@ -128,20 +158,32 @@ export const DiagnosticApprovalPanel = () => {
 
     let assignedQuestions: any[] | null = null;
 
-    if (action === "approved" && reviewRequest.question_distribution) {
-      // Build the question set from the pre-stored question bank
-      assignedQuestions = buildQuestionSet(
-        reviewRequest.class_name,
-        reviewRequest.question_distribution
-      );
+    if (action === "approved") {
+      // Check if this is an excellencia teacher request — use or build 25-question distribution
+      let distribution = reviewRequest.question_distribution;
+      
+      if (distribution) {
+        // If distribution exists (e.g., excellencia teacher auto-set), use it directly
+        assignedQuestions = buildQuestionSet(reviewRequest.class_name, distribution);
+      } else {
+        // No distribution — check if this teacher is excellencia by checking suggested_count pattern
+        // For excellencia teachers, auto-generate 25 question distribution
+        const dist25 = build25QuestionDistribution(reviewRequest.class_name);
+        if (reviewRequest.suggested_count === 25 && Object.keys(dist25).length > 0) {
+          // Could be excellencia teacher — check distribution total
+          assignedQuestions = buildQuestionSet(reviewRequest.class_name, dist25);
+        }
+      }
 
-      if (assignedQuestions.length === 0) {
+      if (assignedQuestions && assignedQuestions.length === 0) {
         toast.error("No matching questions found in the question bank for this class and categories.");
         setProcessing(false);
         return;
       }
 
-      toast.info(`Assigning ${assignedQuestions.length} questions to ${reviewRequest.class_name} - ${reviewRequest.section} students.`);
+      if (assignedQuestions) {
+        toast.info(`Assigning ${assignedQuestions.length} questions to ${reviewRequest.class_name} - ${reviewRequest.section} students.`);
+      }
     }
 
     const updatePayload: any = {
