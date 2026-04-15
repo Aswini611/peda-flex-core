@@ -158,20 +158,32 @@ export const DiagnosticApprovalPanel = () => {
 
     let assignedQuestions: any[] | null = null;
 
-    if (action === "approved" && reviewRequest.question_distribution) {
-      // Build the question set from the pre-stored question bank
-      assignedQuestions = buildQuestionSet(
-        reviewRequest.class_name,
-        reviewRequest.question_distribution
-      );
+    if (action === "approved") {
+      // Check if this is an excellencia teacher request — use or build 25-question distribution
+      let distribution = reviewRequest.question_distribution;
+      
+      if (distribution) {
+        // If distribution exists (e.g., excellencia teacher auto-set), use it directly
+        assignedQuestions = buildQuestionSet(reviewRequest.class_name, distribution);
+      } else {
+        // No distribution — check if this teacher is excellencia by checking suggested_count pattern
+        // For excellencia teachers, auto-generate 25 question distribution
+        const dist25 = build25QuestionDistribution(reviewRequest.class_name);
+        if (reviewRequest.suggested_count === 25 && Object.keys(dist25).length > 0) {
+          // Could be excellencia teacher — check distribution total
+          assignedQuestions = buildQuestionSet(reviewRequest.class_name, dist25);
+        }
+      }
 
-      if (assignedQuestions.length === 0) {
+      if (assignedQuestions && assignedQuestions.length === 0) {
         toast.error("No matching questions found in the question bank for this class and categories.");
         setProcessing(false);
         return;
       }
 
-      toast.info(`Assigning ${assignedQuestions.length} questions to ${reviewRequest.class_name} - ${reviewRequest.section} students.`);
+      if (assignedQuestions) {
+        toast.info(`Assigning ${assignedQuestions.length} questions to ${reviewRequest.class_name} - ${reviewRequest.section} students.`);
+      }
     }
 
     const updatePayload: any = {
