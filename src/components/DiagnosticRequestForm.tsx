@@ -13,6 +13,50 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Send, Clock, CheckCircle, XCircle, ClipboardList } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { AGE_GROUPS } from "@/data/assessmentQuestions";
+
+const EXCELLENCIA_EMAILS = [
+  "excellencia1@gmail.com",
+  "excellencia2@gmail.com",
+  "excellencia3@gmail.com",
+  "excellencia4@gmail.com",
+  "excellencia5@gmail.com",
+  "excellencia6@gmail.com",
+];
+
+/** Map class name to age group */
+function getAgeGroupForClass(className: string): number {
+  const lower = className.toLowerCase().trim();
+  if (["nursery", "lkg", "ukg"].includes(lower)) return 3;
+  const num = parseInt(lower.replace(/\D/g, ""));
+  if (!isNaN(num)) {
+    if (num <= 4) return 5;
+    if (num <= 10) return 10;
+    return 15;
+  }
+  return 5;
+}
+
+/** Build a 25-question distribution across all dimensions for a given class */
+function build25QuestionDistribution(className: string): Record<string, number> {
+  const ageGroup = getAgeGroupForClass(className);
+  const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
+  if (!config) return {};
+
+  const dims = config.dimensions;
+  const total = 25;
+  const base = Math.floor(total / dims.length);
+  let remainder = total - base * dims.length;
+
+  const distribution: Record<string, number> = {};
+  for (const dim of dims) {
+    const count = base + (remainder > 0 ? 1 : 0);
+    distribution[dim.name] = Math.min(count, dim.questions.length);
+    if (remainder > 0) remainder--;
+  }
+
+  return distribution;
+}
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -74,14 +118,24 @@ export const DiagnosticRequestForm = () => {
     }
 
     setSubmitting(true);
-    const { error } = await supabase.from("diagnostic_requests").insert({
+
+    const isExcellencia = EXCELLENCIA_EMAILS.includes(user!.email?.toLowerCase() || "");
+    const finalCount = isExcellencia ? 25 : count;
+    const questionDistribution = isExcellencia ? build25QuestionDistribution(className) : undefined;
+
+    const insertPayload: any = {
       teacher_id: user!.id,
       class_name: className,
       section: (section.trim() || "A").toUpperCase(),
       subject,
       purpose: purpose.trim(),
-      suggested_count: count,
-    } as any);
+      suggested_count: finalCount,
+    };
+    if (questionDistribution) {
+      insertPayload.question_distribution = questionDistribution;
+    }
+
+    const { error } = await supabase.from("diagnostic_requests").insert(insertPayload);
 
     if (error) {
       toast.error(error.message);
