@@ -11,6 +11,15 @@ import { CheckCircle, Clock, Loader2, Send, Eye, BookOpen } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+const EXCELLENCIA_EMAILS = [
+  "excellencia1@gmail.com",
+  "excellencia2@gmail.com",
+  "excellencia3@gmail.com",
+  "excellencia4@gmail.com",
+  "excellencia5@gmail.com",
+  "excellencia6@gmail.com",
+];
+
 interface DiagnosticRequest {
   id: string;
   class_name: string;
@@ -55,13 +64,17 @@ export const DiagnosticAssignPanel = () => {
 
     setGeneratingId(req.id);
     try {
+      // Check if current teacher is excellencia — limit to 25 questions
+      const isExcellencia = EXCELLENCIA_EMAILS.includes(user?.email?.toLowerCase() || "");
+      const numQuestions = isExcellencia ? 25 : req.approved_count;
+
       // Generate diagnostic MCQs via edge function
       const { data: mcqData, error: mcqError } = await supabase.functions.invoke("generate-mcqs", {
         body: {
           studentClass: req.class_name,
           section: req.section,
           subject: req.subject,
-          numQuestions: req.approved_count,
+          numQuestions,
           questionType: "diagnostic",
           difficulty: "mixed",
         },
