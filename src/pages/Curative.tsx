@@ -413,6 +413,10 @@ const Curative = () => {
       });
     };
 
+    // Capture current values for the closure
+    const currentTopic = topicValue.trim() || null;
+    const currentSubject = selectedSubject ? extractSubjectName(selectedSubject) : "General";
+
     try {
       await streamChat({
         selectedClass,
@@ -428,21 +432,18 @@ const Curative = () => {
             // Save lesson plan to database
             try {
               const classLabel = getClassLabel(selectedClass);
-              const cleanSubject = selectedSubject ? extractSubjectName(selectedSubject) : "General";
-              const topicLabel = topicValue.trim() || null;
-              const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || selectedCurriculum || "";
-              const title = `${classLabel}-${selectedSection} ${cleanSubject}${topicLabel ? ` ${topicLabel}` : ""}`;
+              const title = `${classLabel}-${selectedSection} ${currentSubject}${currentTopic ? ` ${currentTopic}` : ""}`;
               
               // Always create a new lesson plan (no override)
               await supabase.from("lessons").insert({
                 title,
-                subject: cleanSubject,
+                subject: currentSubject,
                 curriculum: selectedCurriculum || "",
                 class_level: selectedClass,
                 section: selectedSection,
                 lesson_content: assistantSoFar,
                 ai_generated: true,
-                topic: topicLabel,
+                topic: currentTopic,
                 teacher_id: user?.id || null,
               } as any);
             } catch (err) {
@@ -457,7 +458,7 @@ const Curative = () => {
       toast.error("Failed to connect to AI assistant");
       setIsStreaming(false);
     }
-  }, [selectedClass, selectedSection, selectedSubject, chatMessages, isStreaming]);
+  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id]);
 
   const getPeriodBreakdown = (periods: number) => {
     if (periods === 1) return "a single period";
