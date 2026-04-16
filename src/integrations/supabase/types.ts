@@ -869,6 +869,7 @@ export type Database = {
           lesson_content: string | null
           section: string | null
           subject: string | null
+          teacher_id: string | null
           title: string
           topic: string | null
           vark_target: string | null
@@ -887,6 +888,7 @@ export type Database = {
           lesson_content?: string | null
           section?: string | null
           subject?: string | null
+          teacher_id?: string | null
           title: string
           topic?: string | null
           vark_target?: string | null
@@ -905,11 +907,20 @@ export type Database = {
           lesson_content?: string | null
           section?: string | null
           subject?: string | null
+          teacher_id?: string | null
           title?: string
           topic?: string | null
           vark_target?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mismatch_alerts: {
         Row: {

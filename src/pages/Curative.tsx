@@ -442,6 +442,7 @@ const Curative = () => {
                 lesson_content: assistantSoFar,
                 ai_generated: true,
                 topic: topicLabel,
+                teacher_id: user?.id || null,
               } as any);
             } catch (err) {
               console.error("Failed to save lesson plan:", err);
