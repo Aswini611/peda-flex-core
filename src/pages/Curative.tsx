@@ -868,7 +868,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                   {topicValue.trim() && (
                     <Badge className="text-xs gap-1 bg-primary/10 text-primary border-primary/20"><BookMarked className="h-3 w-3" /> {topicValue.trim()}</Badge>
                   )}
-                  <Badge variant="outline" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> {selectedPeriods} {parseInt(selectedPeriods) === 1 ? "Period" : "Periods"}</Badge>
+                  <Badge variant="outline" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> {selectedPeriods} {parseInt(selectedPeriods) === 1 ? "Period" : "Periods"} × {periodDuration}min</Badge>
                   <span className="text-xs text-muted-foreground ml-2">
                     {studentCount} student{studentCount !== 1 ? "s" : ""} found • AI will use assessment reports & textbook content
                   </span>
