@@ -823,6 +823,19 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="w-[170px] group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" /> Period Duration
+                  </label>
+                  <Select value={periodDuration} onValueChange={setPeriodDuration}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50"><SelectValue placeholder="Duration" /></SelectTrigger>
+                    <SelectContent>
+                      {[30, 35, 40, 45, 50, 55, 60].map((d) => (
+                        <SelectItem key={d} value={String(d)}>{d} min</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Generate Button */}
