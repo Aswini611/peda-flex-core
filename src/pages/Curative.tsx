@@ -255,6 +255,7 @@ const Curative = () => {
   const [selectedChapter, setSelectedChapter] = useState("");
   const [topicValue, setTopicValue] = useState("");
   const [selectedPeriods, setSelectedPeriods] = useState("1");
+  const [periodDuration, setPeriodDuration] = useState("40");
   
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
