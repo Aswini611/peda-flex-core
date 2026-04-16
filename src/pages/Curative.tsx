@@ -477,41 +477,42 @@ const Curative = () => {
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
     const periods = parseInt(selectedPeriods) || 1;
     const periodDesc = getPeriodBreakdown(periods);
+    const periodDurationMin = parseInt(periodDuration) || 40;
     sendMessage(
       `Generate a COMPLETE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.
 
 TOTAL PERIODS: ${periods}
+PERIOD DURATION: ${periodDurationMin} minutes each
 
-${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divided into exactly ${periods} PERIODS. Each period is one complete teaching session. Structure the ENTIRE plan period-by-period as follows:
+${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divided into exactly ${periods} PERIODS. Each period is ${periodDurationMin} minutes. Structure the ENTIRE plan period-by-period as follows:
 
 ---
 ## 📝 Overall Learning Objectives
 (3-5 clear, measurable objectives using Bloom's taxonomy covering the entire ${periods}-period unit)
 
 ---
-## 📅 PERIOD 1 — [Sub-topic Title]
+## 📅 PERIOD 1 — [Sub-topic Title] (${periodDurationMin} min)
 ### Hook / Introduction (First 10 min — PRIMACY EFFECT)
 ### Main Teaching — Chunked Delivery (10-2-10 Rule)
   - Chunk 1: Input → Processing → Application (with 3-tier differentiation: Support/Core/Extension)
   - Chunk 2: Input → Processing → Application (with 3-tier differentiation)
 ### Closure / Revision (Last 5 min — RECENCY EFFECT)
-### Exit Ticket for Period 1
+### Assessment — Exit Ticket for Period 1
 
-## 📅 PERIOD 2 — [Sub-topic Title]
+## 📅 PERIOD 2 — [Sub-topic Title] (${periodDurationMin} min)
 (Same full structure as Period 1, building on previous period)
 
 ... repeat for ALL ${periods} periods ...
 
-## 📅 PERIOD ${periods} — [Sub-topic Title]
+## 📅 PERIOD ${periods} — [Sub-topic Title] (${periodDurationMin} min)
 (Final period with comprehensive review and summative assessment)
 
 ---
 ## BBL Checklist
-## Final Assessment — Comprehensive Exit Ticket
 ## Learning Outcomes (What students can do after completing all ${periods} periods)
 ---
 
-IMPORTANT: Every single period (Period 1 through Period ${periods}) MUST have COMPLETE content — Hook, Main Teaching with chunks, Closure, and Exit Ticket. Do NOT skip or abbreviate any period. Distribute the topic content EVENLY across all ${periods} periods with progressive complexity.` : `Cover the complete topic within a single period with full detail.
+IMPORTANT: Every single period (Period 1 through Period ${periods}) MUST have COMPLETE content — Hook, Main Teaching with chunks, Closure, and ONE Exit Ticket per period. Do NOT duplicate the Exit Ticket section — each period gets exactly ONE exit ticket. Do NOT add a separate "Final Assessment — Comprehensive Exit Ticket" section. Distribute the topic content EVENLY across all ${periods} periods with progressive complexity.` : `Cover the complete topic within a single ${periodDurationMin}-minute period with full detail.
 
 Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs.`}
 
@@ -519,15 +520,19 @@ Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
 - Mismatch alerts for at-risk groups
-- Exit ticket design across Bloom's levels per period
+- ONE Exit Ticket per period (do NOT duplicate exit tickets)
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
 ${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use CBSE pedagogical approach with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
 
 IMPORTANT: For each VARK learning style group (Visual, Auditory, Read/Write, Kinesthetic), LIST the actual student names that belong to that group based on their assessment data.
 
-IMPORTANT: You MUST complete the ENTIRE lesson plan. Do NOT stop early or truncate. The plan MUST end with the "Learning Outcomes" section that summarizes what students will achieve after completing all ${periods} period(s).
+IMPORTANT: You MUST complete the ENTIRE lesson plan. Do NOT stop early or truncate. The plan MUST end with the "Learning Outcomes" section.
 
-Whenever you use any advanced or technical word (like ZPD, Bloom's Taxonomy, Primacy Effect, Scaffolding, etc.), ALWAYS add a simple "decode" explanation right after it.`,
+IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "📖 Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
+→ **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
+Include terms like: Primacy Effect, Recency Effect, 10-2-10 Chunking Rule, Cognitive Load, Amygdala Filter, Patterning & Meaning, Spaced Repetition, Social Brain, ZPD (Zone of Proximal Development), Scaffolding, Multiple Intelligences (MI), VARK, Bloom's Taxonomy, Formative Check, and any other technical terms used in the plan.
+
+Whenever you use any advanced or technical word in the lesson plan body, add a simple decode inline as well.`,
       "generate",
     );
   };
