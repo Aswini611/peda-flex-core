@@ -1632,10 +1632,10 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         .from("student_assessments")
         .select("id, student_name")
         .eq("student_class", homeworkClass)
-        .eq("section", homeworkSection)
-        .eq("teacher_id", user?.id);
+        .eq("section", homeworkSection);
 
       if (studentError || !students || students.length === 0) {
+        console.error("Student fetch error:", studentError);
         toast.error("No students found in this class/section");
         setIsAssigning(false);
         return;
@@ -1673,7 +1673,6 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       const studentAssignments = students.map((student) => ({
         assignment_id: assignment[0]?.id,
         student_id: student.id,
-        student_name: student.student_name,
         assigned_at: new Date().toISOString(),
         completed: false,
       }));
@@ -1683,8 +1682,13 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         .insert(studentAssignments as any);
 
       if (submissionError) {
-        console.error("Submission error:", submissionError);
-        toast.error("Failed to assign homework to students");
+        console.error("Submission error details:", {
+          message: submissionError.message,
+          code: submissionError.code,
+          details: submissionError.details,
+          hint: submissionError.hint,
+        });
+        toast.error(`Failed to assign homework to students: ${submissionError.message}`);
         setIsAssigning(false);
         return;
       }

@@ -26,3 +26,18 @@ verify_jwt = false
 
 [functions.log-audit]
 verify_jwt = false
+
+[functions.register-student]
+verify_jwt = false
+
+[functions.create-students-batch]
+verify_jwt = false
+
+[functions.generate-mcqs]
+verify_jwt = false
+
+[functions.list-subjects]
+verify_jwt = false
+
+[functions.analyze-test-results]
+verify_jwt = false

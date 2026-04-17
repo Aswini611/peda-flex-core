@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Curative from "./pages/Curative";
@@ -62,6 +63,7 @@ export default function App() {
                     <Route path="/automation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><AutomationWorkflows /></RoleGuard></ProtectedRoute>} />
                     <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
                     <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><Billing /></RoleGuard></ProtectedRoute>} />
+                    <Route path="/register" element={<Register />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </NotificationProvider>
