@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ClipboardCheck, CheckCircle, Clock, BookOpen, Send, Loader2 } from "lucide-react";
+import { ClipboardCheck, CheckCircle, Clock, BookOpen, Send, Loader2, Award } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface HomeworkQuestion {
@@ -15,10 +16,46 @@ interface HomeworkQuestion {
   index: number;
 }
 
+// Extract questions from exit ticket content
+const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => {
+  if (!exitTicketContent) return [];
+  
+  // Remove markdown headers and metadata lines
+  let cleanContent = exitTicketContent
+    .replace(/^###\s*Assessment[\s\S]*?\n/i, '')
+    .replace(/^(📝\s*\d+\.\s*)?Assessment[^\n]*\n/i, '')
+    .replace(/^(Format:|Collection Method:|Success Criteria:|Follow-up:)[^\n]*\n?/gim, '')
+    .replace(/^(Format|Collection|Success|Follow).*$/gm, '')
+    .trim();
+  
+  // Extract numbered questions (1. 2. 3. etc.)
+  const questionPattern = /^\s*\d+\.\s*(.+?)(?=^\s*\d+\.|$)/gm;
+  const questions: string[] = [];
+  let match;
+  
+  while ((match = questionPattern.exec(cleanContent)) !== null) {
+    const question = match[1].trim();
+    if (question && question.length > 0) {
+      questions.push(question);
+    }
+  }
+  
+  // If no numbered questions found, try to extract from bullet points
+  if (questions.length === 0) {
+    const bulletPattern = /^[-*]\s+(.+?)$/gm;
+    while ((match = bulletPattern.exec(cleanContent)) !== null) {
+      questions.push(match[1].trim());
+    }
+  }
+  
+  return questions;
+};
+
 const StudentHomework = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({});
+  const [scores, setScores] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
   // First fetch the student's class/section assignments
@@ -91,11 +128,37 @@ const StudentHomework = () => {
     }));
   };
 
+  const handleScoreChange = (assignmentId: string, value: string) => {
+    // Only allow numbers 0-100
+    const numValue = parseInt(value);
+    if (value === "" || (numValue >= 0 && numValue <= 100)) {
+      setScores((prev) => ({
+        ...prev,
+        [assignmentId]: value,
+      }));
+    }
+  };
+
   const handleSubmit = async (assignmentId: string, questions: HomeworkQuestion[]) => {
     const myAnswers = answers[assignmentId] || {};
+    const score = scores[assignmentId];
+
+    // Validate all questions are answered
     const unanswered = questions.filter((_, i) => !myAnswers[i]?.trim());
     if (unanswered.length > 0) {
       toast.error(`Please answer all ${questions.length} questions before submitting.`);
+      return;
+    }
+
+    // Validate score is provided
+    if (!score || score === "") {
+      toast.error("Please enter a score (0-100) before submitting.");
+      return;
+    }
+
+    const scoreNum = parseInt(score);
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
+      toast.error("Score must be between 0 and 100.");
       return;
     }
 
@@ -106,17 +169,38 @@ const StudentHomework = () => {
         answer: myAnswers[i] || "",
       }));
 
-      const { error } = await supabase.from("homework_submissions").insert({
-        assignment_id: assignmentId,
-        student_id: user!.id,
+      const { error } = await supabase.from("homework_submissions").update({
         answers: answerArray as any,
-      });
+        score: scoreNum,
+        completed: true,
+        completed_at: new Date().toISOString(),
+      }).eq("assignment_id", assignmentId).eq("student_id", user!.id);
 
       if (error) throw error;
-      toast.success("Homework submitted successfully!");
+      toast.success(`✓ Homework submitted!\n✓ Your score: ${scoreNum}%`);
       queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
     } catch (e: any) {
-      toast.error(e.message || "Failed to submit homework");
+      // If update fails (record doesn't exist), try insert
+      try {
+        const answerArray = questions.map((q, i) => ({
+          question: q.question,
+          answer: myAnswers[i] || "",
+        }));
+
+        await supabase.from("homework_submissions").insert({
+          assignment_id: assignmentId,
+          student_id: user!.id,
+          answers: answerArray as any,
+          score: scoreNum,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        });
+
+        toast.success(`✓ Homework submitted!\n✓ Your score: ${scoreNum}%`);
+        queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+      } catch (fallbackError: any) {
+        toast.error(fallbackError.message || "Failed to submit homework");
+      }
     } finally {
       setSubmitting(null);
     }
@@ -141,10 +225,24 @@ const StudentHomework = () => {
   return (
     <div className="space-y-4">
       {assignments.map((assignment: any) => {
-        const questions: HomeworkQuestion[] = (assignment.questions || []).map((q: any, i: number) => ({
-          question: typeof q === "string" ? q : q.question || q.text || `Question ${i + 1}`,
-          index: i,
-        }));
+        // Extract questions from either exit_ticket_content or questions array
+        let questionsArray: HomeworkQuestion[] = [];
+        
+        if (assignment.exit_ticket_content) {
+          // New format: exit ticket content
+          const extractedQs = extractQuestionsFromExitTicket(assignment.exit_ticket_content);
+          questionsArray = extractedQs.map((q, i) => ({
+            question: q,
+            index: i,
+          }));
+        } else if (assignment.questions) {
+          // Old format: questions array
+          questionsArray = (assignment.questions || []).map((q: any, i: number) => ({
+            question: typeof q === "string" ? q : q.question || q.text || `Question ${i + 1}`,
+            index: i,
+          }));
+        }
+
         const isSubmitted = submittedIds.has(assignment.id);
         const submission = (submissions || []).find((s: any) => s.assignment_id === assignment.id);
 
@@ -196,7 +294,7 @@ const StudentHomework = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {questions.map((q, idx) => (
+              {questionsArray.map((q, idx) => (
                 <div key={idx} className="space-y-2">
                   <div className="flex items-start gap-2">
                     <span className="text-xs bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5 font-semibold">
@@ -222,20 +320,53 @@ const StudentHomework = () => {
                 </div>
               ))}
 
-              {!isSubmitted && (
-                <div className="flex justify-end pt-2">
-                  <Button
-                    onClick={() => handleSubmit(assignment.id, questions)}
-                    disabled={submitting === assignment.id}
-                    className="gap-2"
-                  >
-                    {submitting === assignment.id ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
-                    ) : (
-                      <><Send className="h-4 w-4" /> Submit Homework</>
-                    )}
-                  </Button>
+              {isSubmitted ? (
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">
+                      Your Score: {submission?.score || 0}%
+                    </h4>
+                  </div>
+                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                    Submitted on {new Date(submission?.completed_at).toLocaleString()}
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <label className="text-xs font-semibold text-blue-900 dark:text-blue-100 uppercase tracking-wider mb-2 block flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      Your Score
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="Enter score 0-100"
+                        value={scores[assignment.id] || ""}
+                        onChange={(e) => handleScoreChange(assignment.id, e.target.value)}
+                        className="text-lg"
+                      />
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">%</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      onClick={() => handleSubmit(assignment.id, questionsArray)}
+                      disabled={submitting === assignment.id}
+                      className="gap-2"
+                    >
+                      {submitting === assignment.id ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
+                      ) : (
+                        <><Send className="h-4 w-4" /> Submit Homework</>
+                      )}
+                    </Button>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

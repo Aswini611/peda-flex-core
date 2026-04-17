@@ -222,15 +222,33 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
     
     const periodContent = periodMatch[0];
     
-    // Find Assessment section within period
-    let exitTicketRegex = /###\s*Assessment[\s\S]*?(?=###|$)/i;
-    let exitTicketMatch = periodContent.match(exitTicketRegex);
+    // First try: Look for "Evaluate Phase" section (7th section)
+    let evaluateRegex = /###\s*(?:\d+\.\s*)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i;
+    let exitTicketMatch = periodContent.match(evaluateRegex);
+    
+    // If Evaluate Phase not found, try Assessment section
+    if (!exitTicketMatch) {
+      evaluateRegex = /###\s*Assessment[\s\S]*?(?=###|$)/i;
+      exitTicketMatch = periodContent.match(evaluateRegex);
+    }
+    
+    // If Assessment not found, try to find any section with question-like content
+    if (!exitTicketMatch) {
+      evaluateRegex = /###\s*(?:\d+\.\s*)?(?:Assessment|Exit Ticket|Evaluation|Questions)[\s\S]*?(?=###|$)/i;
+      exitTicketMatch = periodContent.match(evaluateRegex);
+    }
     
     return exitTicketMatch ? exitTicketMatch[0].trim() : "";
   } else {
     // Single-period: Extract from "📝 X. Assessment — Exit Ticket" section
     let exitTicketRegex = /📝\s*\d+\.\s*Assessment[\s\S]*?(?=📝\s*\d+\.|##|$)/i;
     let exitTicketMatch = cleanContent.match(exitTicketRegex);
+    
+    // Fallback: Try Evaluate Phase pattern
+    if (!exitTicketMatch) {
+      exitTicketRegex = /###\s*(?:\d+\.\s*)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i;
+      exitTicketMatch = cleanContent.match(exitTicketRegex);
+    }
     
     // Fallback: Try ### Assessment pattern
     if (!exitTicketMatch) {
@@ -299,13 +317,17 @@ const extractPeriodInfo = (lessonContent: string, periodNumber: number): { title
   const isMultiPeriod = /##\s*📅\s*PERIOD\s+\d+/i.test(cleanContent);
   
   if (isMultiPeriod) {
-    // Extract from "## 📅 PERIOD X — Title"
+    // Extract from "## 📅 PERIOD X — Title" or "## 📅 PERIOD X: Title"
     const periodRegex = new RegExp(
-      `##\\s*📅\\s*PERIOD\\s+${periodNumber}\\s*[—-]\\s*([^\\n]+)`,
+      `##\\s*📅\\s*PERIOD\\s+${periodNumber}\\s*(?:[—:-]\\s*)?([^\\n]+)`,
       "i"
     );
     const matches = cleanContent.match(periodRegex);
-    const title = matches ? matches[1].trim() : `Period ${periodNumber}`;
+    let title = matches ? matches[1].trim() : `Period ${periodNumber}`;
+    
+    // Clean up title - remove extra formatting
+    title = title.replace(/\s*\(\d+\s*min(?:utes?)?\s*\).*/i, '').trim();
+    
     return { title, topic: title };
   } else {
     // Single-period: Extract main topic from title or first section
