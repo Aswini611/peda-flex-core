@@ -1337,6 +1337,28 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
     enabled: !!homeworkClass && !!homeworkSection && !!user?.id,
   });
 
+  // Fetch existing in-class assignments for this lesson/class/section
+  const { data: existingInClassAssignments = [] } = useQuery({
+    queryKey: ["in-class-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id],
+    queryFn: async () => {
+      if (!selectedLessonId || !homeworkClass || !homeworkSection || !user?.id) return [];
+      const { data, error } = await supabase
+        .from("homework_assignments")
+        .select("*")
+        .eq("lesson_id", selectedLessonId)
+        .eq("class_level", homeworkClass)
+        .eq("section", homeworkSection)
+        .eq("assignment_type", "in-class")
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching in-class assignments:", error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!selectedLessonId && !!homeworkClass && !!homeworkSection && !!user?.id,
+  });
+
   const selectedLesson = generatedLessons.find((lesson) => lesson.id === selectedLessonId) || null;
 
   // Extract available periods from selected lesson
@@ -1368,6 +1390,11 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
   // Extract questions from exit ticket
   const extractedQuestions = extractQuestionsFromExitTicket(selectedExitTicket);
+
+  // Find existing in-class assignment for selected period
+  const existingInClassAssignment = selectedPeriod && existingInClassAssignments
+    ? existingInClassAssignments.find((a: any) => a.period_number === parseInt(selectedPeriod))
+    : null;
 
   // Initialize edited questions when exit ticket changes
   useEffect(() => {
@@ -1839,12 +1866,30 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                             </div>
 
                             {/* Assignment Buttons */}
+                            {existingInClassAssignment && (
+                              <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg mb-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
+                                      <Check className="h-5 w-5" />
+                                      In-Class Assignment Already Created
+                                    </h4>
+                                    <div className="mt-2 space-y-1 text-sm text-emerald-800 dark:text-emerald-200">
+                                      <p><span className="font-medium">Assigned on:</span> {new Date(existingInClassAssignment.assigned_at).toLocaleString()}</p>
+                                      <p><span className="font-medium">Class Performance Score:</span> <span className="font-bold text-lg">{existingInClassAssignment.class_performance_score}%</span></p>
+                                      <p><span className="font-medium">Topic:</span> {existingInClassAssignment.topic}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex gap-3 flex-col sm:flex-row pt-3">
                               <Button
                                 variant="outline"
                                 className="gap-2 flex-1"
                                 onClick={handleAssignInClass}
-                                disabled={isAssigning || isEditingQuestions}
+                                disabled={isAssigning || isEditingQuestions || !!existingInClassAssignment}
                               >
                                 <Users className="h-4 w-4" />
                                 Assign In Class
