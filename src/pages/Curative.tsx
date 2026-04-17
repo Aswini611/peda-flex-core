@@ -1403,11 +1403,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
     setIsAssigning(true);
     try {
-      // Extract questions from exit ticket
-      const questionsArray = extractQuestionsFromExitTicket(selectedExitTicket || "");
-
       // Save in-class assignment with performance score
-      const { error } = await supabase.from("homework_assignments").insert({
+      const assignmentData = {
         teacher_id: user?.id,
         lesson_id: selectedLesson.id,
         class_level: homeworkClass,
@@ -1417,22 +1414,30 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         topic: selectedPeriodInfo.topic,
         subject: selectedLesson.subject || selectedLesson.curriculum || "General",
         exit_ticket_content: selectedExitTicket,
-        questions: questionsArray,
         assignment_type: "in-class",
         assigned_at: new Date().toISOString(),
         class_performance_score: score,
-      } as any);
+      };
 
-      if (error) throw error;
+      console.log("Inserting assignment:", assignmentData);
+      
+      const { data, error } = await supabase
+        .from("homework_assignments")
+        .insert([assignmentData] as any);
 
-      toast.success(`Assignment created for Period ${selectedPeriod} (In Class)\nClass Performance Score: ${score}%\nThis will be used for analytics and performance tracking.`);
+      if (error) {
+        console.error("Supabase error:", error);
+        throw new Error(error.message || "Failed to create assignment");
+      }
+
+      toast.success(`✓ Assignment created for Period ${selectedPeriod} (In Class)\n✓ Class Performance Score: ${score}%\n✓ This will be used for analytics and performance tracking.`);
       setShowClassScoreModal(false);
       setClassPerformanceScore("");
       setAssignmentMode("none");
       setSelectedPeriod("");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error assigning in-class:", err);
-      toast.error("Failed to create in-class assignment");
+      toast.error(`Failed to create assignment: ${err.message || "Unknown error"}`);
     } finally {
       setIsAssigning(false);
     }
@@ -1443,9 +1448,6 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
     setIsAssigning(true);
 
     try {
-      // Extract questions from exit ticket
-      const questionsArray = extractQuestionsFromExitTicket(selectedExitTicket || "");
-
       // Get all students in the class/section
       const { data: students, error: studentError } = await supabase
         .from("student_assessments")
@@ -1461,26 +1463,28 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       }
 
       // Create homework assignment for at-home with full details
+      const assignmentData = {
+        teacher_id: user?.id,
+        lesson_id: selectedLesson.id,
+        class_level: homeworkClass,
+        section: homeworkSection,
+        period_number: parseInt(selectedPeriod),
+        period_title: selectedPeriodInfo.title,
+        topic: selectedPeriodInfo.topic,
+        subject: selectedLesson.subject || selectedLesson.curriculum || "General",
+        exit_ticket_content: selectedExitTicket,
+        assignment_type: "at-home",
+        assigned_at: new Date().toISOString(),
+        assigned_student_count: students.length,
+      };
+
       const { data: assignment, error: assignmentError } = await supabase
         .from("homework_assignments")
-        .insert({
-          teacher_id: user?.id,
-          lesson_id: selectedLesson.id,
-          class_level: homeworkClass,
-          section: homeworkSection,
-          period_number: parseInt(selectedPeriod),
-          period_title: selectedPeriodInfo.title,
-          topic: selectedPeriodInfo.topic,
-          subject: selectedLesson.subject || selectedLesson.curriculum || "General",
-          exit_ticket_content: selectedExitTicket,
-          questions: questionsArray,
-          assignment_type: "at-home",
-          assigned_at: new Date().toISOString(),
-          assigned_student_count: students.length,
-        } as any)
+        .insert([assignmentData] as any)
         .select();
 
-      if (assignmentError || !assignment) {
+      if (assignmentError || !assignment || assignment.length === 0) {
+        console.error("Assignment error:", assignmentError);
         toast.error("Failed to create homework assignment");
         setIsAssigning(false);
         return;
@@ -1495,20 +1499,25 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         completed: false,
       }));
 
-      await supabase.from("homework_submissions").insert(studentAssignments as any);
+      const { error: submissionError } = await supabase
+        .from("homework_submissions")
+        .insert(studentAssignments as any);
+
+      if (submissionError) {
+        console.error("Submission error:", submissionError);
+        toast.error("Failed to assign homework to students");
+        setIsAssigning(false);
+        return;
+      }
 
       toast.success(
-        `Period ${selectedPeriod} homework assigned to ${students.length} students.\n` +
-        `Subject: ${selectedLesson.subject || selectedLesson.curriculum || "General"}\n` +
-        `Topic: ${selectedPeriodInfo.topic}\n` +
-        `Questions: ${questionsArray.length}\n` +
-        `Submission type: At Home`
+        `✓ Period ${selectedPeriod} homework assigned to ${students.length} students\n✓ Subject: ${selectedLesson.subject || selectedLesson.curriculum || "General"}\n✓ Topic: ${selectedPeriodInfo.topic}`
       );
       setAssignmentMode("none");
       setSelectedPeriod("");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error assigning at-home:", err);
-      toast.error("Failed to assign homework to students");
+      toast.error(`Failed to assign homework: ${err.message || "Unknown error"}`);
     } finally {
       setIsAssigning(false);
     }
