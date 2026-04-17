@@ -1337,6 +1337,22 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
     enabled: !!homeworkClass && !!homeworkSection && !!user?.id,
   });
 
+  // Fetch student count for homework assignment
+  const { data: homeworkStudentCount = 0 } = useQuery({
+    queryKey: ["homework-student-count", homeworkClass, homeworkSection, user?.id],
+    queryFn: async () => {
+      if (!homeworkClass || !homeworkSection || !user?.id) return 0;
+      const { count } = await supabase
+        .from("student_assessments")
+        .select("id", { count: "exact", head: true })
+        .eq("student_class", homeworkClass)
+        .eq("section", homeworkSection)
+        .eq("teacher_id", user.id);
+      return count || 0;
+    },
+    enabled: !!homeworkClass && !!homeworkSection && !!user?.id,
+  });
+
   // Fetch existing in-class assignments for this lesson/class/section
   const { data: existingInClassAssignments = [] } = useQuery({
     queryKey: ["in-class-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id],
@@ -1411,6 +1427,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
   const handleAssignInClass = async () => {
     if (!selectedLesson || !selectedPeriod) return;
+    // Set assignment mode to in-class
+    setAssignmentMode("in-class");
     // Open modal to collect class performance score
     setShowClassScoreModal(true);
     setClassPerformanceScore("");
@@ -1472,6 +1490,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
   const handleAssignAtHome = async () => {
     if (!selectedLesson || !selectedPeriod) return;
+    setAssignmentMode("at-home");
     setIsAssigning(true);
 
     try {
@@ -1755,6 +1774,13 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
           {/* Action Buttons */}
           {selectedLesson && (
             <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  {homeworkStudentCount} student{homeworkStudentCount !== 1 ? "s" : ""} found • Homework will be assigned to this group
+                </span>
+              </div>
+
               {selectedLesson.periods_count && selectedLesson.periods_count > 0 && (
                 <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
                   <Clock className="h-4 w-4 text-primary" />
@@ -1889,7 +1915,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                                 variant="outline"
                                 className="gap-2 flex-1"
                                 onClick={handleAssignInClass}
-                                disabled={isAssigning || isEditingQuestions || !!existingInClassAssignment}
+                                disabled={isAssigning || isEditingQuestions || !!existingInClassAssignment || assignmentMode === "at-home"}
                               >
                                 <Users className="h-4 w-4" />
                                 Assign In Class
@@ -1897,7 +1923,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                               <Button
                                 className="gap-2 flex-1"
                                 onClick={handleAssignAtHome}
-                                disabled={isAssigning || isEditingQuestions}
+                                disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class"}
                               >
                                 <Home className="h-4 w-4" />
                                 Assign At Home
