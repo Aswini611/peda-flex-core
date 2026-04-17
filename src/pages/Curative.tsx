@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -205,55 +205,96 @@ const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; ti
 
 // ─── Extract exit ticket for a specific period ────────────────────────
 const extractExitTicket = (lessonContent: string, periodNumber: number): string => {
+  if (!lessonContent) {
+    console.log("No lesson content provided");
+    return "";
+  }
+
   const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
+  console.log("Extracting exit ticket for period:", periodNumber);
+  console.log("Lesson content length:", cleanContent.length);
   
   // Check if multi-period or single-period format
   const isMultiPeriod = /##\s*📅\s*PERIOD\s+\d+/i.test(cleanContent);
+  console.log("Is multi-period format:", isMultiPeriod);
   
   if (isMultiPeriod) {
-    // Multi-period: Extract from "## 📅 PERIOD X" section
+    // Multi-period: Extract from "## 📅 PERIOD X" section - be more flexible with the ending
     let periodRegex = new RegExp(
-      `##\\s*📅\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*📅|##\\s*[A-Z]|BBL|$)`,
+      `##\\s*📅\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*📅|$)`,
       "i"
     );
     let periodMatch = cleanContent.match(periodRegex);
     
-    if (!periodMatch) return "";
+    console.log("Period match found:", !!periodMatch);
+    
+    if (!periodMatch) {
+      // Try alternate period format without emoji
+      periodRegex = new RegExp(
+        `##\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*PERIOD|##|$)`,
+        "i"
+      );
+      periodMatch = cleanContent.match(periodRegex);
+      console.log("Alternate period match found:", !!periodMatch);
+    }
+    
+    if (!periodMatch) {
+      console.log("No period match found");
+      return "";
+    }
     
     const periodContent = periodMatch[0];
+    console.log("Period content length:", periodContent.length);
+    console.log("Period content (first 500 chars):", periodContent.substring(0, 500));
     
-    // First try: Look for "Evaluate Phase" section (7th section)
-    let evaluateRegex = /###\s*(?:\d+\.\s*)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i;
-    let exitTicketMatch = periodContent.match(evaluateRegex);
+    // Log all section headers found in period
+    const headers = periodContent.match(/###\s*[^\n]+/g);
+    console.log("Section headers found:", headers);
     
-    // If Evaluate Phase not found, try Assessment section
-    if (!exitTicketMatch) {
-      evaluateRegex = /###\s*Assessment[\s\S]*?(?=###|$)/i;
-      exitTicketMatch = periodContent.match(evaluateRegex);
+    // First try: Look for "7. Assessment — Exit Ticket" or "📝 7." section (Evaluate Phase)
+    let exitTicketMatch = null;
+    
+    // Try with various patterns for section 7
+    const evaluatePatterns = [
+      /###\s*📝?\s*7\.?\s*Assessment[\s\S]*?(?=###|$)/i,
+      /###\s*📝?\s*7\.?\s*(?:Assessment|Evaluate)[\s\S]*?(?=###|$)/i,
+      /###\s*📝\s*Assessment.*?Evaluate.*?Phase[\s\S]*?(?=###|$)/i,
+      /###\s*(?:\d+\.?\s+)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i,
+      /###\s*Assessment.*?Exit Ticket[\s\S]*?(?=###|$)/i,
+      /###\s*\d+\.[\s\S]*?Exit Ticket[\s\S]*?(?=###|$)/i,
+    ];
+    
+    for (const pattern of evaluatePatterns) {
+      exitTicketMatch = periodContent.match(pattern);
+      if (exitTicketMatch) {
+        console.log("Found exit ticket with pattern:", pattern);
+        break;
+      }
     }
     
-    // If Assessment not found, try to find any section with question-like content
-    if (!exitTicketMatch) {
-      evaluateRegex = /###\s*(?:\d+\.\s*)?(?:Assessment|Exit Ticket|Evaluation|Questions)[\s\S]*?(?=###|$)/i;
-      exitTicketMatch = periodContent.match(evaluateRegex);
+    const result = exitTicketMatch ? exitTicketMatch[0].trim() : "";
+    console.log("Exit ticket result length:", result.length);
+    if (result.length === 0) {
+      console.log("No matching section found. Available content:", periodContent);
     }
-    
-    return exitTicketMatch ? exitTicketMatch[0].trim() : "";
+    return result;
   } else {
-    // Single-period: Extract from "📝 X. Assessment — Exit Ticket" section
-    let exitTicketRegex = /📝\s*\d+\.\s*Assessment[\s\S]*?(?=📝\s*\d+\.|##|$)/i;
-    let exitTicketMatch = cleanContent.match(exitTicketRegex);
+    // Single-period: Extract from various assessment patterns
+    let exitTicketMatch = null;
     
-    // Fallback: Try Evaluate Phase pattern
-    if (!exitTicketMatch) {
-      exitTicketRegex = /###\s*(?:\d+\.\s*)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i;
-      exitTicketMatch = cleanContent.match(exitTicketRegex);
-    }
+    const singlePeriodPatterns = [
+      /📝\s*\d+\.\s*Assessment[\s\S]*?(?=📝\s*\d+\.|##|$)/i,
+      /###\s*(?:\d+\.?\s+)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i,
+      /###\s*Assessment[\s\S]*?(?=###|$)/i,
+      /###\s*(?:\d+\.?\s+)?(?:Assessment|Exit Ticket|Evaluation)[\s\S]*?(?=###|$)/i,
+    ];
     
-    // Fallback: Try ### Assessment pattern
-    if (!exitTicketMatch) {
-      exitTicketRegex = /###\s*Assessment[\s\S]*?(?=###|$)/i;
-      exitTicketMatch = cleanContent.match(exitTicketRegex);
+    for (const pattern of singlePeriodPatterns) {
+      exitTicketMatch = cleanContent.match(pattern);
+      if (exitTicketMatch) {
+        console.log("Found exit ticket with pattern:", pattern);
+        break;
+      }
     }
     
     return exitTicketMatch ? exitTicketMatch[0].trim() : "";
@@ -677,43 +718,111 @@ const Curative = () => {
 TOTAL PERIODS: ${periods}
 PERIOD DURATION: ${periodDurationMin} minutes each
 
-${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divided into exactly ${periods} PERIODS. Each period is ${periodDurationMin} minutes. Structure the ENTIRE plan period-by-period as follows:
+${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divided into exactly ${periods} PERIODS. Each period is ${periodDurationMin} minutes. 
+
+MANDATORY SECTION STRUCTURE FOR EVERY PERIOD (do NOT deviate):
+Each period MUST have EXACTLY these 8 sections in this order:
+
+### 📋 1. Learning Objectives
+- Clear, measurable objectives for THIS period using Bloom's taxonomy
+
+### 🎣 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
+- Engaging opening that captures attention
+- X = approximately 20% of period duration
+
+### 📚 3. Main Teaching — Chunked Delivery (10-2-10 Rule)
+- Chunk 1: Input → 2-min Processing → Application (with 3-tier differentiation)
+- Chunk 2: Input → 2-min Processing → Application (with 3-tier differentiation)
+- Chunk 3: (if time permits) Input → 2-min Processing → Application
+- Include VARK-aligned activities for Visual, Auditory, Read/Write, Kinesthetic learners
+
+### 🎯 4. Activities — Differentiated Group Work ([X] minutes)
+- Group-based collaborative activities
+- 3-tier tasks: Support/Core/Extension for mixed ability groups
+- X = approximately 30-40% of period duration
+
+### ✅ 5. Assessment — Quick Check ([X] minutes)
+- Formative assessment to check understanding
+- Quick quiz, observation checklist, or interactive check
+- X = approximately 10% of period duration
+
+### 🔄 6. Closure — Revision Activity (Last [X] minutes — RECENCY EFFECT)
+- Summarize key learning points
+- Quick review game, exit slip preview, or concept mapping
+- X = approximately 10% of period duration
+
+### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+- 3-5 NUMBERED questions (1. 2. 3. etc.) that assess the key learning from this period
+- Questions should be clear, specific, and answerable in 5 minutes
+- Format: Simple numbered list with clear question text
+- Example:
+  1. Define [key term]
+  2. Give an example of [concept]
+  3. Explain how [concept A] relates to [concept B]
+  4. Solve [sample problem]
+  5. What would happen if [scenario]?
+
+### 📊 8. BBL Compliance Checklist
+- Primacy Effect applied: ✓
+- Recency Effect applied: ✓
+- Cognitive Load managed: ✓
+- Social Brain activated: ✓
+- VARK differentiation: ✓
+- 3-tier scaffolding: ✓
 
 ---
-## 📝 Overall Learning Objectives
-(3-5 clear, measurable objectives using Bloom's taxonomy covering the entire ${periods}-period unit)
+
+NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
+
+## 📝 Overall Learning Objectives (for the complete unit across all periods)
+(3-5 cumulative objectives for the entire ${periods}-period lesson)
 
 ---
-## 📅 PERIOD 1 — [Sub-topic Title] (${periodDurationMin} min)
-### Hook / Introduction (First 10 min — PRIMACY EFFECT)
-### Main Teaching — Chunked Delivery (10-2-10 Rule)
-  - Chunk 1: Input → Processing → Application (with 3-tier differentiation: Support/Core/Extension)
-  - Chunk 2: Input → Processing → Application (with 3-tier differentiation)
-### Closure / Revision (Last 5 min — RECENCY EFFECT)
-### Assessment — Exit Ticket for Period 1
+## 📅 PERIOD 1 — [Sub-topic Title]
+[Apply the 8-section structure above]
 
-## 📅 PERIOD 2 — [Sub-topic Title] (${periodDurationMin} min)
-(Same full structure as Period 1, building on previous period)
+---
+## 📅 PERIOD 2 — [Sub-topic Title]
+[Apply the 8-section structure above, building on Period 1]
 
 ... repeat for ALL ${periods} periods ...
 
-## 📅 PERIOD ${periods} — [Sub-topic Title] (${periodDurationMin} min)
-(Final period with comprehensive review and summative assessment)
+---
+## 📅 PERIOD ${periods} — [Sub-topic Title]
+[Apply the 8-section structure above with comprehensive review]
 
 ---
-## BBL Checklist
-## Learning Outcomes (What students can do after completing all ${periods} periods)
+## Learning Outcomes
+(What students can do after completing all ${periods} periods)
+
 ---
 
-IMPORTANT: Every single period (Period 1 through Period ${periods}) MUST have COMPLETE content — Hook, Main Teaching with chunks, Closure, and ONE Exit Ticket per period. Do NOT duplicate the Exit Ticket section — each period gets exactly ONE exit ticket. Do NOT add a separate "Final Assessment — Comprehensive Exit Ticket" section. Distribute the topic content EVENLY across all ${periods} periods with progressive complexity.` : `Cover the complete topic within a single ${periodDurationMin}-minute period with full detail.
+CRITICAL REQUIREMENTS:
+✓ EVERY period (1 through ${periods}) MUST have ALL 8 sections
+✓ Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
+✓ Period timings MUST total exactly ${periodDurationMin} minutes per period
+✓ Content must be distributed evenly across ${periods} periods with progressive complexity
+✓ Each period builds on previous learning
+✓ Exit tickets must assess THAT period's specific learning objectives
+` : `Cover the complete topic within a single ${periodDurationMin}-minute period with full detail.
 
-Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs.`}
+Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs.
+
+Apply the same 8-section structure for the single period:
+### 📋 1. Learning Objectives
+### 🎣 2. Introduction — Hook Activity
+### 📚 3. Main Teaching — Chunked Delivery
+### 🎯 4. Activities — Differentiated Group Work
+### ✅ 5. Assessment — Quick Check
+### 🔄 6. Closure — Revision Activity
+### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+[Include 3-5 NUMBERED exit ticket questions]
+### 📊 8. BBL Compliance Checklist`}
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
-- 6 Lesson Plan Directives: Opener, Core Delivery, Group Activity, Scaffolding Level, Assessment Check, Teacher Tools
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
 - Mismatch alerts for at-risk groups
-- ONE Exit Ticket per period (do NOT duplicate exit tickets)
+- ONE numbered Exit Ticket (Section 7 - Evaluate Phase) per period with 3-5 clear questions
 - Read the textbook content for this chapter/unit and align all activities to the curriculum
 ${selectedCurriculum === "ib" ? "- Use Inquiry-Based methodology: K-W-L structure, Socratic questioning, transdisciplinary themes" : ""}${selectedCurriculum === "cbse" ? "- Use CBSE pedagogical approach with NCERT alignment" : ""}${selectedCurriculum === "cambridge" ? "- Use Project-Based Learning: real-world tasks, success criteria, practical experiments" : ""}${selectedCurriculum === "ai" ? "- Auto-detect the best pedagogical approach based on the subject, class level, and assessment data" : ""}
 
@@ -1321,6 +1430,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
   const [editedQuestions, setEditedQuestions] = useState<string[]>([]);
   const [showClassScoreModal, setShowClassScoreModal] = useState(false);
   const [classPerformanceScore, setClassPerformanceScore] = useState<number | "">("");
+  const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
+  const [assignmentConfirmationData, setAssignmentConfirmationData] = useState<any>(null);
 
   const { data: homeworkSections = [] } = useQuery({
     queryKey: ["homework-sections", homeworkClass, user?.id],
@@ -1578,9 +1689,23 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         return;
       }
 
-      toast.success(
-        `✓ Period ${selectedPeriod} homework assigned to ${students.length} students\n✓ Subject: ${selectedLesson.subject || selectedLesson.curriculum || "General"}\n✓ Topic: ${selectedPeriodInfo.topic}`
-      );
+      // Store confirmation data to show detailed dialog
+      const questionsArray = extractedQuestions.length > 0 
+        ? extractedQuestions 
+        : ["Questions from exit ticket"];
+      
+      setAssignmentConfirmationData({
+        period: selectedPeriod,
+        periodTitle: selectedPeriodInfo.title,
+        topic: selectedPeriodInfo.topic,
+        subject: selectedLesson.subject || selectedLesson.curriculum || "General",
+        studentCount: students.length,
+        studentList: students.map((s: any) => s.student_name),
+        questionCount: questionsArray.length,
+        questions: questionsArray,
+      });
+      
+      setShowAssignmentConfirmation(true);
       setAssignmentMode("none");
       setSelectedPeriod("");
     } catch (err: any) {
@@ -1955,10 +2080,13 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                           </>
                         ) : selectedExitTicket ? (
                           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg mb-4">
-                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                              Could not extract questions from exit ticket. Showing raw content below:
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200 font-semibold mb-2">
+                              Could not extract questions from exit ticket. Showing raw content:
                             </p>
-                            <div className="prose prose-sm dark:prose-invert max-w-none mt-3">
+                            <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-3">
+                              Check browser console (F12) for extraction debug logs
+                            </p>
+                            <div className="prose prose-sm dark:prose-invert max-w-none mt-3 max-h-96 overflow-y-auto">
                               <ReactMarkdown components={MarkdownComponents}>
                                 {selectedExitTicket}
                               </ReactMarkdown>
@@ -1967,8 +2095,14 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                         ) : (
                           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                              Loading exit ticket content... If content doesn't appear, please check the lesson content or try selecting another period.
+                              Loading exit ticket content... If content doesn't appear:
                             </p>
+                            <ul className="text-xs text-yellow-700 dark:text-yellow-300 mt-2 space-y-1">
+                              <li>• Check browser console (F12) for error details</li>
+                              <li>• Verify lesson plan was saved correctly</li>
+                              <li>• Try selecting a different period</li>
+                              <li>• Check the actual lesson content structure</li>
+                            </ul>
                           </div>
                         )}
                       </CardContent>
@@ -2087,6 +2221,104 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                   Assign & Save Score
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assignment Confirmation Dialog */}
+      <Dialog open={showAssignmentConfirmation} onOpenChange={setShowAssignmentConfirmation}>
+        <DialogContent className="max-w-2xl max-h-96 overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <CheckCircle className="h-6 w-6 text-emerald-600" />
+              Homework Successfully Assigned!
+            </DialogTitle>
+          </DialogHeader>
+          
+          {assignmentConfirmationData && (
+            <div className="space-y-6">
+              {/* Assignment Summary */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Period</p>
+                  <p className="text-lg font-bold text-foreground">{assignmentConfirmationData.period}</p>
+                  <p className="text-sm text-muted-foreground">{assignmentConfirmationData.periodTitle}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Topic</p>
+                  <p className="text-sm font-semibold text-foreground">{assignmentConfirmationData.topic}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Subject</p>
+                  <p className="text-sm font-semibold text-foreground">{assignmentConfirmationData.subject}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Questions</p>
+                  <p className="text-lg font-bold text-primary">{assignmentConfirmationData.questionCount}</p>
+                </div>
+              </div>
+
+              {/* Students List */}
+              <div>
+                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Assigned to {assignmentConfirmationData.studentCount} Students
+                </h4>
+                <div className="grid grid-cols-2 gap-2 p-3 bg-muted/50 rounded-lg max-h-40 overflow-y-auto">
+                  {assignmentConfirmationData.studentList.map((studentName: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-foreground">{studentName}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Questions Preview */}
+              <div>
+                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  Questions Students Will Answer
+                </h4>
+                <div className="space-y-2 p-3 bg-muted/50 rounded-lg max-h-40 overflow-y-auto">
+                  {assignmentConfirmationData.questions.slice(0, 5).map((question: string, idx: number) => (
+                    <div key={idx} className="text-sm">
+                      <span className="font-semibold text-primary">{idx + 1}.</span>
+                      <span className="text-foreground ml-2">{question}</span>
+                    </div>
+                  ))}
+                  {assignmentConfirmationData.questions.length > 5 && (
+                    <p className="text-xs text-muted-foreground italic">
+                      ...and {assignmentConfirmationData.questions.length - 5} more question(s)
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Info Message */}
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                <p className="text-sm text-emerald-900 dark:text-emerald-100">
+                  ✓ These questions will appear in each student's homework with full details (Topic, Period, Subject)
+                </p>
+                <p className="text-xs text-emerald-800 dark:text-emerald-200 mt-1">
+                  Students will answer all questions and enter their test score before submission.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setShowAssignmentConfirmation(false);
+                setAssignmentConfirmationData(null);
+                toast.success("✓ Homework assignment complete!");
+              }}
+              className="gap-2"
+            >
+              <Check className="h-4 w-4" />
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
