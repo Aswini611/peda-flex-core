@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -1296,6 +1297,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isEditingQuestions, setIsEditingQuestions] = useState(false);
   const [editedQuestions, setEditedQuestions] = useState<string[]>([]);
+  const [showClassScoreModal, setShowClassScoreModal] = useState(false);
+  const [classPerformanceScore, setClassPerformanceScore] = useState<number | "">("");
 
   const { data: homeworkSections = [] } = useQuery({
     queryKey: ["homework-sections", homeworkClass, user?.id],
@@ -1381,24 +1384,50 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
   const handleAssignInClass = async () => {
     if (!selectedLesson || !selectedPeriod) return;
+    // Open modal to collect class performance score
+    setShowClassScoreModal(true);
+    setClassPerformanceScore("");
+  };
+
+  const handleSaveClassAssignment = async () => {
+    if (!selectedLesson || !selectedPeriod || classPerformanceScore === "") {
+      toast.error("Please enter a class performance score");
+      return;
+    }
+
+    const score = typeof classPerformanceScore === "string" ? parseFloat(classPerformanceScore) : classPerformanceScore;
+    if (isNaN(score) || score < 0 || score > 100) {
+      toast.error("Please enter a valid score between 0 and 100");
+      return;
+    }
+
     setIsAssigning(true);
-    
     try {
-      // Save in-class assignment with success tracking
-      await supabase.from("homework_assignments").insert({
+      // Extract questions from exit ticket
+      const questionsArray = extractQuestionsFromExitTicket(selectedExitTicket || "");
+
+      // Save in-class assignment with performance score
+      const { error } = await supabase.from("homework_assignments").insert({
         teacher_id: user?.id,
         lesson_id: selectedLesson.id,
         class_level: homeworkClass,
         section: homeworkSection,
         period_number: parseInt(selectedPeriod),
         period_title: selectedPeriodInfo.title,
+        topic: selectedPeriodInfo.topic,
+        subject: selectedLesson.subject || selectedLesson.curriculum || "General",
         exit_ticket_content: selectedExitTicket,
+        questions: questionsArray,
         assignment_type: "in-class",
         assigned_at: new Date().toISOString(),
-        success_percentage: 0,
+        class_performance_score: score,
       } as any);
 
-      toast.success(`Assignment created for Period ${selectedPeriod} (In Class) - Track success percentage`);
+      if (error) throw error;
+
+      toast.success(`Assignment created for Period ${selectedPeriod} (In Class)\nClass Performance Score: ${score}%\nThis will be used for analytics and performance tracking.`);
+      setShowClassScoreModal(false);
+      setClassPerformanceScore("");
       setAssignmentMode("none");
       setSelectedPeriod("");
     } catch (err) {
@@ -1414,6 +1443,9 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
     setIsAssigning(true);
 
     try {
+      // Extract questions from exit ticket
+      const questionsArray = extractQuestionsFromExitTicket(selectedExitTicket || "");
+
       // Get all students in the class/section
       const { data: students, error: studentError } = await supabase
         .from("student_assessments")
@@ -1428,7 +1460,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         return;
       }
 
-      // Create homework assignment for at-home
+      // Create homework assignment for at-home with full details
       const { data: assignment, error: assignmentError } = await supabase
         .from("homework_assignments")
         .insert({
@@ -1438,7 +1470,10 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
           section: homeworkSection,
           period_number: parseInt(selectedPeriod),
           period_title: selectedPeriodInfo.title,
+          topic: selectedPeriodInfo.topic,
+          subject: selectedLesson.subject || selectedLesson.curriculum || "General",
           exit_ticket_content: selectedExitTicket,
+          questions: questionsArray,
           assignment_type: "at-home",
           assigned_at: new Date().toISOString(),
           assigned_student_count: students.length,
@@ -1451,9 +1486,9 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         return;
       }
 
-      // Assign to all students
+      // Assign to all students with full homework details
       const studentAssignments = students.map((student) => ({
-        homework_assignment_id: assignment[0]?.id,
+        assignment_id: assignment[0]?.id,
         student_id: student.id,
         student_name: student.student_name,
         assigned_at: new Date().toISOString(),
@@ -1464,7 +1499,9 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
       toast.success(
         `Period ${selectedPeriod} homework assigned to ${students.length} students.\n` +
+        `Subject: ${selectedLesson.subject || selectedLesson.curriculum || "General"}\n` +
         `Topic: ${selectedPeriodInfo.topic}\n` +
+        `Questions: ${questionsArray.length}\n` +
         `Submission type: At Home`
       );
       setAssignmentMode("none");
@@ -1885,6 +1922,72 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Class Performance Score Modal */}
+      <Dialog open={showClassScoreModal} onOpenChange={setShowClassScoreModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Enter Class Performance Score
+            </DialogTitle>
+            <DialogDescription>
+              This score will be used for analytics and performance tracking of Period {selectedPeriod}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="score" className="text-sm font-medium">
+                Class Performance Score (0-100)
+              </label>
+              <Input
+                id="score"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="Enter score..."
+                value={classPerformanceScore}
+                onChange={(e) => setClassPerformanceScore(e.target.value ? parseFloat(e.target.value) : "")}
+                className="focus-visible:ring-primary"
+              />
+              <p className="text-xs text-muted-foreground">
+                The score represents the overall performance level of the class in this period (0-100)
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowClassScoreModal(false);
+                setClassPerformanceScore("");
+              }}
+              disabled={isAssigning}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveClassAssignment}
+              disabled={isAssigning || classPerformanceScore === ""}
+              className="gap-2"
+            >
+              {isAssigning ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Assigning...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Assign & Save Score
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

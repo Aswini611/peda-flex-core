@@ -151,26 +151,45 @@ const StudentHomework = () => {
         return (
           <Card key={assignment.id} className="border-2 border-primary/10">
             <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
                   <CardTitle className="text-base flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-primary" />
-                    {assignment.title}
+                    {assignment.period_title || assignment.title || "Homework"}
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {assignment.subject && <Badge variant="secondary" className="mr-2 text-xs">{assignment.subject}</Badge>}
-                    <span className="inline-flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground mt-2 space-y-1">
+                    <div className="flex flex-wrap gap-2">
+                      {assignment.subject && (
+                        <Badge variant="secondary" className="text-xs">
+                          {assignment.subject}
+                        </Badge>
+                      )}
+                      {assignment.topic && (
+                        <Badge variant="outline" className="text-xs">
+                          {assignment.topic}
+                        </Badge>
+                      )}
+                    </div>
+                  </p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                    {assignment.period_number && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Period {assignment.period_number}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {new Date(assignment.created_at).toLocaleDateString()}
                     </span>
-                  </p>
+                  </div>
                 </div>
                 {isSubmitted ? (
-                  <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 gap-1">
+                  <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 gap-1 whitespace-nowrap">
                     <CheckCircle className="h-3 w-3" /> Submitted
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="gap-1">
+                  <Badge variant="outline" className="gap-1 whitespace-nowrap">
                     <Clock className="h-3 w-3" /> Pending
                   </Badge>
                 )}
