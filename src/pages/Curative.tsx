@@ -1771,16 +1771,17 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
             </Select>
           </div>
 
+          {/* Student Count Display */}
+          <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              {homeworkStudentCount} student{homeworkStudentCount !== 1 ? "s" : ""} found • Homework will be assigned to this group
+            </span>
+          </div>
+
           {/* Action Buttons */}
           {selectedLesson && (
             <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  {homeworkStudentCount} student{homeworkStudentCount !== 1 ? "s" : ""} found • Homework will be assigned to this group
-                </span>
-              </div>
-
               {selectedLesson.periods_count && selectedLesson.periods_count > 0 && (
                 <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
                   <Clock className="h-4 w-4 text-primary" />
@@ -1923,7 +1924,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                               <Button
                                 className="gap-2 flex-1"
                                 onClick={handleAssignAtHome}
-                                disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class"}
+                                disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class" || !!existingInClassAssignment}
                               >
                                 <Home className="h-4 w-4" />
                                 Assign At Home
