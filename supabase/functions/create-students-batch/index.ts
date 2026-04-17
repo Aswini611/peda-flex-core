@@ -1,0 +1,141 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { students, mode } = await req.json();
+
+    // Mode: "import" — bulk create auth users (triggers profile + student auto-creation), then update student details
+    if (mode === "import") {
+      const results: any[] = [];
+
+      for (const s of students) {
+        // Generate a unique placeholder email for each student
+        const uniqueId = crypto.randomUUID().slice(0, 8);
+        const placeholderEmail = `student_${uniqueId}@import.local`;
+        const placeholderPassword = crypto.randomUUID();
+
+        // Create auth user — the handle_new_user trigger will auto-create profile + student
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: placeholderEmail,
+          password: placeholderPassword,
+          email_confirm: true,
+          user_metadata: {
+            full_name: s.student_name,
+            role: "student",
+            class: s.class || null,
+          },
+        });
+
+        if (authError) {
+          results.push({
+            rowNum: s.rowNum,
+            success: false,
+            error: authError.message,
+          });
+          continue;
+        }
+
+        const userId = authData.user.id;
+
+        // Update the auto-created student record with additional fields
+        const { data: studentData, error: studentError } = await supabaseAdmin
+          .from("students")
+          .update({
+            roll_number: s.roll_number || null,
+            parent_phone: s.parent_phone || null,
+            parent_email: s.parent_email || null,
+            grade: s.class || null,
+          })
+          .eq("profile_id", userId)
+          .select("id")
+          .single();
+
+        if (studentError) {
+          // Student record may not exist yet if trigger didn't fire — create it
+          const { data: insertedStudent, error: insertError } = await supabaseAdmin
+            .from("students")
+            .insert({
+              profile_id: userId,
+              grade: s.class || null,
+              roll_number: s.roll_number || null,
+              parent_phone: s.parent_phone || null,
+              parent_email: s.parent_email || null,
+            })
+            .select("id")
+            .single();
+
+          if (insertError) {
+            results.push({
+              rowNum: s.rowNum,
+              success: false,
+              error: insertError.message,
+            });
+            continue;
+          }
+
+          results.push({
+            rowNum: s.rowNum,
+            success: true,
+            studentId: insertedStudent.id,
+            profileId: userId,
+          });
+        } else {
+          results.push({
+            rowNum: s.rowNum,
+            success: true,
+            studentId: studentData.id,
+            profileId: userId,
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Legacy mode: create auth users
+    const results: any[] = [];
+    for (const s of students) {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email: s.email,
+        password: s.password,
+        email_confirm: true,
+        user_metadata: { full_name: s.name, role: "student" },
+      });
+      results.push({
+        id: s.id,
+        name: s.name,
+        success: !error,
+        error: error?.message || null,
+      });
+    }
+
+    return new Response(JSON.stringify({ results }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: err.message || "Unknown error" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
