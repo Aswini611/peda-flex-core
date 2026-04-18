@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ClipboardCheck, CheckCircle, Clock, BookOpen, Send, Loader2, Award } from "lucide-react";
+import { ClipboardCheck, CheckCircle, Clock, BookOpen, Send, Loader2, Award, Play, AlertCircle, ChevronRight, ChevronLeft, Home } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface HomeworkQuestion {
   question: string;
@@ -132,6 +139,62 @@ const StudentHomework = () => {
 
   const submittedIds = new Set((submissions || []).map((s: any) => s.assignment_id));
 
+  // Homework Start View State
+  type HomeworkView = "list" | "start";
+  const [currentView, setCurrentView] = useState<HomeworkView>("list");
+  const [activeHomeworkId, setActiveHomeworkId] = useState<string | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(5 * 60); // 5 minutes
+  const [timerActive, setTimerActive] = useState(false);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
+
+  // Timer effect
+  useEffect(() => {
+    if (!timerActive || timerSeconds <= 0) {
+      if (timerSeconds === 0 && timerActive) {
+        // Auto-submit when timer reaches 0
+        handleAutoSubmit();
+      }
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => {
+        if (prev <= 1) {
+          setTimerActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerActive, timerSeconds]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getTimerColor = () => {
+    if (timerSeconds > 120) return "text-green-600 dark:text-green-400";
+    if (timerSeconds > 60) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
+  const handleStartHomework = (assignmentId: string) => {
+    setActiveHomeworkId(assignmentId);
+    setCurrentView("start");
+    setCurrentQuestionIndex(0);
+    setTimerSeconds(5 * 60);
+    setTimerActive(true);
+    setAnswers((prev) => ({
+      ...prev,
+      [assignmentId]: prev[assignmentId] || {},
+    }));
+  };
+
   const handleAnswerChange = (assignmentId: string, qIndex: number, value: string) => {
     setAnswers((prev) => ({
       ...prev,
@@ -139,26 +202,35 @@ const StudentHomework = () => {
     }));
   };
 
-  const handleSubmit = async (assignmentId: string, questions: HomeworkQuestion[]) => {
-    const myAnswers = answers[assignmentId] || {};
+  const handleAutoSubmit = async () => {
+    if (!activeHomeworkId) return;
+    await handleSubmit(activeHomeworkId, null);
+  };
 
-    // Validate all questions are answered
-    const unanswered = questions.filter((_, i) => !myAnswers[i]?.trim());
-    if (unanswered.length > 0) {
-      toast.error(`Please answer all ${questions.length} questions before submitting.`);
-      return;
+  const handleSubmit = async (assignmentId: string, questionsArray: HomeworkQuestion[] | null) => {
+    const assignment = assignments?.find((a: any) => a.id === assignmentId);
+    if (!assignment) return;
+
+    if (!questionsArray) {
+      const extractedQs = extractQuestionsFromExitTicket(assignment.exit_ticket_content);
+      questionsArray = extractedQs.map((q, i) => ({
+        question: q,
+        index: i,
+      }));
     }
 
-    // Calculate submission percentage: (answered questions / total questions) * 100
-    const totalQuestions = questions.length;
-    const answeredQuestions = questions.filter((_, i) => myAnswers[i]?.trim()).length;
+    const myAnswers = answers[assignmentId] || {};
+    const totalQuestions = questionsArray.length;
+    const answeredQuestions = questionsArray.filter((_, i) => myAnswers[i]?.trim()).length;
     const submissionPercentage = totalQuestions > 0 
       ? Math.round((answeredQuestions / totalQuestions) * 100) 
       : 0;
 
     setSubmitting(assignmentId);
+    setTimerActive(false);
+
     try {
-      const answerArray = questions.map((q, i) => ({
+      const answerArray = questionsArray.map((q, i) => ({
         question: q.question,
         answer: myAnswers[i] || "",
       }));
@@ -173,10 +245,11 @@ const StudentHomework = () => {
       if (error) throw error;
       toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
       queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+      setCurrentView("list");
+      setActiveHomeworkId(null);
     } catch (e: any) {
-      // If update fails (record doesn't exist), try insert
       try {
-        const answerArray = questions.map((q, i) => ({
+        const answerArray = questionsArray.map((q, i) => ({
           question: q.question,
           answer: myAnswers[i] || "",
         }));
@@ -192,6 +265,8 @@ const StudentHomework = () => {
 
         toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
         queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+        setCurrentView("list");
+        setActiveHomeworkId(null);
       } catch (fallbackError: any) {
         toast.error(fallbackError.message || "Failed to submit homework");
       }
@@ -216,131 +291,372 @@ const StudentHomework = () => {
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {assignments.map((assignment: any) => {
-        // Extract questions from exit_ticket_content field
-        let questionsArray: HomeworkQuestion[] = [];
-        
-        if (assignment.exit_ticket_content) {
-          // Extract questions from exit ticket markdown content
-          const extractedQs = extractQuestionsFromExitTicket(assignment.exit_ticket_content);
-          questionsArray = extractedQs.map((q, i) => ({
-            question: q,
-            index: i,
-          }));
-        }
+  // ──────────────────────────────────────────────────────────────
+  // HOMEWORK LIST VIEW
+  // ──────────────────────────────────────────────────────────────
+  if (currentView === "list") {
+    return (
+      <div className="space-y-4">
+        {assignments.map((assignment: any) => {
+          let questionsArray: HomeworkQuestion[] = [];
+          if (assignment.exit_ticket_content) {
+            const extractedQs = extractQuestionsFromExitTicket(assignment.exit_ticket_content);
+            questionsArray = extractedQs.map((q, i) => ({
+              question: q,
+              index: i,
+            }));
+          }
 
-        const isSubmitted = submittedIds.has(assignment.id);
-        const submission = (submissions || []).find((s: any) => s.assignment_id === assignment.id);
+          const isSubmitted = submittedIds.has(assignment.id);
+          const submission = (submissions || []).find((s: any) => s.assignment_id === assignment.id);
 
-        return (
-          <Card key={assignment.id} className="border-2 border-primary/10">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                    {assignment.period_title || assignment.title || "Homework"}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-2 space-y-1">
-                    <div className="flex flex-wrap gap-2">
-                      {assignment.subject && (
-                        <Badge variant="secondary" className="text-xs">
-                          {assignment.subject}
-                        </Badge>
+          return (
+            <Card 
+              key={assignment.id} 
+              className={`border-2 transition-all ${isSubmitted ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-primary/10 hover:border-primary/30'}`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      {assignment.period_title || assignment.title || "Homework"}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-2 space-y-1">
+                      <div className="flex flex-wrap gap-2">
+                        {assignment.subject && (
+                          <Badge variant="secondary" className="text-xs">
+                            {assignment.subject}
+                          </Badge>
+                        )}
+                        {assignment.topic && (
+                          <Badge variant="outline" className="text-xs">
+                            {assignment.topic}
+                          </Badge>
+                        )}
+                        {questionsArray.length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {questionsArray.length} Questions
+                          </Badge>
+                        )}
+                      </div>
+                    </p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      {assignment.period_number && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Period {assignment.period_number}
+                        </span>
                       )}
-                      {assignment.topic && (
-                        <Badge variant="outline" className="text-xs">
-                          {assignment.topic}
-                        </Badge>
-                      )}
-                    </div>
-                  </p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    {assignment.period_number && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        Period {assignment.period_number}
+                        {new Date(assignment.created_at).toLocaleDateString()}
                       </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {new Date(assignment.created_at).toLocaleDateString()}
-                    </span>
+                    </div>
                   </div>
+                  {isSubmitted ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 gap-1 whitespace-nowrap">
+                      <CheckCircle className="h-3 w-3" /> Submitted
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="gap-1 whitespace-nowrap">
+                      <Clock className="h-3 w-3" /> Pending
+                    </Badge>
+                  )}
                 </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
                 {isSubmitted ? (
-                  <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 gap-1 whitespace-nowrap">
-                    <CheckCircle className="h-3 w-3" /> Submitted
-                  </Badge>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">
+                          Submission: {submission?.submission_percentage || submission?.score || 0}%
+                        </h4>
+                      </div>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                        Submitted on {new Date(submission?.completed_at).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Show submitted answers */}
+                    <div className="space-y-3">
+                      {questionsArray.map((q, idx) => (
+                        <div key={idx} className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className="text-xs bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5 font-semibold">
+                              {idx + 1}
+                            </span>
+                            <p className="text-sm font-medium text-foreground">{q.question}</p>
+                          </div>
+                          <div className="ml-8 p-3 bg-muted/50 rounded-lg border border-border">
+                            <p className="text-sm text-foreground/80">
+                              {(submission?.answers as any)?.[idx]?.answer || "—"}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
-                  <Badge variant="outline" className="gap-1 whitespace-nowrap">
-                    <Clock className="h-3 w-3" /> Pending
+                  <>
+                    {/* Show preview of questions */}
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {questionsArray.slice(0, 2).map((q, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="font-semibold min-w-fit">{idx + 1}.</span>
+                          <p>{q.question}</p>
+                        </div>
+                      ))}
+                      {questionsArray.length > 2 && (
+                        <p className="text-xs text-muted-foreground italic">
+                          +{questionsArray.length - 2} more questions...
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Start Button */}
+                    <Button
+                      onClick={() => handleStartHomework(assignment.id)}
+                      className="w-full gap-2 bg-primary hover:bg-primary/90"
+                    >
+                      <Play className="h-4 w-4" /> Start Homework
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // HOMEWORK START VIEW (With Timer)
+  // ──────────────────────────────────────────────────────────────
+  const activeAssignment = assignments?.find((a: any) => a.id === activeHomeworkId);
+  if (!activeAssignment) return null;
+
+  let questionsArray: HomeworkQuestion[] = [];
+  if (activeAssignment.exit_ticket_content) {
+    const extractedQs = extractQuestionsFromExitTicket(activeAssignment.exit_ticket_content);
+    questionsArray = extractedQs.map((q, i) => ({
+      question: q,
+      index: i,
+    }));
+  }
+
+  const currentQuestion = questionsArray[currentQuestionIndex];
+  const answeredCount = questionsArray.filter((_, i) => answers[activeHomeworkId]?.[i]?.trim()).length;
+  const progressPercent = (currentQuestionIndex / questionsArray.length) * 100;
+
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* ─── TIMER BANNER ─── */}
+      <Card className={`border-2 ${timerSeconds > 120 ? 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20' : timerSeconds > 60 ? 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20' : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'}`}>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Time Remaining</p>
+              <p className={`text-4xl font-bold font-mono ${getTimerColor()}`}>
+                {formatTime(timerSeconds)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Auto-submit when time's up</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground mb-2">Progress</p>
+              <p className="text-2xl font-bold text-primary">
+                {answeredCount}/{questionsArray.length}
+              </p>
+              <p className="text-xs text-muted-foreground">Answered</p>
+            </div>
+          </div>
+          <Progress value={progressPercent} className="mt-4" />
+        </CardContent>
+      </Card>
+
+      {/* ─── HOMEWORK HEADER ─── */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Home className="h-5 w-5 text-primary" />
+                {activeAssignment.period_title || activeAssignment.title || "Homework"}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                {activeAssignment.subject} • {activeAssignment.topic || "General"}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setCurrentView("list");
+                setActiveHomeworkId(null);
+                setTimerActive(false);
+              }}
+            >
+              ✕
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* ─── VIEW MODE TOGGLE ─── */}
+      <div className="flex gap-2">
+        <Button
+          variant={!showAllQuestions ? "default" : "outline"}
+          onClick={() => setShowAllQuestions(false)}
+          className="flex-1"
+        >
+          One at a Time
+        </Button>
+        <Button
+          variant={showAllQuestions ? "default" : "outline"}
+          onClick={() => setShowAllQuestions(true)}
+          className="flex-1"
+        >
+          All Questions
+        </Button>
+      </div>
+
+      {/* ─── QUESTIONS VIEW ─── */}
+      {!showAllQuestions ? (
+        // One Question at a Time View
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="border-b pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Question {currentQuestionIndex + 1} of {questionsArray.length}
+                </p>
+                <CardTitle className="text-lg">{currentQuestion?.question}</CardTitle>
+              </div>
+              <div className="text-right">
+                <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+                  Q {currentQuestionIndex + 1}
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-6 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Your Answer</label>
+              <Textarea
+                placeholder="Type your answer here..."
+                value={answers[activeHomeworkId]?.[currentQuestionIndex] || ""}
+                onChange={(e) => handleAnswerChange(activeHomeworkId, currentQuestionIndex, e.target.value)}
+                rows={6}
+                className="resize-none"
+              />
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex gap-2 justify-between pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentQuestionIndex((q) => Math.max(0, q - 1))}
+                disabled={currentQuestionIndex === 0}
+                className="gap-2"
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </Button>
+
+              <div className="flex items-center gap-2">
+                {answeredCount > 0 && (
+                  <Badge variant="secondary" className="gap-1">
+                    <CheckCircle className="h-3 w-3" /> {answeredCount} Answered
                   </Badge>
                 )}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {questionsArray.map((q, idx) => (
-                <div key={idx} className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <span className="text-xs bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5 font-semibold">
-                      {idx + 1}
-                    </span>
-                    <p className="text-sm font-medium text-foreground">{q.question}</p>
-                  </div>
-                  {isSubmitted ? (
-                    <div className="ml-8 p-3 bg-muted/50 rounded-lg border border-border">
-                      <p className="text-sm text-foreground/80">
-                        {(submission?.answers as any)?.[idx]?.answer || "—"}
-                      </p>
-                    </div>
-                  ) : (
-                    <Textarea
-                      className="ml-8"
-                      placeholder="Type your answer here..."
-                      value={answers[assignment.id]?.[idx] || ""}
-                      onChange={(e) => handleAnswerChange(assignment.id, idx, e.target.value)}
-                      rows={2}
-                    />
-                  )}
-                </div>
-              ))}
 
-              {isSubmitted ? (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">
-                      Submission: {submission?.submission_percentage || submission?.score || 0}%
-                    </h4>
+              <Button
+                onClick={() => setCurrentQuestionIndex((q) => Math.min(questionsArray.length - 1, q + 1))}
+                disabled={currentQuestionIndex === questionsArray.length - 1}
+                className="gap-2"
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        // All Questions at Once View
+        <Card>
+          <CardHeader>
+            <CardTitle>All Questions ({questionsArray.length})</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Answer all questions below</p>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {questionsArray.map((q, idx) => (
+              <div key={idx} className="space-y-2 pb-4 border-b last:border-b-0 last:pb-0">
+                <div className="flex items-start gap-3">
+                  <span className="text-sm font-semibold bg-primary/10 text-primary rounded-full w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{q.question}</p>
+                    <Textarea
+                      placeholder="Type your answer here..."
+                      value={answers[activeHomeworkId]?.[idx] || ""}
+                      onChange={(e) => handleAnswerChange(activeHomeworkId, idx, e.target.value)}
+                      rows={3}
+                      className="mt-2 resize-none"
+                    />
                   </div>
-                  <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                    Submitted on {new Date(submission?.completed_at).toLocaleString()}
-                  </p>
                 </div>
-              ) : (
-                <>
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      onClick={() => handleSubmit(assignment.id, questionsArray)}
-                      disabled={submitting === assignment.id}
-                      className="gap-2"
-                    >
-                      {submitting === assignment.id ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
-                      ) : (
-                        <><Send className="h-4 w-4" /> Submit Homework</>
-                      )}
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ─── SUBMIT BUTTON ─── */}
+      <div className="flex gap-2 sticky bottom-0 bg-background/80 backdrop-blur-sm p-4 rounded-lg border">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setCurrentView("list");
+            setActiveHomeworkId(null);
+            setTimerActive(false);
+          }}
+          className="flex-1"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={() => handleSubmit(activeHomeworkId, questionsArray)}
+          disabled={submitting === activeHomeworkId || timerSeconds === 0}
+          className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+        >
+          {submitting === activeHomeworkId ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
+          ) : (
+            <><Send className="h-4 w-4" /> Submit Homework</>
+          )}
+        </Button>
+      </div>
+
+      {/* ─── TIME WARNING ─── */}
+      {timerSeconds < 60 && (
+        <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+          <CardContent className="pt-4 flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-900 dark:text-red-100">Time Running Out!</p>
+              <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                Your homework will auto-submit in {formatTime(timerSeconds)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

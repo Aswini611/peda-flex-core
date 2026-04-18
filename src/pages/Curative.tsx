@@ -2195,7 +2195,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                                 variant="outline"
                                 className="gap-2 flex-1"
                                 onClick={handleAssignInClass}
-                                disabled={isAssigning || isEditingQuestions || !!existingInClassAssignment || assignmentMode === "at-home"}
+                                disabled={isAssigning || isEditingQuestions || !!existingInClassAssignment || assignmentMode === "at-home" || !!existingAtHomeAssignment}
                               >
                                 <Users className="h-4 w-4" />
                                 Assign In Class
