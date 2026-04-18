@@ -293,7 +293,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         responses: finalAnswers,
         submitted_by: userId,
         student_class: studentClass,
-        section: section.trim(),
+        section: (section || "").toUpperCase().trim(), // Normalize section for consistency with homework assignments
         curriculum: curriculum,
       } as any);
       if (error) throw error;

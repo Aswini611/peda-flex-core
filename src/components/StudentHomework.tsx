@@ -58,52 +58,64 @@ const StudentHomework = () => {
   const [scores, setScores] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
-  // First fetch the student's class/section assignments
-  const { data: studentClasses } = useQuery({
-    queryKey: ["student-classes", user?.id],
+  // Get student's class/section from student_assessments (same as Reports tab)
+  const { data: studentClassInfo } = useQuery({
+    queryKey: ["student-class-info", user?.id],
     queryFn: async () => {
-      // Get the student record for this profile
-      const { data: student } = await supabase
-        .from("students")
-        .select("id")
-        .eq("profile_id", user!.id)
-        .maybeSingle();
-      if (!student) return [];
+      if (!user?.id) return null;
 
-      const { data, error } = await supabase
-        .from("class_students")
-        .select("class_id, classes(name, section)")
-        .eq("student_id", student.id);
-      if (error) throw error;
-      return data || [];
+      const { data } = await supabase
+        .from("student_assessments")
+        .select("student_class, section")
+        .eq("submitted_by", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      console.log("StudentHomework: Found student class info:", data);
+      return data || null;
     },
     enabled: !!user?.id,
   });
 
   const { data: assignments, isLoading } = useQuery({
-    queryKey: ["student-homework", user?.id, studentClasses],
+    queryKey: ["student-homework", user?.id, studentClassInfo],
     queryFn: async () => {
-      if (!studentClasses || studentClasses.length === 0) return [];
+      if (!studentClassInfo?.student_class || !studentClassInfo?.section) {
+        console.log("StudentHomework: Missing class or section info");
+        return [];
+      }
 
-      // Build filter: fetch homework matching any of the student's class/section combos
-      let query = supabase
+      console.log("StudentHomework: Querying for assignments with:", {
+        class_level: studentClassInfo.student_class,
+        section: studentClassInfo.section,
+      });
+
+      // Normalize section to uppercase for matching
+      const normalizedSection = (studentClassInfo.section || "").toUpperCase().trim();
+
+      // Fetch homework matching the student's class/section
+      const { data, error } = await supabase
         .from("homework_assignments")
         .select("*")
-        .eq("status", "active")
+        .eq("class_level", studentClassInfo.student_class)
         .order("created_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching assignments:", error);
+        throw error;
+      }
 
-      // Filter by class_level and section from student's enrolled classes
-      const conditions = studentClasses.map((sc: any) => {
-        const cls = sc.classes as any;
-        return `and(class_level.eq.${cls.name},section.eq.${cls.section})`;
+      // Filter by section (case-insensitive)
+      const filtered = (data || []).filter(assignment => {
+        const assignmentSection = (assignment.section || "").toUpperCase().trim();
+        return assignmentSection === normalizedSection && assignment.assignment_type === "at-home";
       });
-      query = query.or(conditions.join(","));
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+      console.log("StudentHomework: Found assignments after filtering:", filtered);
+      return filtered;
     },
-    enabled: !!user?.id && !!studentClasses,
+    enabled: !!user?.id && !!studentClassInfo?.student_class && !!studentClassInfo?.section,
   });
 
   const { data: submissions } = useQuery({
@@ -225,20 +237,14 @@ const StudentHomework = () => {
   return (
     <div className="space-y-4">
       {assignments.map((assignment: any) => {
-        // Extract questions from either exit_ticket_content or questions array
+        // Extract questions from exit_ticket_content field
         let questionsArray: HomeworkQuestion[] = [];
         
         if (assignment.exit_ticket_content) {
-          // New format: exit ticket content
+          // Extract questions from exit ticket markdown content
           const extractedQs = extractQuestionsFromExitTicket(assignment.exit_ticket_content);
           questionsArray = extractedQs.map((q, i) => ({
             question: q,
-            index: i,
-          }));
-        } else if (assignment.questions) {
-          // Old format: questions array
-          questionsArray = (assignment.questions || []).map((q: any, i: number) => ({
-            question: typeof q === "string" ? q : q.question || q.text || `Question ${i + 1}`,
             index: i,
           }));
         }

@@ -1627,26 +1627,49 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
     setIsAssigning(true);
 
     try {
-      // Get all students in the class/section
-      const { data: students, error: studentError } = await supabase
+      // Get student list for this class/section
+      const { data: students } = await supabase
         .from("student_assessments")
-        .select("id, student_name")
+        .select("student_name, id")
         .eq("student_class", homeworkClass)
-        .eq("section", homeworkSection);
+        .eq("section", homeworkSection)
+        .eq("teacher_id", user?.id);
 
-      if (studentError || !students || students.length === 0) {
-        console.error("Student fetch error:", studentError);
+      if (!students || students.length === 0) {
         toast.error("No students found in this class/section");
         setIsAssigning(false);
         return;
       }
 
-      // Create homework assignment for at-home with full details
+      // Get unique student names and check which ones have full_name in profiles table
+      const uniqueStudentNames = Array.from(new Set(students.map(s => s.student_name).filter(Boolean)));
+      
+      // Query profiles table to get only students with full_name populated
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("role", "student")
+        .not("full_name", "is", null)
+        .in("full_name", uniqueStudentNames);
+
+      // Get the filtered list of students who have full names in profiles
+      const studentsWithFullNames = profilesData ? profilesData.map(p => p.full_name) : [];
+      
+      if (studentsWithFullNames.length === 0) {
+        toast.error("No students with registered names found in this class/section");
+        setIsAssigning(false);
+        return;
+      }
+
+      // Extract unique student names from the results
+      const studentNames = Array.from(new Set(studentsWithFullNames));
+
+      // Create homework assignment for at-home with exit ticket questions
       const assignmentData = {
         teacher_id: user?.id,
         lesson_id: selectedLesson.id,
         class_level: homeworkClass,
-        section: homeworkSection,
+        section: (homeworkSection || "").toUpperCase().trim(), // Normalize section for consistency
         period_number: parseInt(selectedPeriod),
         period_title: selectedPeriodInfo.title,
         topic: selectedPeriodInfo.topic,
@@ -1654,8 +1677,10 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         exit_ticket_content: selectedExitTicket,
         assignment_type: "at-home",
         assigned_at: new Date().toISOString(),
-        assigned_student_count: students.length,
+        assigned_student_count: studentNames.length, // Count of students with full names
       };
+
+      console.log("Creating assignment with data:", assignmentData);
 
       const { data: assignment, error: assignmentError } = await supabase
         .from("homework_assignments")
@@ -1664,34 +1689,18 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
       if (assignmentError || !assignment || assignment.length === 0) {
         console.error("Assignment error:", assignmentError);
-        toast.error("Failed to create homework assignment");
-        setIsAssigning(false);
-        return;
-      }
-
-      // Assign to all students with full homework details
-      const studentAssignments = students.map((student) => ({
-        assignment_id: assignment[0]?.id,
-        student_id: student.id,
-        assigned_at: new Date().toISOString(),
-        completed: false,
-      }));
-
-      const { error: submissionError } = await supabase
-        .from("homework_submissions")
-        .insert(studentAssignments as any);
-
-      if (submissionError) {
-        console.error("Submission error details:", {
-          message: submissionError.message,
-          code: submissionError.code,
-          details: submissionError.details,
-          hint: submissionError.hint,
+        console.error("Assignment error details:", {
+          message: assignmentError?.message,
+          code: assignmentError?.code,
+          details: assignmentError?.details,
+          hint: assignmentError?.hint,
         });
-        toast.error(`Failed to assign homework to students: ${submissionError.message}`);
+        toast.error(`Failed to create homework assignment: ${assignmentError?.message || "Unknown error"}`);
         setIsAssigning(false);
         return;
       }
+
+      console.log("Assignment created successfully:", assignment[0]);
 
       // Store confirmation data to show detailed dialog
       const questionsArray = extractedQuestions.length > 0 
@@ -1703,12 +1712,13 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         periodTitle: selectedPeriodInfo.title,
         topic: selectedPeriodInfo.topic,
         subject: selectedLesson.subject || selectedLesson.curriculum || "General",
-        studentCount: students.length,
-        studentList: students.map((s: any) => s.student_name),
+        studentCount: studentNames.length,
+        studentList: studentNames, // Show student names from the class/section
         questionCount: questionsArray.length,
         questions: questionsArray,
       });
       
+      toast.success(`✓ Homework assigned to ${studentNames.length} student${studentNames.length !== 1 ? 's' : ''} in ${homeworkClass} - Section ${homeworkSection}`);
       setShowAssignmentConfirmation(true);
       setAssignmentMode("none");
       setSelectedPeriod("");

@@ -455,18 +455,23 @@ const PeriodPlanGenerator = () => {
       return;
     }
 
+    // Extract the full exit ticket markdown content
+    const exitTicketContent = selectedLesson.lesson_content.includes("## 📝 Assessment") || selectedLesson.lesson_content.includes("### Assessment")
+      ? selectedLesson.lesson_content.split(/##\s*📝\s*Assessment|###\s*Assessment/i)[1]?.split(/^##|^###/m)[0] || ""
+      : "";
+
     setIsMarkingCompleted(true);
     try {
-      const classLabel = getClassLabel(selectedClass);
       const { error } = await supabase.from("homework_assignments").insert({
         lesson_id: selectedLessonId,
-        class_level: classLabel,
+        teacher_id: user.id,
+        class_level: selectedClass,
         section: selectedSection.toUpperCase(),
         subject: selectedLesson.subject || null,
-        title: `Exit Ticket: ${selectedLesson.subject || 'Lesson'} – ${selectedLesson.topic || selectedLesson.title}`,
-        questions: questions as any,
-        assigned_by: user.id,
-      });
+        exit_ticket_content: exitTicketContent || selectedLesson.lesson_content,
+        assignment_type: "auto-assigned",
+        assigned_at: new Date().toISOString(),
+      }) as any;
       if (error) throw error;
       toast.success(`Teaching marked complete! ${questions.length} exit ticket question(s) assigned as homework to ${getClassLabel(selectedClass)} Section ${selectedSection}.`);
       queryClient.invalidateQueries({ queryKey: ["homework-exists", selectedLessonId] });
