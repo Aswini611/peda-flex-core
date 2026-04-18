@@ -55,7 +55,6 @@ const StudentHomework = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({});
-  const [scores, setScores] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
   // Get student's class/section from student_assessments (same as Reports tab)
@@ -140,20 +139,8 @@ const StudentHomework = () => {
     }));
   };
 
-  const handleScoreChange = (assignmentId: string, value: string) => {
-    // Only allow numbers 0-100
-    const numValue = parseInt(value);
-    if (value === "" || (numValue >= 0 && numValue <= 100)) {
-      setScores((prev) => ({
-        ...prev,
-        [assignmentId]: value,
-      }));
-    }
-  };
-
   const handleSubmit = async (assignmentId: string, questions: HomeworkQuestion[]) => {
     const myAnswers = answers[assignmentId] || {};
-    const score = scores[assignmentId];
 
     // Validate all questions are answered
     const unanswered = questions.filter((_, i) => !myAnswers[i]?.trim());
@@ -162,17 +149,12 @@ const StudentHomework = () => {
       return;
     }
 
-    // Validate score is provided
-    if (!score || score === "") {
-      toast.error("Please enter a score (0-100) before submitting.");
-      return;
-    }
-
-    const scoreNum = parseInt(score);
-    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
-      toast.error("Score must be between 0 and 100.");
-      return;
-    }
+    // Calculate submission percentage: (answered questions / total questions) * 100
+    const totalQuestions = questions.length;
+    const answeredQuestions = questions.filter((_, i) => myAnswers[i]?.trim()).length;
+    const submissionPercentage = totalQuestions > 0 
+      ? Math.round((answeredQuestions / totalQuestions) * 100) 
+      : 0;
 
     setSubmitting(assignmentId);
     try {
@@ -183,13 +165,13 @@ const StudentHomework = () => {
 
       const { error } = await supabase.from("homework_submissions").update({
         answers: answerArray as any,
-        score: scoreNum,
+        submission_percentage: submissionPercentage,
         completed: true,
         completed_at: new Date().toISOString(),
       }).eq("assignment_id", assignmentId).eq("student_id", user!.id);
 
       if (error) throw error;
-      toast.success(`✓ Homework submitted!\n✓ Your score: ${scoreNum}%`);
+      toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
       queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
     } catch (e: any) {
       // If update fails (record doesn't exist), try insert
@@ -203,12 +185,12 @@ const StudentHomework = () => {
           assignment_id: assignmentId,
           student_id: user!.id,
           answers: answerArray as any,
-          score: scoreNum,
+          submission_percentage: submissionPercentage,
           completed: true,
           completed_at: new Date().toISOString(),
         });
 
-        toast.success(`✓ Homework submitted!\n✓ Your score: ${scoreNum}%`);
+        toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
         queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
       } catch (fallbackError: any) {
         toast.error(fallbackError.message || "Failed to submit homework");
@@ -331,7 +313,7 @@ const StudentHomework = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                     <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">
-                      Your Score: {submission?.score || 0}%
+                      Submission: {submission?.submission_percentage || submission?.score || 0}%
                     </h4>
                   </div>
                   <p className="text-sm text-emerald-800 dark:text-emerald-200">
@@ -340,25 +322,6 @@ const StudentHomework = () => {
                 </div>
               ) : (
                 <>
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <label className="text-xs font-semibold text-blue-900 dark:text-blue-100 uppercase tracking-wider mb-2 block flex items-center gap-2">
-                      <Award className="h-4 w-4" />
-                      Your Score
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        placeholder="Enter score 0-100"
-                        value={scores[assignment.id] || ""}
-                        onChange={(e) => handleScoreChange(assignment.id, e.target.value)}
-                        className="text-lg"
-                      />
-                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">%</span>
-                    </div>
-                  </div>
-
                   <div className="flex justify-end pt-2">
                     <Button
                       onClick={() => handleSubmit(assignment.id, questionsArray)}

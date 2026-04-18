@@ -1392,7 +1392,7 @@ REQUIREMENTS:
 
         {/* ─── Assign Homework Tab ─── */}
         <TabsContent value="assign-homework" className="space-y-6 mt-0">
-          <AssignHomeworkTab user={user} profile={profile} />
+          <AssignHomeworkTab user={user} profile={profile} getClassLabel={getClassLabel} />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -1403,6 +1403,7 @@ REQUIREMENTS:
 interface AssignHomeworkTabProps {
   user: any;
   profile: any;
+  getClassLabel: (value: string) => string;
 }
 
 interface GeneratedLesson {
@@ -1418,7 +1419,7 @@ interface GeneratedLesson {
   periods_count?: number;
 }
 
-const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
+const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabProps) => {
   const [homeworkClass, setHomeworkClass] = useState("");
   const [homeworkSection, setHomeworkSection] = useState("");
   const [selectedLessonId, setSelectedLessonId] = useState("");
@@ -1509,6 +1510,28 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
     enabled: !!selectedLessonId && !!homeworkClass && !!homeworkSection && !!user?.id,
   });
 
+  // Fetch existing at-home assignments for this lesson/class/section
+  const { data: existingAtHomeAssignments = [] } = useQuery({
+    queryKey: ["at-home-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id],
+    queryFn: async () => {
+      if (!selectedLessonId || !homeworkClass || !homeworkSection || !user?.id) return [];
+      const { data, error } = await supabase
+        .from("homework_assignments")
+        .select("*")
+        .eq("lesson_id", selectedLessonId)
+        .eq("class_level", homeworkClass)
+        .eq("section", homeworkSection)
+        .eq("assignment_type", "at-home")
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching at-home assignments:", error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!selectedLessonId && !!homeworkClass && !!homeworkSection && !!user?.id,
+  });
+
   const selectedLesson = generatedLessons.find((lesson) => lesson.id === selectedLessonId) || null;
 
   // Extract available periods from selected lesson
@@ -1544,6 +1567,11 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
   // Find existing in-class assignment for selected period
   const existingInClassAssignment = selectedPeriod && existingInClassAssignments
     ? existingInClassAssignments.find((a: any) => a.period_number === parseInt(selectedPeriod))
+    : null;
+
+  // Find existing at-home assignment for selected period
+  const existingAtHomeAssignment = selectedPeriod && existingAtHomeAssignments
+    ? existingAtHomeAssignments.find((a: any) => a.period_number === parseInt(selectedPeriod))
     : null;
 
   // Initialize edited questions when exit ticket changes
@@ -1622,6 +1650,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       setSelectedPeriod("");
       setEditedQuestions([]);
       setNewQuestions([]);
+      // Refresh the in-class assignments list to show the newly assigned homework
+      queryClient.invalidateQueries({ queryKey: ["in-class-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id] });
     } catch (err: any) {
       console.error("Error assigning in-class:", err);
       toast.error(`Failed to create assignment: ${err.message || "Unknown error"}`);
@@ -1718,7 +1748,6 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       console.log("Assignment created successfully:", assignment[0]);
 
       // Store confirmation data to show detailed dialog
-      const allQuestions = [...editedQuestions, ...newQuestions].filter(q => q.trim());
       const questionsArray = allQuestions.length > 0 
         ? allQuestions 
         : ["Questions from exit ticket"];
@@ -1740,6 +1769,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       setSelectedPeriod("");
       setEditedQuestions([]);
       setNewQuestions([]);
+      // Refresh the at-home assignments list to show the newly assigned homework
+      queryClient.invalidateQueries({ queryKey: ["at-home-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id] });
     } catch (err: any) {
       console.error("Error assigning at-home:", err);
       toast.error(`Failed to assign homework: ${err.message || "Unknown error"}`);
@@ -2139,6 +2170,26 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                               </div>
                             )}
 
+                            {existingAtHomeAssignment && (
+                              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                                      <Check className="h-5 w-5" />
+                                      At-Home Assignment Already Assigned
+                                    </h4>
+                                    <div className="mt-2 space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                                      <p><span className="font-medium">Assigned on:</span> {new Date(existingAtHomeAssignment.assigned_at).toLocaleString()}</p>
+                                      <p><span className="font-medium">Class:</span> {getClassLabel(existingAtHomeAssignment.class_level)}</p>
+                                      <p><span className="font-medium">Section:</span> {existingAtHomeAssignment.section}</p>
+                                      <p><span className="font-medium">Students Assigned:</span> <span className="font-bold">{existingAtHomeAssignment.assigned_student_count}</span></p>
+                                      <p><span className="font-medium">Topic:</span> {existingAtHomeAssignment.topic}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex gap-3 flex-col sm:flex-row pt-3">
                               <Button
                                 variant="outline"
@@ -2150,12 +2201,12 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                                 Assign In Class
                               </Button>
                               <Button
-                                className="gap-2 flex-1"
+                                className={`gap-2 flex-1 ${!!existingAtHomeAssignment ? 'border-muted text-muted-foreground cursor-not-allowed' : ''}`}
                                 onClick={handleAssignAtHome}
-                                disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class" || !!existingInClassAssignment}
+                                disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class" || !!existingInClassAssignment || !!existingAtHomeAssignment}
                               >
                                 <Home className="h-4 w-4" />
-                                Assign At Home
+                                {existingAtHomeAssignment ? 'Already Assigned At Home ✓' : 'Assign At Home'}
                               </Button>
                             </div>
                           </>
