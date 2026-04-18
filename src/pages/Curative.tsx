@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle, Plus, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -1428,6 +1428,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isEditingQuestions, setIsEditingQuestions] = useState(false);
   const [editedQuestions, setEditedQuestions] = useState<string[]>([]);
+  const [newQuestions, setNewQuestions] = useState<string[]>([]);
   const [showClassScoreModal, setShowClassScoreModal] = useState(false);
   const [classPerformanceScore, setClassPerformanceScore] = useState<number | "">("");
   const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
@@ -1581,6 +1582,12 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
 
     setIsAssigning(true);
     try {
+      // Build exit ticket content from edited and new questions
+      const allQuestions = [...editedQuestions, ...newQuestions].filter(q => q.trim());
+      const exitTicketContent = allQuestions.length > 0
+        ? allQuestions.map((q, idx) => `${idx + 1}. ${q}`).join("\n")
+        : selectedExitTicket;
+
       // Save in-class assignment with performance score
       const assignmentData = {
         teacher_id: user?.id,
@@ -1591,7 +1598,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         period_title: selectedPeriodInfo.title,
         topic: selectedPeriodInfo.topic,
         subject: selectedLesson.subject || selectedLesson.curriculum || "General",
-        exit_ticket_content: selectedExitTicket,
+        exit_ticket_content: exitTicketContent,
         assignment_type: "in-class",
         assigned_at: new Date().toISOString(),
         class_performance_score: score,
@@ -1613,6 +1620,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       setClassPerformanceScore("");
       setAssignmentMode("none");
       setSelectedPeriod("");
+      setEditedQuestions([]);
+      setNewQuestions([]);
     } catch (err: any) {
       console.error("Error assigning in-class:", err);
       toast.error(`Failed to create assignment: ${err.message || "Unknown error"}`);
@@ -1664,6 +1673,12 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       // Extract unique student names from the results
       const studentNames = Array.from(new Set(studentsWithFullNames));
 
+      // Build exit ticket content from edited and new questions
+      const allQuestions = [...editedQuestions, ...newQuestions].filter(q => q.trim());
+      const exitTicketContent = allQuestions.length > 0
+        ? allQuestions.map((q, idx) => `${idx + 1}. ${q}`).join("\n")
+        : selectedExitTicket;
+
       // Create homework assignment for at-home with exit ticket questions
       const assignmentData = {
         teacher_id: user?.id,
@@ -1674,7 +1689,7 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
         period_title: selectedPeriodInfo.title,
         topic: selectedPeriodInfo.topic,
         subject: selectedLesson.subject || selectedLesson.curriculum || "General",
-        exit_ticket_content: selectedExitTicket,
+        exit_ticket_content: exitTicketContent,
         assignment_type: "at-home",
         assigned_at: new Date().toISOString(),
         assigned_student_count: studentNames.length, // Count of students with full names
@@ -1703,8 +1718,9 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       console.log("Assignment created successfully:", assignment[0]);
 
       // Store confirmation data to show detailed dialog
-      const questionsArray = extractedQuestions.length > 0 
-        ? extractedQuestions 
+      const allQuestions = [...editedQuestions, ...newQuestions].filter(q => q.trim());
+      const questionsArray = allQuestions.length > 0 
+        ? allQuestions 
         : ["Questions from exit ticket"];
       
       setAssignmentConfirmationData({
@@ -1722,6 +1738,8 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
       setShowAssignmentConfirmation(true);
       setAssignmentMode("none");
       setSelectedPeriod("");
+      setEditedQuestions([]);
+      setNewQuestions([]);
     } catch (err: any) {
       console.error("Error assigning at-home:", err);
       toast.error(`Failed to assign homework: ${err.message || "Unknown error"}`);
@@ -1994,28 +2012,77 @@ const AssignHomeworkTab = ({ user, profile }: AssignHomeworkTabProps) => {
                             <div className="space-y-3 mb-4">
                               {isEditingQuestions ? (
                                 // Edit Mode
-                                <div className="space-y-3">
-                                  <p className="text-xs font-semibold text-muted-foreground uppercase">Edit Questions</p>
-                                  {editedQuestions.map((question, idx) => (
-                                    <div key={idx} className="space-y-1">
-                                      <label className="text-xs font-medium">Question {idx + 1}</label>
-                                      <Textarea
-                                        value={question}
-                                        onChange={(e) => {
-                                          const updated = [...editedQuestions];
-                                          updated[idx] = e.target.value;
-                                          setEditedQuestions(updated);
-                                        }}
-                                        className="text-sm"
-                                        rows={2}
-                                      />
-                                    </div>
-                                  ))}
+                                <div className="space-y-4">
+                                  {/* Existing Questions Section */}
+                                  <div>
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-3">Edit Existing Questions</p>
+                                    {editedQuestions.map((question, idx) => (
+                                      <div key={idx} className="space-y-1 mb-3">
+                                        <label className="text-xs font-medium">Question {idx + 1}</label>
+                                        <Textarea
+                                          value={question}
+                                          onChange={(e) => {
+                                            const updated = [...editedQuestions];
+                                            updated[idx] = e.target.value;
+                                            setEditedQuestions(updated);
+                                          }}
+                                          className="text-sm"
+                                          rows={2}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* New Questions Section */}
+                                  <div className="border-t border-border/30 pt-4">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 flex items-center gap-2">
+                                      <Plus className="h-3.5 w-3.5" />
+                                      Add New Questions
+                                    </p>
+                                    {newQuestions.map((question, idx) => (
+                                      <div key={`new-${idx}`} className="space-y-1 mb-3">
+                                        <label className="text-xs font-medium">New Question {idx + 1}</label>
+                                        <div className="flex gap-2">
+                                          <Textarea
+                                            value={question}
+                                            onChange={(e) => {
+                                              const updated = [...newQuestions];
+                                              updated[idx] = e.target.value;
+                                              setNewQuestions(updated);
+                                            }}
+                                            placeholder="Enter new question..."
+                                            className="text-sm flex-1"
+                                            rows={2}
+                                          />
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              const updated = newQuestions.filter((_, i) => i !== idx);
+                                              setNewQuestions(updated);
+                                            }}
+                                            className="h-fit text-destructive hover:bg-destructive/10"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="gap-2 w-full"
+                                      onClick={() => setNewQuestions([...newQuestions, ""])}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                      Add Another Question
+                                    </Button>
+                                  </div>
                                 </div>
                               ) : (
                                 // Display Mode
                                 <div className="space-y-2">
-                                  {editedQuestions.map((question, idx) => (
+                                  {editedQuestions.concat(newQuestions).map((question, idx) => (
                                     <div key={idx} className="flex gap-3 items-start">
                                       <span className="text-sm font-semibold text-primary/70 flex-shrink-0">{idx + 1}.</span>
                                       <p className="text-sm text-foreground/85">{question}</p>
