@@ -640,40 +640,58 @@ export type Database = {
       }
       homework_assignments: {
         Row: {
-          assigned_by: string
+          assigned_at: string | null
+          assigned_student_count: number | null
+          assignment_type: string
           class_level: string
-          created_at: string
+          class_performance_score: number | null
+          created_at: string | null
+          exit_ticket_content: string | null
           id: string
-          lesson_id: string
-          questions: Json
-          section: string
-          status: string
+          lesson_id: string | null
+          period_number: number | null
+          period_title: string | null
+          section: string | null
           subject: string | null
-          title: string
+          teacher_id: string
+          topic: string | null
+          updated_at: string | null
         }
         Insert: {
-          assigned_by: string
+          assigned_at?: string | null
+          assigned_student_count?: number | null
+          assignment_type?: string
           class_level: string
-          created_at?: string
+          class_performance_score?: number | null
+          created_at?: string | null
+          exit_ticket_content?: string | null
           id?: string
-          lesson_id: string
-          questions?: Json
-          section: string
-          status?: string
+          lesson_id?: string | null
+          period_number?: number | null
+          period_title?: string | null
+          section?: string | null
           subject?: string | null
-          title: string
+          teacher_id: string
+          topic?: string | null
+          updated_at?: string | null
         }
         Update: {
-          assigned_by?: string
+          assigned_at?: string | null
+          assigned_student_count?: number | null
+          assignment_type?: string
           class_level?: string
-          created_at?: string
+          class_performance_score?: number | null
+          created_at?: string | null
+          exit_ticket_content?: string | null
           id?: string
-          lesson_id?: string
-          questions?: Json
-          section?: string
-          status?: string
+          lesson_id?: string | null
+          period_number?: number | null
+          period_title?: string | null
+          section?: string | null
           subject?: string | null
-          title?: string
+          teacher_id?: string
+          topic?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -687,28 +705,43 @@ export type Database = {
       }
       homework_submissions: {
         Row: {
-          answers: Json
+          answers: Json | null
+          assigned_at: string | null
           assignment_id: string
+          completed: boolean | null
+          created_at: string | null
           id: string
-          score: number | null
-          student_id: string
-          submitted_at: string
+          student_id: string | null
+          student_name: string | null
+          submission_percentage: number | null
+          submitted_at: string | null
+          updated_at: string | null
         }
         Insert: {
-          answers?: Json
+          answers?: Json | null
+          assigned_at?: string | null
           assignment_id: string
+          completed?: boolean | null
+          created_at?: string | null
           id?: string
-          score?: number | null
-          student_id: string
-          submitted_at?: string
+          student_id?: string | null
+          student_name?: string | null
+          submission_percentage?: number | null
+          submitted_at?: string | null
+          updated_at?: string | null
         }
         Update: {
-          answers?: Json
+          answers?: Json | null
+          assigned_at?: string | null
           assignment_id?: string
+          completed?: boolean | null
+          created_at?: string | null
           id?: string
-          score?: number | null
-          student_id?: string
-          submitted_at?: string
+          student_id?: string | null
+          student_name?: string | null
+          submission_percentage?: number | null
+          submitted_at?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -716,6 +749,13 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "homework_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_assessments"
             referencedColumns: ["id"]
           },
         ]
@@ -867,6 +907,7 @@ export type Database = {
           id: string
           learning_outcomes: string | null
           lesson_content: string | null
+          periods_count: number | null
           section: string | null
           subject: string | null
           teacher_id: string | null
@@ -886,6 +927,7 @@ export type Database = {
           id?: string
           learning_outcomes?: string | null
           lesson_content?: string | null
+          periods_count?: number | null
           section?: string | null
           subject?: string | null
           teacher_id?: string | null
@@ -905,6 +947,7 @@ export type Database = {
           id?: string
           learning_outcomes?: string | null
           lesson_content?: string | null
+          periods_count?: number | null
           section?: string | null
           subject?: string | null
           teacher_id?: string | null
