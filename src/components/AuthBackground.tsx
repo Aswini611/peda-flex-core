@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import excellenciaLogo from "@/assets/excellencia-logo.png";
+import knsoftLogo from "@/assets/knsoft-logo.png";
 
 /* ── Floating particles canvas ── */
 const ParticleCanvas = () => {
@@ -30,10 +31,10 @@ const ParticleCanvas = () => {
     }
 
     const colors = [
-      "59, 130, 246",
-      "99, 102, 241",
-      "167, 139, 250",
-      "244, 114, 182",
+      "37, 99, 235",    // Excellencia blue
+      "239, 68, 68",    // Excellencia red
+      "168, 85, 247",   // Purple bridge
+      "59, 130, 246",   // Light blue
     ];
 
     const particles: Particle[] = Array.from({ length: 60 }, () => ({
@@ -129,11 +130,11 @@ const AuthBackground = () => (
       aria-hidden="true"
     />
 
-    {/* Gradient blobs – boosted opacity */}
-    <div className="absolute -left-20 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-br from-blue-400/40 to-indigo-500/25 blur-3xl auth-float-slow" />
-    <div className="absolute -bottom-32 -right-32 h-[550px] w-[550px] rounded-full bg-gradient-to-tl from-purple-400/35 to-pink-400/20 blur-3xl auth-float-slow-reverse" />
-    <div className="absolute left-1/3 top-1/4 h-80 w-80 rounded-full bg-gradient-to-br from-indigo-400/25 to-blue-300/15 blur-3xl auth-float-medium" />
-    <div className="absolute right-1/4 bottom-1/3 h-64 w-64 rounded-full bg-gradient-to-tl from-violet-400/20 to-fuchsia-300/12 blur-3xl auth-float-slow" />
+    {/* Gradient blobs – Excellencia brand colors (blue / red / purple) */}
+    <div className="absolute -left-20 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-br from-blue-500/40 to-indigo-600/25 blur-3xl auth-float-slow" />
+    <div className="absolute -bottom-32 -right-32 h-[550px] w-[550px] rounded-full bg-gradient-to-tl from-red-500/35 to-rose-400/20 blur-3xl auth-float-slow-reverse" />
+    <div className="absolute left-1/3 top-1/4 h-80 w-80 rounded-full bg-gradient-to-br from-purple-500/25 to-blue-400/15 blur-3xl auth-float-medium" />
+    <div className="absolute right-1/4 bottom-1/3 h-64 w-64 rounded-full bg-gradient-to-tl from-red-400/22 to-purple-400/15 blur-3xl auth-float-slow" />
 
     {/* Particle network canvas */}
     <ParticleCanvas />
@@ -186,6 +187,18 @@ const AuthBackground = () => (
           className="auth-wave-2"
         />
       </svg>
+    </div>
+
+    {/* Knsoft Technologies branding – bottom right */}
+    <div className="absolute bottom-4 right-4 z-[5] pointer-events-none flex flex-col items-end gap-1">
+      <img
+        src={knsoftLogo}
+        alt="Knsoft Technologies"
+        className="h-10 sm:h-12 w-auto opacity-90 drop-shadow-md select-none"
+      />
+      <span className="text-[10px] sm:text-xs text-slate-600/80 font-medium tracking-wide">
+        Powered by Knsoft Technologies
+      </span>
     </div>
   </>
 );
