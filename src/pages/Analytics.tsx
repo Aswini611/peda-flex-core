@@ -59,6 +59,26 @@ const Analytics = () => {
 
   const assignmentIds = useMemo(() => assignments.map((a: any) => a.id), [assignments]);
 
+  // Roster of all students in this class+section (mirrors Reports tab source)
+  const { data: roster = [] } = useQuery({
+    queryKey: ["analytics-roster", selectedClass, selectedSection],
+    enabled: !!selectedClass && !!selectedSection && isAuthorized,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("student_assessments")
+        .select("student_name, submitted_by, student_class, section")
+        .eq("student_class", selectedClass)
+        .eq("section", selectedSection.toUpperCase());
+      // Dedupe by submitted_by (student profile id) — fallback to name
+      const map = new Map<string, { student_id: string | null; student_name: string }>();
+      for (const r of data || []) {
+        const key = r.submitted_by || r.student_name;
+        if (!map.has(key)) map.set(key, { student_id: r.submitted_by, student_name: r.student_name });
+      }
+      return Array.from(map.values());
+    },
+  });
+
   const { data: submissions = [], isLoading: subsLoading } = useQuery({
     queryKey: ["analytics-athome-submissions", assignmentIds],
     enabled: assignmentIds.length > 0,
@@ -73,15 +93,26 @@ const Analytics = () => {
     },
   });
 
+  // Build per-student aggregated row: submissions count, latest submission, evaluated count
   const rows = useMemo(() => {
-    return submissions.map((s: any) => {
-      const a = assignments.find((x: any) => x.id === s.assignment_id);
+    return roster.map((stu) => {
+      const studentSubs = submissions.filter(
+        (s: any) => s.student_id === stu.student_id || s.student_name === stu.student_name
+      );
+      const latest = studentSubs[0] || null;
+      const evaluatedCount = studentSubs.filter((s: any) => s.teacher_score != null).length;
       return {
-        ...s,
-        assignment: a,
+        student_id: stu.student_id,
+        student_name: stu.student_name,
+        submissionsCount: studentSubs.length,
+        totalAssignments: assignments.length,
+        evaluatedCount,
+        latest,
+        allSubs: studentSubs,
       };
-    });
-  }, [submissions, assignments]);
+    }).sort((a, b) => a.student_name.localeCompare(b.student_name));
+  }, [roster, submissions, assignments]);
+
 
   const openReview = (sub: any) => {
     setReviewing(sub);
