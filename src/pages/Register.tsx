@@ -12,7 +12,7 @@ import AuthBackground from "@/components/AuthBackground";
 const roles = [
   { value: "student", label: "Student", desc: "Track your learning" },
   { value: "teacher", label: "Teacher", desc: "Manage courses" },
-  { value: "school_admin", label: "Admin", desc: "School management" },
+  { value: "school_admin", label: "Admin / Principal", desc: "School management & full admin access" },
 ] as const;
 
 const hasUpperCase = (str: string) => /[A-Z]/.test(str);
