@@ -444,6 +444,34 @@ const StudentHomework = () => {
                       </p>
                     </div>
 
+                    {/* Teacher's review (score + feedback) */}
+                    {(submission?.teacher_score != null || submission?.teacher_feedback) && (
+                      <div className="p-4 bg-primary/5 border-2 border-primary/30 rounded-lg space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Award className="h-5 w-5 text-primary" />
+                            <h4 className="font-semibold text-foreground">Teacher's Review</h4>
+                          </div>
+                          {submission?.teacher_score != null && (
+                            <Badge className="bg-primary text-primary-foreground text-base px-3 py-1">
+                              Score: {submission.teacher_score}/100
+                            </Badge>
+                          )}
+                        </div>
+                        {submission?.teacher_feedback && (
+                          <div className="pt-2 border-t border-primary/20">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Feedback:</p>
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{submission.teacher_feedback}</p>
+                          </div>
+                        )}
+                        {submission?.evaluated_at && (
+                          <p className="text-xs text-muted-foreground">
+                            Reviewed on {new Date(submission.evaluated_at).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Show submitted answers */}
                     <div className="space-y-3">
                       {questionsArray.map((q, idx) => (
