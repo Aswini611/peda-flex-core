@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import teacherAiAvatar from "@/assets/teacher-ai-avatar.png";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import html2pdf from "html2pdf.js";
 
@@ -477,6 +477,7 @@ async function streamChat({
 const Curative = () => {
   const { profile, user } = useAuth();
   const { awardXp } = useGamification();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [selectedClass, setSelectedClass] = useState(searchParams.get("class") || "");
   const [selectedSection, setSelectedSection] = useState(searchParams.get("section") || "");
