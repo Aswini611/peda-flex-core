@@ -694,7 +694,7 @@ const StudentHomework = () => {
           Cancel
         </Button>
         <Button
-          onClick={() => handleSubmit(activeHomeworkId, questionsArray)}
+          onClick={() => setConfirmSubmitOpen(true)}
           disabled={submitting === activeHomeworkId || timerSeconds === 0}
           className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
         >
