@@ -483,6 +483,16 @@ const Analytics = () => {
                           {hasSubmission ? "Review Answers" : "Awaiting"}
                         </Button>
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setStudentAnalytics(r)}
+                          className="gap-1"
+                        >
+                          <BarChart3 className="h-3 w-3" /> View
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
