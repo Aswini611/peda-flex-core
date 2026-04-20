@@ -1435,6 +1435,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
   const [classPerformanceScore, setClassPerformanceScore] = useState<number | "">("");
   const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
   const [assignmentConfirmationData, setAssignmentConfirmationData] = useState<any>(null);
+  const queryClient = useQueryClient();
 
   const { data: homeworkSections = [] } = useQuery({
     queryKey: ["homework-sections", homeworkClass, user?.id],
