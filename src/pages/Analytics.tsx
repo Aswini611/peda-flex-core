@@ -902,10 +902,37 @@ const Analytics = () => {
                               {pending} of {totalAssign} not yet submitted
                             </p>
                           </div>
-                          <Badge className="bg-amber-500/15 text-amber-700 border-amber-200">
-                            View All
-                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-amber-500/15 text-amber-700 border-amber-200 hover:bg-amber-500/25 h-7"
+                            onClick={() => setShowPendingList((v) => !v)}
+                            disabled={pending === 0}
+                          >
+                            {showPendingList ? "Hide" : "View All"}
+                          </Button>
                         </div>
+                        {showPendingList && pending > 0 && (
+                          <div className="rounded-lg border bg-card p-2 max-h-44 overflow-y-auto divide-y">
+                            {assignments
+                              .filter((a: any) => !studentAnalytics.allSubs.some((s: any) => s.assignment_id === a.id))
+                              .map((a: any) => (
+                                <div key={a.id} className="flex items-center justify-between py-2 px-1 gap-2">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium truncate">
+                                      {a.topic || a.period_title || "Untitled assignment"}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">
+                                      {a.created_at ? `Assigned ${new Date(a.created_at).toLocaleDateString()}` : "—"}
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline" className="text-amber-700 border-amber-200 text-[10px] gap-1 shrink-0">
+                                    <Clock className="h-3 w-3" /> Pending
+                                  </Badge>
+                                </div>
+                              ))}
+                          </div>
+                        )}
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div className="rounded-md bg-emerald-500/10 p-2">
                             <p className="text-lg font-bold text-emerald-700">{submitted}</p>
