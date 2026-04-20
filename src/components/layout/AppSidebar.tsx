@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Dashboard", icon: LineChart, path: "/student-dashboard", roles: ["student"] },
   { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin", "school_admin"] },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"] },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"] },

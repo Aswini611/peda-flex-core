@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import StudentDashboard from "./pages/StudentDashboard";
 import Analytics from "./pages/Analytics";
 import Curative from "./pages/Curative";
 import Requests from "./pages/Requests";
@@ -47,6 +48,7 @@ export default function App() {
                     <Route path="/" element={<Navigate to="/login" replace />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
                     <Route path="/teacher" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin"]}><TeacherPanel /></RoleGuard></ProtectedRoute>} />
                     <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
                     <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin"]}><Analytics /></RoleGuard></ProtectedRoute>} />
