@@ -805,7 +805,7 @@ const Analytics = () => {
       </Dialog>
 
       {/* Individual Student Analytics Dialog — Dashboard layout */}
-      <Dialog open={!!studentAnalytics} onOpenChange={(o) => !o && setStudentAnalytics(null)}>
+      <Dialog open={!!studentAnalytics} onOpenChange={(o) => { if (!o) { setStudentAnalytics(null); setShowPendingList(false); } }}>
         <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-0 gap-0">
           {studentAnalytics && (() => {
             const totalAssign = studentAnalytics.totalAssignments || 0;
