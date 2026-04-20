@@ -422,6 +422,7 @@ const Analytics = () => {
                   <TableHead className="text-center">Avg Score</TableHead>
                   <TableHead>Latest Submission</TableHead>
                   <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="text-right">Analytics</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
