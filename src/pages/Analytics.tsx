@@ -61,20 +61,35 @@ const Analytics = () => {
 
   // Roster of all students in this class+section (mirrors Reports tab source)
   const { data: roster = [] } = useQuery({
-    queryKey: ["analytics-roster", selectedClass, selectedSection],
+    queryKey: ["analytics-roster", selectedClass, selectedSection, assignmentIds.join(",")],
     enabled: !!selectedClass && !!selectedSection && isAuthorized,
     queryFn: async () => {
-      const { data } = await supabase
+      const map = new Map<string, { student_id: string | null; student_name: string }>();
+
+      // Primary source: student_assessments (same as Reports tab)
+      const { data: assessRows } = await supabase
         .from("student_assessments")
         .select("student_name, submitted_by, student_class, section")
         .eq("student_class", selectedClass)
         .eq("section", selectedSection.toUpperCase());
-      // Dedupe by submitted_by (student profile id) — fallback to name
-      const map = new Map<string, { student_id: string | null; student_name: string }>();
-      for (const r of data || []) {
-        const key = r.submitted_by || r.student_name;
+      for (const r of assessRows || []) {
+        const key = (r.submitted_by || r.student_name).toLowerCase();
         if (!map.has(key)) map.set(key, { student_id: r.submitted_by, student_name: r.student_name });
       }
+
+      // Fallback: include any student who already submitted homework for this class
+      if (assignmentIds.length > 0) {
+        const { data: subRows } = await supabase
+          .from("homework_submissions")
+          .select("student_id, student_name")
+          .in("assignment_id", assignmentIds);
+        for (const r of subRows || []) {
+          const key = (r.student_id || r.student_name || "").toLowerCase();
+          if (!key) continue;
+          if (!map.has(key)) map.set(key, { student_id: r.student_id, student_name: r.student_name || "Unknown" });
+        }
+      }
+
       return Array.from(map.values());
     },
   });
