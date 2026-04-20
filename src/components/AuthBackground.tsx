@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import excellenciaLogo from "@/assets/excellencia-logo.png";
 
 /* ── Floating particles canvas ── */
 const ParticleCanvas = () => {
@@ -116,6 +117,18 @@ const AuthBackground = () => (
   <>
     {/* Animated gradient base */}
     <div className="absolute inset-0 auth-gradient-bg" />
+
+    {/* Excellencia Infinitum logo watermark */}
+    <div
+      className="absolute inset-0 z-[2] flex items-center justify-center pointer-events-none"
+      aria-hidden="true"
+    >
+      <img
+        src={excellenciaLogo}
+        alt=""
+        className="w-[min(60vw,640px)] max-w-none opacity-40 select-none drop-shadow-sm"
+      />
+    </div>
 
     {/* Gradient blobs – boosted opacity */}
     <div className="absolute -left-20 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-br from-blue-400/40 to-indigo-500/25 blur-3xl auth-float-slow" />
