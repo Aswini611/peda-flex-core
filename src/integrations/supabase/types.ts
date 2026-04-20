@@ -710,11 +710,15 @@ export type Database = {
           assignment_id: string
           completed: boolean | null
           created_at: string | null
+          evaluated_at: string | null
+          evaluated_by: string | null
           id: string
           student_id: string | null
           student_name: string | null
           submission_percentage: number | null
           submitted_at: string | null
+          teacher_feedback: string | null
+          teacher_score: number | null
           updated_at: string | null
         }
         Insert: {
@@ -723,11 +727,15 @@ export type Database = {
           assignment_id: string
           completed?: boolean | null
           created_at?: string | null
+          evaluated_at?: string | null
+          evaluated_by?: string | null
           id?: string
           student_id?: string | null
           student_name?: string | null
           submission_percentage?: number | null
           submitted_at?: string | null
+          teacher_feedback?: string | null
+          teacher_score?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -736,11 +744,15 @@ export type Database = {
           assignment_id?: string
           completed?: boolean | null
           created_at?: string | null
+          evaluated_at?: string | null
+          evaluated_by?: string | null
           id?: string
           student_id?: string | null
           student_name?: string | null
           submission_percentage?: number | null
           submitted_at?: string | null
+          teacher_feedback?: string | null
+          teacher_score?: number | null
           updated_at?: string | null
         }
         Relationships: [
