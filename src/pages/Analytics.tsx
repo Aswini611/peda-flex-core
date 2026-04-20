@@ -41,6 +41,7 @@ const Analytics = () => {
   const [classAnalyticsOpen, setClassAnalyticsOpen] = useState(false);
   const [studentAnalytics, setStudentAnalytics] = useState<any | null>(null);
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "not_submitted">("all");
+  const [assignmentFilter, setAssignmentFilter] = useState<string | null>(null);
 
   const isAuthorized =
     profile?.role === "teacher" || profile?.role === "admin" || profile?.role === "school_admin";
