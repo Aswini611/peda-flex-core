@@ -194,7 +194,7 @@ export default function StudentDashboard() {
     <AppLayout>
       <PageHeader
         title={`Hi ${firstName} 👋`}
-        description="Your personal learning dashboard — track homework, scores and weekly progress"
+        subtitle="Your personal learning dashboard — track homework, scores and weekly progress"
       />
 
       {/* Top row: KPI strip */}
