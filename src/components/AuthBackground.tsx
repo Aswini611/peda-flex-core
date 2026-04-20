@@ -191,7 +191,7 @@ const AuthBackground = () => (
       <img
         src={excellenciaLogoFull}
         alt="Excellencia Infinitum"
-        className="h-14 sm:h-16 md:h-20 w-auto drop-shadow-lg select-none"
+        className="h-28 sm:h-32 md:h-40 w-auto drop-shadow-lg select-none"
       />
     </div>
 
