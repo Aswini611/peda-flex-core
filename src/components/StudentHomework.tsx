@@ -235,33 +235,25 @@ const StudentHomework = () => {
         answer: myAnswers[i] || "",
       }));
 
+      const timestamp = new Date().toISOString();
       const { error } = await supabase.from("homework_submissions").update({
         answers: answerArray as any,
         submission_percentage: submissionPercentage,
         completed: true,
-        completed_at: new Date().toISOString(),
+        submitted_at: timestamp,
+        updated_at: timestamp,
       }).eq("assignment_id", assignmentId).eq("student_id", user!.id);
-
-      if (error) throw error;
-      toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
-      queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
-      setCurrentView("list");
-      setActiveHomeworkId(null);
-    } catch (e: any) {
-      try {
-        const answerArray = questionsArray.map((q, i) => ({
-          question: q.question,
-          answer: myAnswers[i] || "",
-        }));
-
-        await supabase.from("homework_submissions").insert({
+...
+        await supabase.from("homework_submissions").insert([{
           assignment_id: assignmentId,
           student_id: user!.id,
+          student_name: user?.email || "Student",
           answers: answerArray as any,
           submission_percentage: submissionPercentage,
           completed: true,
-          completed_at: new Date().toISOString(),
-        });
+          submitted_at: timestamp,
+          updated_at: timestamp,
+        }] as any);
 
         toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
         queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
@@ -373,11 +365,11 @@ const StudentHomework = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                         <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">
-                          Submission: {submission?.submission_percentage || submission?.score || 0}%
+                          Submission: {submission?.submission_percentage || 0}%
                         </h4>
                       </div>
                       <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                        Submitted on {new Date(submission?.completed_at).toLocaleString()}
+                        Submitted on {new Date(submission?.submitted_at || submission?.updated_at || submission?.created_at).toLocaleString()}
                       </p>
                     </div>
 
@@ -485,7 +477,7 @@ const StudentHomework = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Home className="h-5 w-5 text-primary" />
-                {activeAssignment.period_title || activeAssignment.title || "Homework"}
+                {activeAssignment.period_title || `Period ${activeAssignment.period_number ?? "Homework"}`}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-2">
                 {activeAssignment.subject} • {activeAssignment.topic || "General"}
