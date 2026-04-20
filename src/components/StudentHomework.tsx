@@ -236,24 +236,44 @@ const StudentHomework = () => {
       }));
 
       const timestamp = new Date().toISOString();
-      const { error } = await supabase.from("homework_submissions").update({
-        answers: answerArray as any,
-        submission_percentage: submissionPercentage,
-        completed: true,
-        submitted_at: timestamp,
-        updated_at: timestamp,
-      }).eq("assignment_id", assignmentId).eq("student_id", user!.id);
-...
-        await supabase.from("homework_submissions").insert([{
-          assignment_id: assignmentId,
-          student_id: user!.id,
-          student_name: user?.email || "Student",
+      const { error } = await supabase
+        .from("homework_submissions")
+        .update({
           answers: answerArray as any,
           submission_percentage: submissionPercentage,
           completed: true,
           submitted_at: timestamp,
           updated_at: timestamp,
-        }] as any);
+        })
+        .eq("assignment_id", assignmentId)
+        .eq("student_id", user!.id);
+
+      if (error) throw error;
+
+      toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
+      queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+      setCurrentView("list");
+      setActiveHomeworkId(null);
+    } catch (e: any) {
+      try {
+        const answerArray = questionsArray.map((q, i) => ({
+          question: q.question,
+          answer: myAnswers[i] || "",
+        }));
+
+        const timestamp = new Date().toISOString();
+        await supabase.from("homework_submissions").insert([
+          {
+            assignment_id: assignmentId,
+            student_id: user!.id,
+            student_name: user?.email || "Student",
+            answers: answerArray as any,
+            submission_percentage: submissionPercentage,
+            completed: true,
+            submitted_at: timestamp,
+            updated_at: timestamp,
+          },
+        ] as any);
 
         toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
         queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
