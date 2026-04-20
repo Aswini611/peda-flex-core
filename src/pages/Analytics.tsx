@@ -404,8 +404,15 @@ const Analytics = () => {
               <TableBody>
                 {rows.map((r) => {
                   const hasSubmission = r.submissionsCount > 0;
+                  const isHighlighted =
+                    (submissionFilter === "submitted" && hasSubmission) ||
+                    (submissionFilter === "not_submitted" && !hasSubmission);
+                  const isDimmed = submissionFilter !== "all" && !isHighlighted;
                   return (
-                    <TableRow key={r.student_id || r.student_name}>
+                    <TableRow
+                      key={r.student_id || r.student_name}
+                      className={`${isHighlighted ? (hasSubmission ? "bg-emerald-500/10 hover:bg-emerald-500/15" : "bg-muted/60") : ""} ${isDimmed ? "opacity-40" : ""}`}
+                    >
                       <TableCell className="font-medium">
                         <button
                           onClick={() => hasSubmission && setStudentAnalytics(r)}
