@@ -348,7 +348,7 @@ For chat questions (mode != generate): respond with structured markdown using em
             contents: toGeminiContents(openaiMessages),
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: mode === "generate" ? 8192 : 2048,
+              maxOutputTokens: mode === "generate" ? 65536 : 4096,
             },
           }),
         });
