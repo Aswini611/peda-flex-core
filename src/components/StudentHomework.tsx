@@ -236,7 +236,9 @@ const StudentHomework = () => {
       }));
 
       const timestamp = new Date().toISOString();
-      const { error } = await supabase
+
+      // Try update first; if no row exists, insert a new submission
+      const { data: updated, error: updateError } = await supabase
         .from("homework_submissions")
         .update({
           answers: answerArray as any,
@@ -244,44 +246,41 @@ const StudentHomework = () => {
           completed: true,
           submitted_at: timestamp,
           updated_at: timestamp,
+          student_name: profile?.full_name || user?.email || "Student",
         })
         .eq("assignment_id", assignmentId)
-        .eq("student_id", user!.id);
+        .eq("student_id", user!.id)
+        .select("id");
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from("homework_submissions")
+          .insert([
+            {
+              assignment_id: assignmentId,
+              student_id: user!.id,
+              student_name: profile?.full_name || user?.email || "Student",
+              answers: answerArray as any,
+              submission_percentage: submissionPercentage,
+              completed: true,
+              assigned_at: timestamp,
+              submitted_at: timestamp,
+              updated_at: timestamp,
+            },
+          ] as any);
+
+        if (insertError) throw insertError;
+      }
 
       toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
-      queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+      await queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
       setCurrentView("list");
       setActiveHomeworkId(null);
     } catch (e: any) {
-      try {
-        const answerArray = questionsArray.map((q, i) => ({
-          question: q.question,
-          answer: myAnswers[i] || "",
-        }));
-
-        const timestamp = new Date().toISOString();
-        await supabase.from("homework_submissions").insert([
-          {
-            assignment_id: assignmentId,
-            student_id: user!.id,
-            student_name: user?.email || "Student",
-            answers: answerArray as any,
-            submission_percentage: submissionPercentage,
-            completed: true,
-            submitted_at: timestamp,
-            updated_at: timestamp,
-          },
-        ] as any);
-
-        toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
-        queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
-        setCurrentView("list");
-        setActiveHomeworkId(null);
-      } catch (fallbackError: any) {
-        toast.error(fallbackError.message || "Failed to submit homework");
-      }
+      console.error("Homework submission error:", e);
+      toast.error(e.message || "Failed to submit homework");
     } finally {
       setSubmitting(null);
     }
