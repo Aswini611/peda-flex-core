@@ -41,6 +41,7 @@ const Analytics = () => {
   const [classAnalyticsOpen, setClassAnalyticsOpen] = useState(false);
   const [studentAnalytics, setStudentAnalytics] = useState<any | null>(null);
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "not_submitted">("all");
+  const [assignmentFilter, setAssignmentFilter] = useState<string | null>(null);
 
   const isAuthorized =
     profile?.role === "teacher" || profile?.role === "admin" || profile?.role === "school_admin";
@@ -109,8 +110,12 @@ const Analytics = () => {
   });
 
   const rows = useMemo(() => {
+    const filteredSubs = assignmentFilter
+      ? submissions.filter((s: any) => s.assignment_id === assignmentFilter)
+      : submissions;
+    const totalAssignments = assignmentFilter ? 1 : assignments.length;
     return roster.map((stu) => {
-      const studentSubs = submissions.filter(
+      const studentSubs = filteredSubs.filter(
         (s: any) => s.student_id === stu.student_id || s.student_name === stu.student_name
       );
       const latest = studentSubs[0] || null;
@@ -123,14 +128,14 @@ const Analytics = () => {
         student_id: stu.student_id,
         student_name: stu.student_name,
         submissionsCount: studentSubs.length,
-        totalAssignments: assignments.length,
+        totalAssignments,
         evaluatedCount,
         avgScore,
         latest,
         allSubs: studentSubs,
       };
     }).sort((a, b) => a.student_name.localeCompare(b.student_name));
-  }, [roster, submissions, assignments]);
+  }, [roster, submissions, assignments, assignmentFilter]);
 
   // Class-wide analytics
   const classAnalytics = useMemo(() => {
@@ -319,22 +324,39 @@ const Analytics = () => {
                 {/* Clickable assignments badge */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="secondary" size="sm" className="h-7 gap-1">
+                    <Button variant={assignmentFilter ? "default" : "secondary"} size="sm" className="h-7 gap-1">
                       <FileText className="h-3 w-3" />
-                      {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}
+                      {assignmentFilter
+                        ? `1 of ${assignments.length} selected`
+                        : `${assignments.length} assignment${assignments.length !== 1 ? "s" : ""}`}
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-0" align="end">
-                    <div className="p-3 border-b">
-                      <p className="text-sm font-semibold">At-Home Assignments</p>
-                      <p className="text-xs text-muted-foreground">{assignments.length} total</p>
+                    <div className="p-3 border-b flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">At-Home Assignments</p>
+                        <p className="text-xs text-muted-foreground">
+                          {assignmentFilter ? "Filtering by 1 assignment" : `${assignments.length} total · click to filter`}
+                        </p>
+                      </div>
+                      {assignmentFilter && (
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setAssignmentFilter(null)}>
+                          Clear
+                        </Button>
+                      )}
                     </div>
                     <div className="max-h-80 overflow-y-auto divide-y">
                       {assignments.map((a: any) => {
                         const subs = submissions.filter((s: any) => s.assignment_id === a.id);
+                        const isActive = assignmentFilter === a.id;
                         return (
-                          <div key={a.id} className="p-3 hover:bg-muted/50">
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => setAssignmentFilter(isActive ? null : a.id)}
+                            className={`w-full text-left p-3 transition ${isActive ? "bg-primary/10 border-l-2 border-l-primary" : "hover:bg-muted/50"}`}
+                          >
                             <p className="text-sm font-medium line-clamp-2">
                               {a.topic || a.period_title || "Untitled"}
                             </p>
@@ -350,8 +372,9 @@ const Analytics = () => {
                               <Badge variant="outline" className="text-[10px] h-5">
                                 {subs.filter((s: any) => s.teacher_score != null).length} evaluated
                               </Badge>
+                              {isActive && <Badge className="text-[10px] h-5 bg-primary/20 text-primary border-primary/30">Active filter</Badge>}
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
