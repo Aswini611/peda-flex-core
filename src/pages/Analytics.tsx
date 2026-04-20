@@ -110,8 +110,12 @@ const Analytics = () => {
   });
 
   const rows = useMemo(() => {
+    const filteredSubs = assignmentFilter
+      ? submissions.filter((s: any) => s.assignment_id === assignmentFilter)
+      : submissions;
+    const totalAssignments = assignmentFilter ? 1 : assignments.length;
     return roster.map((stu) => {
-      const studentSubs = submissions.filter(
+      const studentSubs = filteredSubs.filter(
         (s: any) => s.student_id === stu.student_id || s.student_name === stu.student_name
       );
       const latest = studentSubs[0] || null;
@@ -124,14 +128,14 @@ const Analytics = () => {
         student_id: stu.student_id,
         student_name: stu.student_name,
         submissionsCount: studentSubs.length,
-        totalAssignments: assignments.length,
+        totalAssignments,
         evaluatedCount,
         avgScore,
         latest,
         allSubs: studentSubs,
       };
     }).sort((a, b) => a.student_name.localeCompare(b.student_name));
-  }, [roster, submissions, assignments]);
+  }, [roster, submissions, assignments, assignmentFilter]);
 
   // Class-wide analytics
   const classAnalytics = useMemo(() => {
