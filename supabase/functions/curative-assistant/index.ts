@@ -327,50 +327,59 @@ For chat questions (mode != generate): respond with structured markdown using em
       openaiMessages.push({ role: "user", content: prompt });
     }
 
-    const model = "gemini-2.5-flash";
-    console.log("Calling Gemini API with model:", model, "messages count:", openaiMessages.length);
+    const modelCandidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+    let result: any = null;
+    let lastStatus = 500;
+    let lastErrorText = "Unknown lesson generation error";
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
+    for (const model of modelCandidates) {
+      console.log("Calling Gemini API with model:", model, "messages count:", openaiMessages.length);
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        contents: toGeminiContents(openaiMessages),
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: mode === "generate" ? 8192 : 2048,
-        },
-      }),
-    });
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }],
+          },
+          contents: toGeminiContents(openaiMessages),
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: mode === "generate" ? 8192 : 2048,
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini API error:", response.status, errorText);
+      if (response.ok) {
+        result = await response.json();
+        break;
+      }
 
-      if (response.status === 429) {
+      lastStatus = response.status;
+      lastErrorText = await response.text();
+      console.error(`Gemini API error (${model}):`, response.status, lastErrorText);
+
+      if (response.status !== 503) {
+        break;
+      }
+    }
+
+    if (!result) {
+      if (lastStatus === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "API credits exhausted. Please check your Grok API account." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
 
-      return new Response(JSON.stringify({ error: `Gemini API error (${response.status}): ${errorText.substring(0, 200)}` }), {
-        status: response.status,
+      return new Response(JSON.stringify({ error: `Lesson generation error (${lastStatus}): ${lastErrorText.substring(0, 200)}` }), {
+        status: lastStatus,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const result = await response.json();
     const generatedText = (result?.candidates ?? [])
       .flatMap((candidate: any) => candidate?.content?.parts ?? [])
       .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
