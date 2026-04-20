@@ -720,6 +720,33 @@ const StudentHomework = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* ─── CONFIRM SUBMIT DIALOG ─── */}
+      <AlertDialog open={confirmSubmitOpen} onOpenChange={setConfirmSubmitOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit Homework?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have answered <strong>{answeredCount} of {questionsArray.length}</strong> questions.
+              Once submitted, you <strong>cannot change your answers</strong>. Your teacher will review and score this submission.
+              <br /><br />
+              Are you sure you want to submit now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Editing</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmSubmitOpen(false);
+                handleSubmit(activeHomeworkId, questionsArray);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              Yes, Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
