@@ -7,6 +7,40 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const encoder = new TextEncoder();
+
+type OpenAIMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+const toGeminiContents = (messages: OpenAIMessage[]) =>
+  messages
+    .filter((message) => message.role !== "system")
+    .map((message) => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: [{ text: message.content }],
+    }));
+
+const buildSseStream = (text: string) =>
+  new ReadableStream({
+    start(controller) {
+      const chunkSize = 600;
+
+      for (let index = 0; index < text.length; index += chunkSize) {
+        const chunk = text.slice(index, index + chunkSize);
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ choices: [{ delta: { content: chunk } }] })}\n\n`,
+          ),
+        );
+      }
+
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,8 +49,8 @@ serve(async (req) => {
   try {
     const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
 
-    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_API_KEY) throw new Error("GROK_API_KEY is not configured");
+    const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+    if (!GOOGLE_GEMINI_API_KEY) throw new Error("GOOGLE_GEMINI_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -278,7 +312,7 @@ You MUST complete the ENTIRE lesson plan. Do NOT truncate. End with the Word Dec
 For chat questions (mode != generate): respond with structured markdown using emoji headings, short paragraphs, bullet points, and end with actionable tips.`;
 
     // 4. Build messages — exclude chatHistory in generate mode to stay under TPM limits
-    const openaiMessages: any[] = [{ role: "system", content: systemPrompt }];
+    const openaiMessages: OpenAIMessage[] = [{ role: "system", content: systemPrompt }];
     if (mode !== "generate" && chatHistory && Array.isArray(chatHistory)) {
       const recent = chatHistory.slice(-4);
       for (const msg of recent) openaiMessages.push({ role: msg.role, content: msg.content });
@@ -293,49 +327,77 @@ For chat questions (mode != generate): respond with structured markdown using em
       openaiMessages.push({ role: "user", content: prompt });
     }
 
-    console.log("Calling Grok API with model: openai/gpt-oss-120b, messages count:", openaiMessages.length);
+    const modelCandidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+    let result: any = null;
+    let lastStatus = 500;
+    let lastErrorText = "Unknown lesson generation error";
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${GROK_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
-        messages: openaiMessages,
-        temperature: 0.7,
-        max_tokens: 8000,
-        stream: true,
-      }),
-    });
+    for (const model of modelCandidates) {
+      console.log("Calling Gemini API with model:", model, "messages count:", openaiMessages.length);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Grok API error:", response.status, errorText);
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }],
+          },
+          contents: toGeminiContents(openaiMessages),
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: mode === "generate" ? 8192 : 2048,
+          },
+        }),
+      });
 
-      if (response.status === 429) {
+      if (response.ok) {
+        result = await response.json();
+        break;
+      }
+
+      lastStatus = response.status;
+      lastErrorText = await response.text();
+      console.error(`Gemini API error (${model}):`, response.status, lastErrorText);
+
+      if (response.status !== 503) {
+        break;
+      }
+    }
+
+    if (!result) {
+      if (lastStatus === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "API credits exhausted. Please check your Grok API account." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
 
-      return new Response(JSON.stringify({ error: `Grok API error (${response.status}): ${errorText.substring(0, 200)}` }), {
-        status: response.status,
+      return new Response(JSON.stringify({ error: `Lesson generation error (${lastStatus}): ${lastErrorText.substring(0, 200)}` }), {
+        status: lastStatus,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Grok API response successful, streaming started");
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    const generatedText = (result?.candidates ?? [])
+      .flatMap((candidate: any) => candidate?.content?.parts ?? [])
+      .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
+      .join("")
+      .trim();
+
+    if (!generatedText) {
+      const blockReason = result?.promptFeedback?.blockReason;
+      throw new Error(blockReason ? `Generation blocked: ${blockReason}` : "Empty response from lesson generation model");
+    }
+
+    console.log("Gemini API response successful, streaming started");
+    return new Response(buildSseStream(generatedText), {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+      },
     });
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : "Unknown error";
