@@ -1652,7 +1652,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       setEditedQuestions([]);
       setNewQuestions([]);
       // Refresh the in-class assignments list to show the newly assigned homework
-      queryClient.invalidateQueries({ queryKey: ["in-class-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id] });
+      void useQueryClient().invalidateQueries({ queryKey: ["in-class-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id] });
     } catch (err: any) {
       console.error("Error assigning in-class:", err);
       toast.error(`Failed to create assignment: ${err.message || "Unknown error"}`);
@@ -1771,7 +1771,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       setEditedQuestions([]);
       setNewQuestions([]);
       // Refresh the at-home assignments list to show the newly assigned homework
-      queryClient.invalidateQueries({ queryKey: ["at-home-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id] });
+      void useQueryClient().invalidateQueries({ queryKey: ["at-home-assignments", selectedLessonId, homeworkClass, homeworkSection, user?.id] });
     } catch (err: any) {
       console.error("Error assigning at-home:", err);
       toast.error(`Failed to assign homework: ${err.message || "Unknown error"}`);
