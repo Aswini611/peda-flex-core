@@ -59,7 +59,7 @@ const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => 
 };
 
 const StudentHomework = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
