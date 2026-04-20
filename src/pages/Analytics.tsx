@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar } from "lucide-react";
+import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar, Bell, MessageSquare, GraduationCap, Inbox } from "lucide-react";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -842,18 +842,37 @@ const Analytics = () => {
                 {/* Gradient header */}
                 <div className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground p-5 rounded-t-lg">
                   <DialogHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <DialogTitle className="text-primary-foreground text-2xl font-bold">
-                          Hi {studentAnalytics.student_name?.split(" ")[0]}
-                        </DialogTitle>
-                        <p className="text-sm text-primary-foreground/80 mt-1">
-                          {getClassLabel(selectedClass)} · Section {selectedSection} · Individual Student Report
-                        </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-full bg-background/20 border border-primary-foreground/30 flex items-center justify-center">
+                          <GraduationCap className="h-6 w-6 text-primary-foreground" />
+                        </div>
+                        <div>
+                          <DialogTitle className="text-primary-foreground text-2xl font-bold text-left">
+                            Hi {studentAnalytics.student_name?.split(" ")[0]}
+                          </DialogTitle>
+                          <p className="text-sm text-primary-foreground/80 mt-0.5">
+                            {getClassLabel(selectedClass)} · Section {selectedSection} · Student Dashboard
+                          </p>
+                        </div>
                       </div>
-                      <Badge className="bg-background/20 text-primary-foreground border-primary-foreground/20 hover:bg-background/30">
-                        Active
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <div className="hidden sm:flex items-center gap-1.5 bg-background/20 border border-primary-foreground/20 rounded-full px-3 py-1.5 text-xs">
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          Messages
+                        </div>
+                        <div className="relative h-9 w-9 rounded-full bg-background/20 border border-primary-foreground/20 flex items-center justify-center">
+                          <Bell className="h-4 w-4" />
+                          {pending > 0 && (
+                            <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-rose-500 text-[10px] font-bold flex items-center justify-center">
+                              {pending}
+                            </span>
+                          )}
+                        </div>
+                        <Badge className="bg-background/20 text-primary-foreground border-primary-foreground/20 hover:bg-background/30">
+                          Active
+                        </Badge>
+                      </div>
                     </div>
                   </DialogHeader>
                 </div>
