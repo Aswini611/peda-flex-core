@@ -644,10 +644,10 @@ Make the plan specific, actionable, and based on actual assessment data.`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         messages: openaiMessages,
         temperature: 0.7,
-        max_tokens: 8000,
+        max_tokens: 4000,
         stream: true,
       }),
     });
