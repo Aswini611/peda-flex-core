@@ -422,6 +422,7 @@ const Analytics = () => {
                   <TableHead className="text-center">Avg Score</TableHead>
                   <TableHead>Latest Submission</TableHead>
                   <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="text-right">Analytics</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -480,6 +481,16 @@ const Analytics = () => {
                           }}
                         >
                           {hasSubmission ? "Review Answers" : "Awaiting"}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setStudentAnalytics(r)}
+                          className="gap-1"
+                        >
+                          <BarChart3 className="h-3 w-3" /> View
                         </Button>
                       </TableCell>
                     </TableRow>
