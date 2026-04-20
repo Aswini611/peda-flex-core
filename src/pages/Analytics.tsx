@@ -548,121 +548,246 @@ const Analytics = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Class Analytics Dialog */}
+      {/* Class Analytics Dialog — Dashboard layout */}
       <Dialog open={classAnalyticsOpen} onOpenChange={setClassAnalyticsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Class Analytics — {getClassLabel(selectedClass)} · Section {selectedSection}
-            </DialogTitle>
-          </DialogHeader>
-
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="p-3">
-                <p className="text-xs text-muted-foreground">Submission Rate</p>
-                <p className="text-2xl font-bold">{classAnalytics.submissionRate}%</p>
-                <p className="text-[10px] text-muted-foreground">{classAnalytics.submittedStudents}/{classAnalytics.totalStudents} students</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <p className="text-xs text-muted-foreground">Class Avg Score</p>
-                <p className="text-2xl font-bold">{Math.round(classAnalytics.avgScore)}%</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <p className="text-xs text-muted-foreground">Total Submissions</p>
-                <p className="text-2xl font-bold">{submissions.length}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <p className="text-xs text-muted-foreground">Pending Evaluation</p>
-                <p className="text-2xl font-bold text-amber-600">{classAnalytics.pendingEval}</p>
-              </CardContent>
-            </Card>
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-0 gap-0">
+          {/* Header strip */}
+          <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-5 rounded-t-lg">
+            <DialogHeader>
+              <DialogTitle className="text-primary-foreground text-2xl font-bold">
+                Class Analytics Dashboard
+              </DialogTitle>
+              <p className="text-sm text-primary-foreground/80 mt-1">
+                {getClassLabel(selectedClass)} · Section {selectedSection}
+              </p>
+            </DialogHeader>
           </div>
 
-          {/* Per-assignment bar chart */}
-          {classAnalytics.perAssignment.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Average Score by Assignment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{ avgScore: { label: "Avg Score", color: "hsl(var(--primary))" } }} className="h-[220px]">
-                  <BarChart data={classAnalytics.perAssignment}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" fontSize={10} />
-                    <YAxis domain={[0, 100]} fontSize={11} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="avgScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Score distribution */}
-          {submissions.some((s: any) => s.teacher_score != null) && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Score Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{ count: { label: "Students", color: "hsl(var(--chart-2))" } }} className="h-[200px]">
-                  <BarChart data={classAnalytics.buckets}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="range" fontSize={11} />
-                    <YAxis allowDecimals={false} fontSize={11} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Top & Bottom performers */}
-          <div className="grid md:grid-cols-2 gap-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Award className="h-4 w-4 text-emerald-600" /> Top Performers
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {classAnalytics.top.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No evaluated submissions yet.</p>
-                ) : classAnalytics.top.map((p, i) => (
-                  <div key={i} className="flex justify-between items-center text-sm">
-                    <span>{i + 1}. {p.student_name}</span>
-                    <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">{Math.round(p.avgScore || 0)}%</Badge>
+          <div className="p-5 space-y-5 bg-muted/30">
+            {/* Top row: Class summary + Analytics Rating */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Class summary card */}
+              <Card className="shadow-sm">
+                <CardContent className="p-5">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <h3 className="text-lg font-bold">{getClassLabel(selectedClass)} {selectedSection}</h3>
+                    <Badge variant="secondary" className="text-xs">{assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</Badge>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" /> Needs Attention
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {classAnalytics.bottom.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No evaluated submissions yet.</p>
-                ) : classAnalytics.bottom.map((p, i) => (
-                  <div key={i} className="flex justify-between items-center text-sm">
-                    <span>{p.student_name}</span>
-                    <Badge variant="outline" className="text-amber-700 border-amber-200">{Math.round(p.avgScore || 0)}%</Badge>
+                  <div className="flex items-end gap-3 mb-4">
+                    <p className="text-5xl font-bold text-primary leading-none">{Math.round(classAnalytics.avgScore)}%</p>
+                    <div className="text-xs text-muted-foreground pb-1">
+                      <p>Class Avg Score</p>
+                      <p className="text-emerald-600 font-medium">Submission Rate: {classAnalytics.submissionRate}%</p>
+                    </div>
                   </div>
-                ))}
+                  <div className="space-y-2 pt-3 border-t">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Submitted Students</span>
+                      <span className="font-medium">{classAnalytics.submittedStudents} / {classAnalytics.totalStudents}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Submissions</span>
+                      <span className="font-medium">{submissions.length}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Pending Evaluation</span>
+                      <span className="font-medium text-amber-600">{classAnalytics.pendingEval}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Analytics Rating panel */}
+              <Card className="shadow-sm bg-primary/5 border-primary/20">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                      Analytics Rating
+                    </h3>
+                    <Badge className="bg-primary text-primary-foreground">Live</Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-background rounded-lg p-3 text-center">
+                      <p className="text-2xl font-bold text-primary">{Math.round(classAnalytics.avgScore)}%</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Mastery Score</p>
+                    </div>
+                    <div className="bg-background rounded-lg p-3 text-center">
+                      <p className="text-2xl font-bold text-primary">{classAnalytics.submissionRate}%</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Performance</p>
+                    </div>
+                    <div className="bg-background rounded-lg p-3 text-center">
+                      <p className="text-2xl font-bold text-primary">
+                        {classAnalytics.totalStudents
+                          ? Math.round((submissions.length / Math.max(classAnalytics.totalStudents * Math.max(assignments.length, 1), 1)) * 100)
+                          : 0}%
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Engagement</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Academic Coverage strip */}
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                      <Award className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Academic Coverage</p>
+                      <p className="text-sm font-semibold">{assignments.length} Lessons</p>
+                    </div>
+                  </div>
+                  <div className="h-10 w-px bg-border" />
+                  <div className="flex-1 grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <p className="text-xl font-bold">{Math.round(classAnalytics.avgScore)}%</p>
+                      <p className="text-[10px] text-muted-foreground">Mastered</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold">{classAnalytics.submissionRate}%</p>
+                      <p className="text-[10px] text-muted-foreground">Submitted</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold">{classAnalytics.pendingEval}</p>
+                      <p className="text-[10px] text-muted-foreground">Pending Review</p>
+                    </div>
+                  </div>
+                  <Button size="sm" className="gap-1">
+                    <FileText className="h-3 w-3" /> {submissions.length} Submissions
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Per-assignment bar chart */}
+            {classAnalytics.perAssignment.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Average Score by Assignment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={{ avgScore: { label: "Avg Score", color: "hsl(var(--primary))" } }} className="h-[220px]">
+                    <BarChart data={classAnalytics.perAssignment}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" fontSize={10} />
+                      <YAxis domain={[0, 100]} fontSize={11} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="avgScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Score distribution */}
+            {submissions.some((s: any) => s.teacher_score != null) && (
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Score Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={{ count: { label: "Students", color: "hsl(var(--chart-2))" } }} className="h-[200px]">
+                    <BarChart data={classAnalytics.buckets}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="range" fontSize={11} />
+                      <YAxis allowDecimals={false} fontSize={11} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Student Performance section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold">Student Performance</h3>
+                <div className="flex gap-2 text-xs text-muted-foreground items-center">
+                  <span>Improvement</span><span>→</span>
+                  <span>Activity</span><span>→</span>
+                  <span>Outcome</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <Card className="shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Submissions</p>
+                      <p className="text-xl font-bold">{submissions.length}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Improvement</p>
+                      <p className="text-xl font-bold">{Math.round(classAnalytics.avgScore)}%</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                      <Award className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Effort</p>
+                      <p className="text-xl font-bold">{classAnalytics.submissionRate}%</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Top & Bottom performers */}
+              <div className="grid md:grid-cols-2 gap-3">
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Award className="h-4 w-4 text-emerald-600" /> Top Performers
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {classAnalytics.top.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No evaluated submissions yet.</p>
+                    ) : classAnalytics.top.map((p, i) => (
+                      <div key={i} className="flex justify-between items-center text-sm">
+                        <span>{i + 1}. {p.student_name}</span>
+                        <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">{Math.round(p.avgScore || 0)}%</Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" /> Needs Attention
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {classAnalytics.bottom.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No evaluated submissions yet.</p>
+                    ) : classAnalytics.bottom.map((p, i) => (
+                      <div key={i} className="flex justify-between items-center text-sm">
+                        <span>{p.student_name}</span>
+                        <Badge variant="outline" className="text-amber-700 border-amber-200">{Math.round(p.avgScore || 0)}%</Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
