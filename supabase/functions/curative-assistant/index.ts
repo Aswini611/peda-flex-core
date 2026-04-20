@@ -393,6 +393,11 @@ For chat questions (mode != generate): respond with structured markdown using em
       throw new Error(blockReason ? `Generation blocked: ${blockReason}` : "Empty response from lesson generation model");
     }
 
+    const finishReason = result?.candidates?.[0]?.finishReason;
+    if (finishReason === "MAX_TOKENS") {
+      console.warn("Gemini response was truncated due to MAX_TOKENS. Consider reducing prompt complexity.");
+    }
+
     console.log("Gemini API response successful, streaming started");
     return new Response(buildSseStream(generatedText), {
       headers: {
