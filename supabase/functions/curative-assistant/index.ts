@@ -49,8 +49,10 @@ serve(async (req) => {
   try {
     const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
 
-    const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-    if (!GOOGLE_GEMINI_API_KEY) throw new Error("GOOGLE_GEMINI_API_KEY is not configured");
+    // Prefer the advanced (paid/higher-quota) Gemini key for lesson plan generation, fallback to the standard key
+    const GOOGLE_GEMINI_API_KEY =
+      Deno.env.get("GEMINI_ADVANCED_API_KEY") || Deno.env.get("GOOGLE_GEMINI_API_KEY");
+    if (!GOOGLE_GEMINI_API_KEY) throw new Error("No Gemini API key configured (GEMINI_ADVANCED_API_KEY or GOOGLE_GEMINI_API_KEY)");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
