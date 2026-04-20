@@ -17,6 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface HomeworkQuestion {
   question: string;
@@ -147,6 +158,8 @@ const StudentHomework = () => {
   const [timerSeconds, setTimerSeconds] = useState(5 * 60); // 5 minutes
   const [timerActive, setTimerActive] = useState(false);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "submitted">("all");
 
   // Timer effect
   useEffect(() => {
@@ -306,9 +319,48 @@ const StudentHomework = () => {
   // HOMEWORK LIST VIEW
   // ──────────────────────────────────────────────────────────────
   if (currentView === "list") {
+    const pendingCount = (assignments || []).filter((a: any) => !submittedIds.has(a.id)).length;
+    const submittedCount = (assignments || []).filter((a: any) => submittedIds.has(a.id)).length;
+    const filteredAssignments = (assignments || []).filter((a: any) => {
+      if (statusFilter === "pending") return !submittedIds.has(a.id);
+      if (statusFilter === "submitted") return submittedIds.has(a.id);
+      return true;
+    });
+
     return (
       <div className="space-y-4">
-        {assignments.map((assignment: any) => {
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all" className="gap-2">
+              All <Badge variant="secondary" className="ml-1">{assignments.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="gap-2">
+              <Clock className="h-3.5 w-3.5" /> Pending
+              <Badge variant="secondary" className="ml-1">{pendingCount}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="submitted" className="gap-2">
+              <CheckCircle className="h-3.5 w-3.5" /> Submitted
+              <Badge variant="secondary" className="ml-1">{submittedCount}</Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {filteredAssignments.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <ClipboardCheck className="h-10 w-10 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">
+                {statusFilter === "pending"
+                  ? "Great! No pending homework."
+                  : statusFilter === "submitted"
+                  ? "You haven't submitted any homework yet."
+                  : "No homework available."}
+              </p>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {filteredAssignments.map((assignment: any) => {
           let questionsArray: HomeworkQuestion[] = [];
           if (assignment.exit_ticket_content) {
             const extractedQs = extractQuestionsFromExitTicket(assignment.exit_ticket_content);
@@ -642,7 +694,7 @@ const StudentHomework = () => {
           Cancel
         </Button>
         <Button
-          onClick={() => handleSubmit(activeHomeworkId, questionsArray)}
+          onClick={() => setConfirmSubmitOpen(true)}
           disabled={submitting === activeHomeworkId || timerSeconds === 0}
           className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
         >
@@ -668,6 +720,33 @@ const StudentHomework = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* ─── CONFIRM SUBMIT DIALOG ─── */}
+      <AlertDialog open={confirmSubmitOpen} onOpenChange={setConfirmSubmitOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit Homework?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have answered <strong>{answeredCount} of {questionsArray.length}</strong> questions.
+              Once submitted, you <strong>cannot change your answers</strong>. Your teacher will review and score this submission.
+              <br /><br />
+              Are you sure you want to submit now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Editing</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmSubmitOpen(false);
+                handleSubmit(activeHomeworkId, questionsArray);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              Yes, Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
