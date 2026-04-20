@@ -158,6 +158,8 @@ const StudentHomework = () => {
   const [timerSeconds, setTimerSeconds] = useState(5 * 60); // 5 minutes
   const [timerActive, setTimerActive] = useState(false);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "submitted">("all");
 
   // Timer effect
   useEffect(() => {
