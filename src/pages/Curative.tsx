@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import teacherAiAvatar from "@/assets/teacher-ai-avatar.png";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
