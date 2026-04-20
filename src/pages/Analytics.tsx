@@ -209,24 +209,42 @@ const Analytics = () => {
         </Card>
       ) : subsLoading ? (
         <Card><CardContent className="py-10 text-center text-muted-foreground">Loading…</CardContent></Card>
+      ) : assignments.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <FileText className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">
+              No at-home homework has been assigned for {getClassLabel(selectedClass)} – Section {selectedSection} yet.
+            </p>
+          </CardContent>
+        </Card>
       ) : rows.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <FileText className="h-10 w-10 text-muted-foreground mb-3" />
             <p className="text-muted-foreground">
-              No student submissions yet for {getClassLabel(selectedClass)} – Section {selectedSection}.
+              No students found in this class & section. Add students first.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between flex-wrap gap-2">
               <span className="flex items-center gap-2">
                 <Home className="h-5 w-5 text-primary" />
-                Student Submissions — {getClassLabel(selectedClass)} · Section {selectedSection}
+                Students — {getClassLabel(selectedClass)} · Section {selectedSection}
               </span>
-              <Badge variant="secondary">{rows.length} submission{rows.length !== 1 ? "s" : ""}</Badge>
+              <div className="flex gap-2 flex-wrap">
+                <Badge variant="secondary">{assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</Badge>
+                <Badge variant="secondary">{rows.length} student{rows.length !== 1 ? "s" : ""}</Badge>
+                <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">
+                  {rows.filter(r => r.submissionsCount > 0).length} submitted
+                </Badge>
+                <Badge variant="outline">
+                  {rows.filter(r => r.submissionsCount === 0).length} not submitted
+                </Badge>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -234,42 +252,51 @@ const Analytics = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Student</TableHead>
-                  <TableHead>Topic</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Score</TableHead>
+                  <TableHead className="text-center">Submitted</TableHead>
+                  <TableHead className="text-center">Evaluated</TableHead>
+                  <TableHead>Latest Submission</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((s: any) => {
-                  const evaluated = s.teacher_score != null;
+                {rows.map((r) => {
+                  const hasSubmission = r.submissionsCount > 0;
                   return (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.student_name || "—"}</TableCell>
-                      <TableCell className="text-sm">
-                        {s.assignment?.topic || s.assignment?.period_title || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "—"}
-                      </TableCell>
+                    <TableRow key={r.student_id || r.student_name}>
+                      <TableCell className="font-medium">{r.student_name}</TableCell>
                       <TableCell className="text-center">
-                        {evaluated ? (
+                        {hasSubmission ? (
                           <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 gap-1">
-                            <CheckCircle2 className="h-3 w-3" /> Evaluated
+                            <CheckCircle2 className="h-3 w-3" />
+                            {r.submissionsCount} / {r.totalAssignments}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="gap-1">
-                            <Clock className="h-3 w-3" /> Pending
+                          <Badge variant="outline" className="gap-1 text-muted-foreground">
+                            <Clock className="h-3 w-3" /> Not submitted
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-center font-semibold">
-                        {evaluated ? `${s.teacher_score}%` : "—"}
+                      <TableCell className="text-center text-sm">
+                        {hasSubmission ? `${r.evaluatedCount} / ${r.submissionsCount}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {r.latest?.submitted_at ? new Date(r.latest.submitted_at).toLocaleString() : "—"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline" onClick={() => openReview(s)}>
-                          {evaluated ? "Re-evaluate" : "Review & Score"}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!hasSubmission}
+                          onClick={() => {
+                            // Open the latest submission (with assignment context)
+                            const latestWithAssignment = {
+                              ...r.latest,
+                              assignment: assignments.find((a: any) => a.id === r.latest.assignment_id),
+                            };
+                            openReview(latestWithAssignment);
+                          }}
+                        >
+                          {hasSubmission ? "Review Answers" : "Awaiting"}
                         </Button>
                       </TableCell>
                     </TableRow>
