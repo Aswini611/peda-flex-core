@@ -646,6 +646,7 @@ export type Database = {
           class_level: string
           class_performance_score: number | null
           created_at: string | null
+          due_date: string | null
           exit_ticket_content: string | null
           id: string
           lesson_id: string | null
@@ -664,6 +665,7 @@ export type Database = {
           class_level: string
           class_performance_score?: number | null
           created_at?: string | null
+          due_date?: string | null
           exit_ticket_content?: string | null
           id?: string
           lesson_id?: string | null
@@ -682,6 +684,7 @@ export type Database = {
           class_level?: string
           class_performance_score?: number | null
           created_at?: string | null
+          due_date?: string | null
           exit_ticket_content?: string | null
           id?: string
           lesson_id?: string | null
