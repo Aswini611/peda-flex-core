@@ -126,7 +126,6 @@ const Analytics = () => {
       <PageHeader
         title="Analytics Phase"
         subtitle="At-home homework performance by class and section"
-        icon={BarChart3}
       />
 
       {/* Filters */}
