@@ -125,7 +125,7 @@ const Analytics = () => {
     <AppLayout>
       <PageHeader
         title="Analytics Phase"
-        description="At-home homework performance by class and section"
+        subtitle="At-home homework performance by class and section"
         icon={BarChart3}
       />
 
