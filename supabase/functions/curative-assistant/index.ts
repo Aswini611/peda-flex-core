@@ -327,42 +327,42 @@ For chat questions (mode != generate): respond with structured markdown using em
       openaiMessages.push({ role: "user", content: prompt });
     }
 
-    const modelCandidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+    const modelCandidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
     let result: any = null;
     let lastStatus = 500;
     let lastErrorText = "Unknown lesson generation error";
 
-    for (const model of modelCandidates) {
-      console.log("Calling Gemini API with model:", model, "messages count:", openaiMessages.length);
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }],
-          },
-          contents: toGeminiContents(openaiMessages),
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: mode === "generate" ? 8192 : 2048,
-          },
-        }),
-      });
+    outer: for (const model of modelCandidates) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        console.log(`Calling Gemini API with model: ${model} (attempt ${attempt + 1}) messages count: ${openaiMessages.length}`);
 
-      if (response.ok) {
-        result = await response.json();
-        break;
-      }
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: toGeminiContents(openaiMessages),
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: mode === "generate" ? 8192 : 2048,
+            },
+          }),
+        });
 
-      lastStatus = response.status;
-      lastErrorText = await response.text();
-      console.error(`Gemini API error (${model}):`, response.status, lastErrorText);
+        if (response.ok) {
+          result = await response.json();
+          break outer;
+        }
 
-      if (response.status !== 503) {
-        break;
+        lastStatus = response.status;
+        lastErrorText = await response.text();
+        console.error(`Gemini API error (${model}, attempt ${attempt + 1}):`, response.status, lastErrorText);
+
+        const transient = response.status === 500 || response.status === 503 || response.status === 429;
+        if (!transient) break;
+        if (attempt < 2) await sleep(1000 * Math.pow(2, attempt));
       }
     }
 
