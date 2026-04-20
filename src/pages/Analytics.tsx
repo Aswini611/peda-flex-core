@@ -359,12 +359,29 @@ const Analytics = () => {
                 </Popover>
 
                 <Badge variant="secondary">{rows.length} student{rows.length !== 1 ? "s" : ""}</Badge>
-                <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">
-                  {rows.filter(r => r.submissionsCount > 0).length} submitted
-                </Badge>
-                <Badge variant="outline">
-                  {rows.filter(r => r.submissionsCount === 0).length} not submitted
-                </Badge>
+                <button
+                  type="button"
+                  onClick={() => setSubmissionFilter(f => f === "submitted" ? "all" : "submitted")}
+                  aria-pressed={submissionFilter === "submitted"}
+                >
+                  <Badge
+                    className={`bg-emerald-500/15 text-emerald-700 border-emerald-200 cursor-pointer transition ${submissionFilter === "submitted" ? "ring-2 ring-emerald-500" : "hover:bg-emerald-500/25"}`}
+                  >
+                    {rows.filter(r => r.submissionsCount > 0).length} submitted
+                  </Badge>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubmissionFilter(f => f === "not_submitted" ? "all" : "not_submitted")}
+                  aria-pressed={submissionFilter === "not_submitted"}
+                >
+                  <Badge
+                    variant="outline"
+                    className={`cursor-pointer transition ${submissionFilter === "not_submitted" ? "ring-2 ring-primary" : "hover:bg-muted"}`}
+                  >
+                    {rows.filter(r => r.submissionsCount === 0).length} not submitted
+                  </Badge>
+                </button>
 
                 <Button size="sm" onClick={() => setClassAnalyticsOpen(true)} className="h-7 gap-1">
                   <BarChart3 className="h-3 w-3" /> Class Analytics
