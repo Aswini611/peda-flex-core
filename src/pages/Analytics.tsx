@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -792,111 +792,295 @@ const Analytics = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Individual Student Analytics Dialog */}
+      {/* Individual Student Analytics Dialog — Dashboard layout */}
       <Dialog open={!!studentAnalytics} onOpenChange={(o) => !o && setStudentAnalytics(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              {studentAnalytics?.student_name} — Performance Analytics
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-0 gap-0">
+          {studentAnalytics && (() => {
+            const totalAssign = studentAnalytics.totalAssignments || 0;
+            const submitted = studentAnalytics.submissionsCount || 0;
+            const pending = Math.max(totalAssign - submitted, 0);
+            const evaluated = studentAnalytics.evaluatedCount || 0;
+            const pendingReview = Math.max(submitted - evaluated, 0);
+            const completionPct = totalAssign ? Math.round((submitted / totalAssign) * 100) : 0;
+            const pendingPct = totalAssign ? Math.round((pending / totalAssign) * 100) : 0;
+            const reviewPct = totalAssign ? Math.max(100 - completionPct - pendingPct, 0) : 0;
+            const avgScore = studentAnalytics.avgScore != null ? Math.round(studentAnalytics.avgScore) : 0;
 
-          {studentAnalytics && (
-            <>
-              <div className="grid grid-cols-3 gap-3">
-                <Card>
-                  <CardContent className="p-3">
-                    <p className="text-xs text-muted-foreground">Submitted</p>
-                    <p className="text-2xl font-bold">{studentAnalytics.submissionsCount} / {studentAnalytics.totalAssignments}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3">
-                    <p className="text-xs text-muted-foreground">Evaluated</p>
-                    <p className="text-2xl font-bold">{studentAnalytics.evaluatedCount}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3">
-                    <p className="text-xs text-muted-foreground">Average Score</p>
-                    <p className="text-2xl font-bold">{studentAnalytics.avgScore != null ? `${Math.round(studentAnalytics.avgScore)}%` : "—"}</p>
-                  </CardContent>
-                </Card>
-              </div>
+            const pieData = [
+              { name: "Completed", value: submitted, color: "hsl(142 71% 45%)" },
+              { name: "Pending", value: pending, color: "hsl(45 93% 58%)" },
+              { name: "In Review", value: pendingReview, color: "hsl(0 72% 60%)" },
+            ].filter(d => d.value > 0);
 
-              {studentTrend.length > 0 ? (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Score Trend Across Assignments</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={{ score: { label: "Score", color: "hsl(var(--primary))" } }} className="h-[240px]">
-                      <LineChart data={studentTrend}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" fontSize={10} />
-                        <YAxis domain={[0, 100]} fontSize={11} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
-                      </LineChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardContent className="py-6 text-center text-sm text-muted-foreground">
-                    No evaluated submissions yet — score the student's homework to see the trend.
-                  </CardContent>
-                </Card>
-              )}
+            // Weekly improvement: group trend by week index
+            const weekly = studentTrend.length > 0
+              ? studentTrend.map((t, i) => ({
+                  week: `Week ${i + 1}`,
+                  score: t.score,
+                }))
+              : [];
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">All Submissions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Assignment</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead className="text-center">Score</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {studentAnalytics.allSubs.map((s: any) => {
-                        const a = assignments.find((x: any) => x.id === s.assignment_id);
-                        return (
-                          <TableRow key={s.id}>
-                            <TableCell className="text-sm">{a?.topic || a?.period_title || "Untitled"}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "—"}
-                            </TableCell>
-                            <TableCell className="text-center text-sm font-medium">
-                              {s.teacher_score != null ? `${s.teacher_score}%` : <span className="text-muted-foreground">Pending</span>}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setStudentAnalytics(null);
-                                  openReview({ ...s, assignment: a });
-                                }}
-                              >
-                                Review
-                              </Button>
-                            </TableCell>
+            // Daily performance (last 7 submissions)
+            const daily = studentTrend.slice(-7).map((t, i) => ({
+              day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i] || `D${i + 1}`,
+              score: t.score,
+            }));
+
+            return (
+              <>
+                {/* Gradient header */}
+                <div className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground p-5 rounded-t-lg">
+                  <DialogHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <DialogTitle className="text-primary-foreground text-2xl font-bold">
+                          Hi {studentAnalytics.student_name?.split(" ")[0]}
+                        </DialogTitle>
+                        <p className="text-sm text-primary-foreground/80 mt-1">
+                          {getClassLabel(selectedClass)} · Section {selectedSection} · Individual Student Report
+                        </p>
+                      </div>
+                      <Badge className="bg-background/20 text-primary-foreground border-primary-foreground/20 hover:bg-background/30">
+                        Active
+                      </Badge>
+                    </div>
+                  </DialogHeader>
+                </div>
+
+                <div className="p-5 space-y-4 bg-muted/30">
+                  {/* Top row: Pending Homework + Daily Performance */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Pending Homework */}
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-primary" />
+                            Pending Homework
+                          </CardTitle>
+                          <Badge variant="secondary" className="text-xs">
+                            {pending} pending
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="rounded-lg border bg-card p-3 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold">Pending Assignments</p>
+                            <p className="text-xs text-muted-foreground">
+                              {pending} of {totalAssign} not yet submitted
+                            </p>
+                          </div>
+                          <Badge className="bg-amber-500/15 text-amber-700 border-amber-200">
+                            View All
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="rounded-md bg-emerald-500/10 p-2">
+                            <p className="text-lg font-bold text-emerald-700">{submitted}</p>
+                            <p className="text-[10px] text-muted-foreground">Submitted</p>
+                          </div>
+                          <div className="rounded-md bg-amber-500/10 p-2">
+                            <p className="text-lg font-bold text-amber-700">{pending}</p>
+                            <p className="text-[10px] text-muted-foreground">Pending</p>
+                          </div>
+                          <div className="rounded-md bg-rose-500/10 p-2">
+                            <p className="text-lg font-bold text-rose-700">{pendingReview}</p>
+                            <p className="text-[10px] text-muted-foreground">In Review</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Daily Performance Score */}
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            Daily Performance Score
+                          </CardTitle>
+                          <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 text-xs">
+                            {avgScore >= 70 ? "Completed" : "On Track"}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className="text-4xl font-bold text-primary leading-none">{avgScore}%</p>
+                          <div className="text-xs text-muted-foreground">
+                            <p>Average across</p>
+                            <p className="font-medium">{evaluated} evaluated submission{evaluated !== 1 ? "s" : ""}</p>
+                          </div>
+                        </div>
+                        {daily.length > 0 ? (
+                          <ChartContainer config={{ score: { label: "Score", color: "hsl(var(--primary))" } }} className="h-[120px]">
+                            <LineChart data={daily}>
+                              <XAxis dataKey="day" fontSize={10} />
+                              <YAxis hide domain={[0, 100]} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                            </LineChart>
+                          </ChartContainer>
+                        ) : (
+                          <p className="text-xs text-muted-foreground text-center py-6">No daily data yet</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Bottom row: Homework Completion donut + Weekly Improvement */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Homework Completion */}
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Homework Completion</CardTitle>
+                          <Badge variant="outline" className="text-xs">{totalAssign} total</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {pieData.length > 0 ? (
+                          <div className="flex items-center gap-4">
+                            <div className="relative h-[160px] w-[160px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={pieData}
+                                    cx="50%" cy="50%"
+                                    innerRadius={42} outerRadius={70}
+                                    paddingAngle={2}
+                                    dataKey="value"
+                                  >
+                                    {pieData.map((entry, i) => (
+                                      <Cell key={i} fill={entry.color} />
+                                    ))}
+                                  </Pie>
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <p className="text-2xl font-bold text-foreground">{completionPct}%</p>
+                                <p className="text-[10px] text-muted-foreground">Done</p>
+                              </div>
+                            </div>
+                            <div className="flex-1 space-y-2 text-sm">
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                  Completed
+                                </span>
+                                <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">{submitted}</Badge>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                  Pending
+                                </span>
+                                <Badge className="bg-amber-500/15 text-amber-700 border-amber-200">{pending}</Badge>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                                  In Review
+                                </span>
+                                <Badge className="bg-rose-500/15 text-rose-700 border-rose-200">{pendingReview}</Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-8">No assignment data</p>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Weekly Improvement */}
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Weekly Improvement</CardTitle>
+                          <Badge variant="outline" className="text-xs">Score Trend</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {weekly.length > 0 ? (
+                          <ChartContainer config={{ score: { label: "Score", color: "hsl(142 71% 45%)" } }} className="h-[180px]">
+                            <AreaChart data={weekly}>
+                              <defs>
+                                <linearGradient id="weeklyGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(142 71% 45%)" stopOpacity={0.4} />
+                                  <stop offset="95%" stopColor="hsl(142 71% 45%)" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="week" fontSize={10} />
+                              <YAxis domain={[0, 100]} fontSize={10} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <Area
+                                type="monotone"
+                                dataKey="score"
+                                stroke="hsl(142 71% 45%)"
+                                strokeWidth={2}
+                                fill="url(#weeklyGrad)"
+                              />
+                            </AreaChart>
+                          </ChartContainer>
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-8">No evaluated submissions yet</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* All Submissions table */}
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">All Submissions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Assignment</TableHead>
+                            <TableHead>Submitted</TableHead>
+                            <TableHead className="text-center">Score</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </>
-          )}
+                        </TableHeader>
+                        <TableBody>
+                          {studentAnalytics.allSubs.map((s: any) => {
+                            const a = assignments.find((x: any) => x.id === s.assignment_id);
+                            return (
+                              <TableRow key={s.id}>
+                                <TableCell className="text-sm">{a?.topic || a?.period_title || "Untitled"}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">
+                                  {s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "—"}
+                                </TableCell>
+                                <TableCell className="text-center text-sm font-medium">
+                                  {s.teacher_score != null ? `${s.teacher_score}%` : <span className="text-muted-foreground">Pending</span>}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setStudentAnalytics(null);
+                                      openReview({ ...s, assignment: a });
+                                    }}
+                                  >
+                                    Review
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </AppLayout>
