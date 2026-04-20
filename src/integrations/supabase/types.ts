@@ -763,13 +763,6 @@ export type Database = {
             referencedRelation: "homework_assignments"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "homework_submissions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_assessments"
-            referencedColumns: ["id"]
-          },
         ]
       }
       invoices: {
