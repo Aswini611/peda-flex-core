@@ -616,10 +616,11 @@ Nice! [Opening with specific context from data]
 ## GENERAL Q&A
 When answering questions, always reference the assessment data and textbook content. Be specific, cite scores, and provide actionable recommendations. Format responses in clear, well-structured markdown with tables and proper indentation.`;
 
-    // 4. Build messages for OpenAI
+    // 4. Build messages — for "generate" mode, skip chatHistory to keep request small (avoid Groq TPM limits)
     const openaiMessages: any[] = [{ role: "system", content: systemPrompt }];
-    if (chatHistory && Array.isArray(chatHistory)) {
-      for (const msg of chatHistory) openaiMessages.push({ role: msg.role, content: msg.content });
+    if (mode !== "generate" && chatHistory && Array.isArray(chatHistory)) {
+      const recent = chatHistory.slice(-4);
+      for (const msg of recent) openaiMessages.push({ role: msg.role, content: msg.content });
     }
 
     if (mode === "generate") {
@@ -644,10 +645,10 @@ Make the plan specific, actionable, and based on actual assessment data.`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "llama-3.3-70b-versatile",
         messages: openaiMessages,
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 3500,
         stream: true,
       }),
     });
