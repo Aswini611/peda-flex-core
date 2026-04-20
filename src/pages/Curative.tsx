@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import teacherAiAvatar from "@/assets/teacher-ai-avatar.png";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1316,7 +1317,7 @@ REQUIREMENTS:
                   }`}>
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown components={MarkdownComponents}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
                           {msg.content}
                         </ReactMarkdown>
                       </div>
@@ -2221,7 +2222,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                               Check browser console (F12) for extraction debug logs
                             </p>
                             <div className="prose prose-sm dark:prose-invert max-w-none mt-3 max-h-96 overflow-y-auto">
-                              <ReactMarkdown components={MarkdownComponents}>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
                                 {selectedExitTicket}
                               </ReactMarkdown>
                             </div>
@@ -2286,7 +2287,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
           </CardHeader>
           <CardContent className="p-6 max-h-[600px] overflow-y-auto">
             <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown components={MarkdownComponents}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
                 {selectedLesson.lesson_content}
               </ReactMarkdown>
             </div>
