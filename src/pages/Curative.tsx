@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle, Plus, X } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle, Plus, X, History } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -493,8 +494,88 @@ const Curative = () => {
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasGeneratedContent, setHasGeneratedContent] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [historyVersion, setHistoryVersion] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // ─── Chat history persistence (localStorage) ──────────────────────────
+  const historyKey = user?.id ? `curative-chat-history-${user.id}` : null;
+
+  type ChatSession = {
+    id: string;
+    title: string;
+    classLabel: string;
+    section: string;
+    subject: string;
+    messages: ChatMessage[];
+    updatedAt: number;
+  };
+
+  const loadHistory = useCallback((): ChatSession[] => {
+    if (!historyKey) return [];
+    try {
+      const raw = localStorage.getItem(historyKey);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as ChatSession[];
+      return Array.isArray(parsed) ? parsed.sort((a, b) => b.updatedAt - a.updatedAt) : [];
+    } catch { return []; }
+  }, [historyKey]);
+
+  const saveHistory = useCallback((sessions: ChatSession[]) => {
+    if (!historyKey) return;
+    try {
+      // Keep latest 50 to avoid bloat
+      localStorage.setItem(historyKey, JSON.stringify(sessions.slice(0, 50)));
+      setHistoryVersion((v) => v + 1);
+    } catch (e) { console.error("Failed to save chat history", e); }
+  }, [historyKey]);
+
+  const persistCurrentSession = useCallback((messages: ChatMessage[]) => {
+    if (!historyKey || messages.length === 0) return;
+    const sessions = loadHistory();
+    const firstUser = messages.find((m) => m.role === "user")?.content || "Untitled chat";
+    const title = firstUser.length > 60 ? firstUser.slice(0, 60) + "…" : firstUser;
+    const classLabel = CLASS_OPTIONS.find((c) => c.value === selectedClass)?.label || selectedClass || "—";
+    const session: ChatSession = {
+      id: currentSessionId || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      title,
+      classLabel,
+      section: selectedSection || "—",
+      subject: selectedSubject || "",
+      messages,
+      updatedAt: Date.now(),
+    };
+    if (!currentSessionId) setCurrentSessionId(session.id);
+    const next = [session, ...sessions.filter((s) => s.id !== session.id)];
+    saveHistory(next);
+  }, [historyKey, currentSessionId, selectedClass, selectedSection, selectedSubject, loadHistory, saveHistory]);
+
+  const chatHistorySessions = useMemo(() => loadHistory(), [loadHistory, historyVersion]);
+
+  const handleNewChat = useCallback(() => {
+    setChatMessages([]);
+    setHasGeneratedContent(false);
+    setCurrentSessionId(null);
+  }, []);
+
+  const handleLoadSession = useCallback((id: string) => {
+    const sessions = loadHistory();
+    const s = sessions.find((x) => x.id === id);
+    if (!s) return;
+    setChatMessages(s.messages);
+    setCurrentSessionId(s.id);
+    setHasGeneratedContent(s.messages.some((m) => m.role === "assistant"));
+    toast.success(`Loaded chat: ${s.title}`);
+  }, [loadHistory]);
+
+  const handleDeleteSession = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = loadHistory().filter((s) => s.id !== id);
+    saveHistory(next);
+    if (currentSessionId === id) handleNewChat();
+  }, [loadHistory, saveHistory, currentSessionId, handleNewChat]);
+
 
   // Authorization check - only teachers can access Curative page
   if (profile?.role !== "teacher") {
@@ -658,6 +739,11 @@ const Curative = () => {
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: async () => {
           setIsStreaming(false);
+          // Persist conversation to history
+          try {
+            const finalMessages: ChatMessage[] = [...chatMessages, userMsg, { role: "assistant", content: assistantSoFar }];
+            persistCurrentSession(finalMessages);
+          } catch (err) { console.error("history persist failed", err); }
           if (mode === "generate") {
             setHasGeneratedContent(true);
             awardXp("generate_lesson", "Generated a lesson plan");
@@ -694,7 +780,7 @@ const Curative = () => {
       toast.error("Failed to connect to AI assistant");
       setIsStreaming(false);
     }
-  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id]);
+  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id, persistCurrentSession]);
 
   const getPeriodBreakdown = (periods: number) => {
     if (periods === 1) return "a single period";
@@ -1202,11 +1288,61 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                 <p className="text-white/70 text-xs mt-0.5">Your intelligent co-teacher — ask anything about your class</p>
               </div>
             </div>
-            {chatMessages.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => { setChatMessages([]); setHasGeneratedContent(false); }} className="text-white/70 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
-                <Trash2 className="h-3.5 w-3.5" /> Clear Chat
-              </Button>
-            )}
+            <div className="flex items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
+                    <History className="h-3.5 w-3.5" /> History
+                    {chatHistorySessions.length > 0 && (
+                      <span className="ml-1 text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">{chatHistorySessions.length}</span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+                  <DropdownMenuLabel className="flex items-center justify-between">
+                    <span>Chat history</span>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={handleNewChat}>
+                      <Plus className="h-3 w-3" /> New
+                    </Button>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {chatHistorySessions.length === 0 ? (
+                    <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                      No previous chats yet. Start a conversation and it will appear here.
+                    </div>
+                  ) : (
+                    chatHistorySessions.map((s) => (
+                      <DropdownMenuItem
+                        key={s.id}
+                        onClick={() => handleLoadSession(s.id)}
+                        className={`flex items-start justify-between gap-2 cursor-pointer py-2 ${currentSessionId === s.id ? "bg-accent/10" : ""}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-foreground truncate">{s.title}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                            <span>{s.classLabel} • Sec {s.section}</span>
+                            <span>·</span>
+                            <span>{new Date(s.updatedAt).toLocaleDateString()} {new Date(s.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => handleDeleteSession(s.id, e)}
+                          className="shrink-0 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          aria-label="Delete chat"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {chatMessages.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleNewChat} className="text-white/70 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
+                  <Plus className="h-3.5 w-3.5" /> New Chat
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
