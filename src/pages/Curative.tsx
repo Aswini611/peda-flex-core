@@ -572,6 +572,10 @@ const Curative = () => {
     setChatMessages(s.messages);
     setCurrentSessionId(s.id);
     setHasGeneratedContent(s.messages.some((m) => m.role === "assistant"));
+    // Restore class/section/subject so the user can continue chatting
+    if (s.classValue) setSelectedClass(s.classValue);
+    if (s.sectionValue) setSelectedSection(s.sectionValue);
+    if (s.subjectValue !== undefined) setSelectedSubject(s.subjectValue);
     toast.success(`Loaded chat: ${s.title}`);
   }, [loadHistory]);
 
