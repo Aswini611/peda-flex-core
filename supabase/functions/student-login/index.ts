@@ -1,0 +1,110 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const normalizeStudentId = (value: string | null | undefined) =>
+  String(value || "").trim().toLowerCase();
+
+const dobToPassword = (dob: string | null | undefined): string | null => {
+  if (!dob) return null;
+  const match = String(dob).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  return `${match[3]}${match[2]}${match[1]}`;
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { studentId, password } = await req.json();
+    const normalizedStudentId = normalizeStudentId(studentId);
+    const providedPassword = String(password || "").trim();
+
+    if (!normalizedStudentId || !providedPassword) {
+      return new Response(JSON.stringify({ error: "Student ID and password are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const supabaseAnon = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+
+    const { data: student, error: studentError } = await supabaseAdmin
+      .from("students")
+      .select("profile_id, date_of_birth, roll_number")
+      .ilike("roll_number", normalizedStudentId)
+      .maybeSingle();
+
+    if (studentError) throw studentError;
+    if (!student?.profile_id) {
+      return new Response(JSON.stringify({ error: "Invalid login credentials" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(student.profile_id);
+    if (authUserError) throw authUserError;
+
+    const currentEmail = authUserData.user?.email;
+    const desiredEmail = `${normalizedStudentId}@student.apas.local`;
+
+    if (currentEmail) {
+      const { data: existingLogin, error: existingLoginError } = await supabaseAnon.auth.signInWithPassword({
+        email: currentEmail,
+        password: providedPassword,
+      });
+
+      if (!existingLoginError && existingLogin.session) {
+        return new Response(JSON.stringify({ session: existingLogin.session, user: existingLogin.user }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const expectedDobPassword = dobToPassword(student.date_of_birth);
+    if (expectedDobPassword && providedPassword === expectedDobPassword) {
+      const { error: syncError } = await supabaseAdmin.auth.admin.updateUserById(student.profile_id, {
+        email: desiredEmail,
+        password: expectedDobPassword,
+        email_confirm: true,
+      });
+
+      if (syncError) throw syncError;
+
+      const { data: syncedLogin, error: syncedLoginError } = await supabaseAnon.auth.signInWithPassword({
+        email: desiredEmail,
+        password: expectedDobPassword,
+      });
+
+      if (!syncedLoginError && syncedLogin.session) {
+        return new Response(JSON.stringify({ session: syncedLogin.session, user: syncedLogin.user }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid login credentials" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
