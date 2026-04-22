@@ -163,13 +163,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
       ["student_name", "Class", "section", "roll_number", "parent_phone", "parent_email", "teacher_name"],
-      ["John Doe", "Class 3", "A", "101", "+919876543210", "parent@email.com", "Mrs. Sharma"],
-      ["Jane Smith", "Class 4", "B", "102", "+919876543211", "", "Mr. Verma"],
-      ["Bob Wilson", "Class 3", "A", "103", "", "", ""],
     ]);
-    ws["!cols"] = [
-      { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 18 }, { wch: 22 }, { wch: 18 },
-    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
     XLSX.writeFile(wb, "student_import_template.xlsx");
@@ -355,20 +349,32 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       if (cls.teacherId && !classFailed) {
         const { data: existingCT } = await supabase
           .from("class_teachers")
-          .select("id")
-          .eq("class_id", classId)
-          .eq("teacher_id", cls.teacherId);
+          .select("id, teacher_id, teacher_role")
+          .eq("class_id", classId);
 
-        if (!existingCT?.length) {
-          const { error } = await supabase.from("class_teachers").insert({
-            class_id: classId,
-            teacher_id: cls.teacherId,
-            teacher_role: cls.teacherRole,
-            subject: cls.teacherRole === "subject" ? cls.teacherSubject : null,
-            assigned_by: user?.id,
-          });
-          if (error) {
-            classErrors.push(`Class "${key}": ${error.message}`);
+        const sameTeacherAssigned = existingCT?.some((ct) => ct.teacher_id === cls.teacherId);
+        const primaryAlreadyExists = existingCT?.some((ct) => ct.teacher_role === "primary");
+
+        if (!sameTeacherAssigned) {
+          // If a primary teacher already exists and we're trying to add another primary, switch to subject role
+          const effectiveRole =
+            cls.teacherRole === "primary" && primaryAlreadyExists ? "subject" : cls.teacherRole;
+
+          if (effectiveRole === "subject" && !cls.teacherSubject) {
+            classErrors.push(
+              `Class "${key}": a primary teacher already exists. Set role to "Subject" and provide a subject to add this teacher.`
+            );
+          } else {
+            const { error } = await supabase.from("class_teachers").insert({
+              class_id: classId,
+              teacher_id: cls.teacherId,
+              teacher_role: effectiveRole,
+              subject: effectiveRole === "subject" ? cls.teacherSubject : null,
+              assigned_by: user?.id,
+            });
+            if (error) {
+              classErrors.push(`Class "${key}": ${error.message}`);
+            }
           }
         }
       }
