@@ -494,8 +494,88 @@ const Curative = () => {
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasGeneratedContent, setHasGeneratedContent] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [historyVersion, setHistoryVersion] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // ─── Chat history persistence (localStorage) ──────────────────────────
+  const historyKey = user?.id ? `curative-chat-history-${user.id}` : null;
+
+  type ChatSession = {
+    id: string;
+    title: string;
+    classLabel: string;
+    section: string;
+    subject: string;
+    messages: ChatMessage[];
+    updatedAt: number;
+  };
+
+  const loadHistory = useCallback((): ChatSession[] => {
+    if (!historyKey) return [];
+    try {
+      const raw = localStorage.getItem(historyKey);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as ChatSession[];
+      return Array.isArray(parsed) ? parsed.sort((a, b) => b.updatedAt - a.updatedAt) : [];
+    } catch { return []; }
+  }, [historyKey]);
+
+  const saveHistory = useCallback((sessions: ChatSession[]) => {
+    if (!historyKey) return;
+    try {
+      // Keep latest 50 to avoid bloat
+      localStorage.setItem(historyKey, JSON.stringify(sessions.slice(0, 50)));
+      setHistoryVersion((v) => v + 1);
+    } catch (e) { console.error("Failed to save chat history", e); }
+  }, [historyKey]);
+
+  const persistCurrentSession = useCallback((messages: ChatMessage[]) => {
+    if (!historyKey || messages.length === 0) return;
+    const sessions = loadHistory();
+    const firstUser = messages.find((m) => m.role === "user")?.content || "Untitled chat";
+    const title = firstUser.length > 60 ? firstUser.slice(0, 60) + "…" : firstUser;
+    const classLabel = CLASS_OPTIONS.find((c) => c.value === selectedClass)?.label || selectedClass || "—";
+    const session: ChatSession = {
+      id: currentSessionId || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      title,
+      classLabel,
+      section: selectedSection || "—",
+      subject: selectedSubject || "",
+      messages,
+      updatedAt: Date.now(),
+    };
+    if (!currentSessionId) setCurrentSessionId(session.id);
+    const next = [session, ...sessions.filter((s) => s.id !== session.id)];
+    saveHistory(next);
+  }, [historyKey, currentSessionId, selectedClass, selectedSection, selectedSubject, loadHistory, saveHistory]);
+
+  const chatHistorySessions = useMemo(() => loadHistory(), [loadHistory, historyVersion]);
+
+  const handleNewChat = useCallback(() => {
+    setChatMessages([]);
+    setHasGeneratedContent(false);
+    setCurrentSessionId(null);
+  }, []);
+
+  const handleLoadSession = useCallback((id: string) => {
+    const sessions = loadHistory();
+    const s = sessions.find((x) => x.id === id);
+    if (!s) return;
+    setChatMessages(s.messages);
+    setCurrentSessionId(s.id);
+    setHasGeneratedContent(s.messages.some((m) => m.role === "assistant"));
+    toast.success(`Loaded chat: ${s.title}`);
+  }, [loadHistory]);
+
+  const handleDeleteSession = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = loadHistory().filter((s) => s.id !== id);
+    saveHistory(next);
+    if (currentSessionId === id) handleNewChat();
+  }, [loadHistory, saveHistory, currentSessionId, handleNewChat]);
+
 
   // Authorization check - only teachers can access Curative page
   if (profile?.role !== "teacher") {
