@@ -219,48 +219,22 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     // Track which students belong to which class-section
     const classStudentMap = new Map<string, { studentIds: string[]; teacherName: string }>();
 
-    // Check for existing students first
-    const { data: existingStudents } = await supabase
-      .from("students")
-      .select("id, roll_number, grade, profiles(full_name)");
+    const importRows = validRows.map((v) => ({
+      rowNum: v.row.rowNum,
+      student_name: v.row.student_name,
+      class: v.row.class,
+      section: v.row.section,
+      roll_number: v.row.student_id,
+      parent_phone: v.row.parent_phone,
+      parent_email: "",
+      teacher_name: v.row.teacher_name,
+      date_of_birth: v.row.date_of_birth,
+    }));
 
-    // Separate existing vs new students
-    const newStudents: { rowNum: number; student_name: string; class: string; roll_number: string; parent_phone: string; parent_email: string; teacher_name: string; section: string; date_of_birth: string }[] = [];
-
-    for (const v of validRows) {
-      const classKey = `${v.row.class} - ${v.row.section}`;
-      const existing = existingStudents?.find(
-        (s) =>
-          (s as any).profiles?.full_name?.toLowerCase() === v.row.student_name.toLowerCase() &&
-          s.roll_number === v.row.student_id &&
-          s.grade === v.row.class
-      );
-
-      if (existing) {
-        imported++;
-        if (!classStudentMap.has(classKey)) {
-          classStudentMap.set(classKey, { studentIds: [], teacherName: v.row.teacher_name });
-        }
-        classStudentMap.get(classKey)!.studentIds.push(existing.id);
-      } else {
-        newStudents.push({
-          rowNum: v.row.rowNum,
-          student_name: v.row.student_name,
-          class: v.row.class,
-          section: v.row.section,
-          roll_number: v.row.student_id,
-          parent_phone: v.row.parent_phone,
-          parent_email: "",
-          teacher_name: v.row.teacher_name,
-          date_of_birth: v.row.date_of_birth,
-        });
-      }
-    }
-
-    // Batch create new students via edge function (uses service role, bypasses RLS)
-    if (newStudents.length > 0) {
+    // Import every valid row so existing students also get their DOB/login credentials synced
+    if (importRows.length > 0) {
       const { data, error } = await supabase.functions.invoke("create-students-batch", {
-        body: { students: newStudents, mode: "import" },
+        body: { students: importRows, mode: "import" },
       });
 
       if (error) {
@@ -269,7 +243,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         for (const r of data.results) {
           if (r.success) {
             imported++;
-            const row = newStudents.find((s) => s.rowNum === r.rowNum);
+            const row = importRows.find((s) => s.rowNum === r.rowNum);
             if (row) {
               const classKey = `${row.class} - ${row.section}`;
               if (!classStudentMap.has(classKey)) {
