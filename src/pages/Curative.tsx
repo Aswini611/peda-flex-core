@@ -780,7 +780,7 @@ const Curative = () => {
       toast.error("Failed to connect to AI assistant");
       setIsStreaming(false);
     }
-  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id]);
+  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id, persistCurrentSession]);
 
   const getPeriodBreakdown = (periods: number) => {
     if (periods === 1) return "a single period";
