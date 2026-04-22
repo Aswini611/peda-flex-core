@@ -50,6 +50,7 @@ interface ClassStudent {
     roll_number: string | null;
     parent_phone: string | null;
     parent_email: string | null;
+    date_of_birth: string | null;
   } | null;
 }
 
@@ -97,7 +98,7 @@ const AdminPanel = () => {
       supabase.from("classes").select("*").order("name"),
       supabase.from("students").select("id, profile_id, grade, age, profiles!inner(full_name, role)").eq("profiles.role", "student"),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
-      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, age, roll_number, parent_phone, parent_email, profiles(full_name))"),
+      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, age, roll_number, parent_phone, parent_email, date_of_birth, profiles(full_name))"),
       supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
       supabase.from("teacher_question_assignments").select("*"),
     ]);
