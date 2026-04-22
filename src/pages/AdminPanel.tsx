@@ -220,6 +220,20 @@ const AdminPanel = () => {
           .eq("id", stu.profile_id);
         if (profErr) throw profErr;
       }
+
+      if (editStudent.roll_number.trim() && editStudent.date_of_birth) {
+        const { data: resetData, error: resetError } = await supabase.functions.invoke("reset-student-passwords", {
+          body: { roll_number: editStudent.roll_number.trim() },
+        });
+
+        if (resetError) throw resetError;
+
+        const resetResult = (resetData as { results?: Array<{ success: boolean; error?: string }> } | null)?.results?.[0];
+        if (resetResult && !resetResult.success) {
+          throw new Error(resetResult.error || "Failed to sync student login credentials");
+        }
+      }
+
       toast({ title: "Student updated" });
       setEditStudentOpen(false);
       setEditStudent(null);

@@ -142,24 +142,25 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       return `${yyyy}-${mm}-${dd}`;
     }
     const s = String(val).trim();
-    // Try DD/MM/YYYY or DD-MM-YYYY
-    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    const normalized = s.replace(/\./g, "/");
+    // Prefer DD/MM/YYYY or DD-MM-YYYY for manual / Excel text entries
+    const m = normalized.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
     if (m) {
       let [, d, mo, y] = m;
       if (y.length === 2) y = (parseInt(y) > 50 ? "19" : "20") + y;
       return `${y.padStart(4, "0")}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
     }
     // Try YYYY-MM-DD passthrough
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}/.test(normalized)) return normalized.slice(0, 10);
     // ISO parse fallback
-    const dt = new Date(s);
+    const dt = new Date(normalized);
     if (!isNaN(dt.getTime())) {
       const yyyy = String(dt.getFullYear()).padStart(4, "0");
       const mm = String(dt.getMonth() + 1).padStart(2, "0");
       const dd = String(dt.getDate()).padStart(2, "0");
       return `${yyyy}-${mm}-${dd}`;
     }
-    return s;
+    return normalized;
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
