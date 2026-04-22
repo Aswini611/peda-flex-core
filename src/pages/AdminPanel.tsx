@@ -96,6 +96,11 @@ const AdminPanel = () => {
   const [editClassSection, setEditClassSection] = useState("");
   const [addStudentSearch, setAddStudentSearch] = useState("");
   const [savingClassEdit, setSavingClassEdit] = useState(false);
+  const [newStudent, setNewStudent] = useState({ name: "", student_id: "", date_of_birth: "", parent_phone: "" });
+  const [addingNewStudent, setAddingNewStudent] = useState(false);
+  const [editStudentOpen, setEditStudentOpen] = useState(false);
+  const [editStudent, setEditStudent] = useState<{ id: string; profile_id: string; full_name: string; roll_number: string; date_of_birth: string; parent_phone: string } | null>(null);
+  const [savingStudentEdit, setSavingStudentEdit] = useState(false);
 
   const handleSaveClassEdit = async () => {
     if (!selectedClassDetailsId || !editClassName.trim()) return;
