@@ -1381,6 +1381,7 @@ export type Database = {
           age: number | null
           created_at: string
           curriculum: string | null
+          date_of_birth: string | null
           dominant_intelligence: string | null
           grade: string | null
           id: string
@@ -1395,6 +1396,7 @@ export type Database = {
           age?: number | null
           created_at?: string
           curriculum?: string | null
+          date_of_birth?: string | null
           dominant_intelligence?: string | null
           grade?: string | null
           id?: string
@@ -1409,6 +1411,7 @@ export type Database = {
           age?: number | null
           created_at?: string
           curriculum?: string | null
+          date_of_birth?: string | null
           dominant_intelligence?: string | null
           grade?: string | null
           id?: string
