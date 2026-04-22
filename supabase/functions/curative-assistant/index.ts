@@ -377,37 +377,50 @@ For chat questions (mode != generate): respond with structured markdown using em
     }
 
     const modelCandidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
-    let result: any = null;
     let lastStatus = 500;
     let lastErrorText = "Unknown lesson generation error";
 
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    outer: for (const model of modelCandidates) {
+    const requestBody = JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: toGeminiContents(openaiMessages),
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: mode === "generate" ? 65536 : 4096,
+      },
+    });
+
+    // Try each model with the TRUE streaming endpoint so the client receives
+    // tokens as Gemini produces them (no more "Thinking..." then a giant dump).
+    for (const model of modelCandidates) {
       for (let attempt = 0; attempt < 3; attempt++) {
-        console.log(`Calling Gemini API with model: ${model} (attempt ${attempt + 1}) messages count: ${openaiMessages.length}`);
+        console.log(`Streaming Gemini ${model} (attempt ${attempt + 1}) messages=${openaiMessages.length}`);
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_GEMINI_API_KEY}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: toGeminiContents(openaiMessages),
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: mode === "generate" ? 65536 : 4096,
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GOOGLE_GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: requestBody,
+          },
+        );
+
+        if (response.ok && response.body) {
+          console.log(`Gemini stream connected (${model})`);
+          return new Response(pipeGeminiSseToOpenAi(response.body), {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              "X-Accel-Buffering": "no",
             },
-          }),
-        });
-
-        if (response.ok) {
-          result = await response.json();
-          break outer;
+          });
         }
 
         lastStatus = response.status;
         lastErrorText = await response.text();
-        console.error(`Gemini API error (${model}, attempt ${attempt + 1}):`, response.status, lastErrorText);
+        console.error(`Gemini stream error (${model}, attempt ${attempt + 1}):`, response.status, lastErrorText);
 
         const transient = response.status === 500 || response.status === 503 || response.status === 429;
         if (!transient) break;
@@ -415,43 +428,16 @@ For chat questions (mode != generate): respond with structured markdown using em
       }
     }
 
-    if (!result) {
-      if (lastStatus === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ error: `Lesson generation error (${lastStatus}): ${lastErrorText.substring(0, 200)}` }), {
-        status: lastStatus,
+    if (lastStatus === 429) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+        status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const generatedText = (result?.candidates ?? [])
-      .flatMap((candidate: any) => candidate?.content?.parts ?? [])
-      .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
-      .join("")
-      .trim();
-
-    if (!generatedText) {
-      const blockReason = result?.promptFeedback?.blockReason;
-      throw new Error(blockReason ? `Generation blocked: ${blockReason}` : "Empty response from lesson generation model");
-    }
-
-    const finishReason = result?.candidates?.[0]?.finishReason;
-    if (finishReason === "MAX_TOKENS") {
-      console.warn("Gemini response was truncated due to MAX_TOKENS. Consider reducing prompt complexity.");
-    }
-
-    console.log("Gemini API response successful, streaming started");
-    return new Response(buildSseStream(generatedText), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-      },
+    return new Response(JSON.stringify({ error: `Lesson generation error (${lastStatus}): ${lastErrorText.substring(0, 200)}` }), {
+      status: lastStatus,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : "Unknown error";
