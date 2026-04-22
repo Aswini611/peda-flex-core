@@ -15,8 +15,8 @@ const dobToPassword = (dob: string | null | undefined): string | null => {
   return `${match[3]}${match[2]}${match[1]}`;
 };
 
-const invalidLoginResponse = () =>
-  new Response(JSON.stringify({ success: false, error: "Invalid login credentials" }), {
+const errorResponse = (message: string) =>
+  new Response(JSON.stringify({ success: false, error: message }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
@@ -54,14 +54,18 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (studentError) throw studentError;
-    if (!student?.profile_id) return invalidLoginResponse();
+    if (!student?.profile_id) {
+      return errorResponse(`Student ID "${studentId}" not found. Please check your Student ID.`);
+    }
 
     const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(student.profile_id);
     if (authUserError) throw authUserError;
 
     const currentEmail = authUserData.user?.email;
     const desiredEmail = `${normalizedStudentId}@student.apas.local`;
+    const expectedDobPassword = dobToPassword(student.date_of_birth);
 
+    // Attempt 1: try the provided password against the current (existing) email
     if (currentEmail) {
       const { data: existingLogin, error: existingLoginError } = await supabaseAnon.auth.signInWithPassword({
         email: currentEmail,
@@ -75,7 +79,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    const expectedDobPassword = dobToPassword(student.date_of_birth);
+    // Attempt 2: try the provided password against the desired (canonical) email
+    if (currentEmail !== desiredEmail) {
+      const { data: desiredLogin, error: desiredLoginError } = await supabaseAnon.auth.signInWithPassword({
+        email: desiredEmail,
+        password: providedPassword,
+      });
+
+      if (!desiredLoginError && desiredLogin.session) {
+        return new Response(JSON.stringify({ success: true, session: desiredLogin.session, user: desiredLogin.user }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Attempt 3: if provided password matches DOB (DDMMYYYY), sync credentials and sign in
     if (expectedDobPassword && providedPassword === expectedDobPassword) {
       const { error: syncError } = await supabaseAdmin.auth.admin.updateUserById(student.profile_id, {
         email: desiredEmail,
@@ -97,10 +115,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    return invalidLoginResponse();
+    const hint = expectedDobPassword
+      ? "Use your previous password, or your Date of Birth in DDMMYYYY format."
+      : "Use the password set by your teacher/admin. (No Date of Birth on file for DOB login.)";
+    return errorResponse(`Incorrect password for ${student.roll_number}. ${hint}`);
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500,
+    return new Response(JSON.stringify({ success: false, error: (error as Error).message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
