@@ -139,7 +139,97 @@ const AdminPanel = () => {
     }
   };
 
-  const fetchAll = async () => {
+  const handleAddNewStudentToClass = async () => {
+    if (!selectedClassDetailsId) return;
+    if (!newStudent.name.trim()) {
+      toast({ title: "Name required", variant: "destructive" });
+      return;
+    }
+    const cls = classes.find((c) => c.id === selectedClassDetailsId);
+    if (!cls) return;
+    setAddingNewStudent(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-students-batch", {
+        body: {
+          mode: "import",
+          students: [{
+            rowNum: 1,
+            student_name: newStudent.name.trim(),
+            class: cls.name,
+            section: cls.section,
+            roll_number: newStudent.student_id.trim() || null,
+            parent_phone: newStudent.parent_phone.trim() || null,
+            parent_email: null,
+            date_of_birth: newStudent.date_of_birth || null,
+          }],
+        },
+      });
+      if (error) throw error;
+      const result = (data as any)?.results?.[0];
+      if (!result?.success) throw new Error(result?.error || "Failed to create student");
+      // Link to class
+      await supabase.from("class_students").insert({
+        class_id: selectedClassDetailsId,
+        student_id: result.studentId,
+        assigned_by: user?.id,
+      });
+      toast({ title: "Student added" });
+      setNewStudent({ name: "", student_id: "", date_of_birth: "", parent_phone: "" });
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setAddingNewStudent(false);
+    }
+  };
+
+  const openEditStudent = (member: ClassStudent) => {
+    if (!member.students) return;
+    setEditStudent({
+      id: member.students.id,
+      profile_id: "",
+      full_name: member.students.profiles?.full_name || "",
+      roll_number: member.students.roll_number || "",
+      date_of_birth: member.students.date_of_birth || "",
+      parent_phone: member.students.parent_phone || "",
+    });
+    setEditStudentOpen(true);
+  };
+
+  const handleSaveStudentEdit = async () => {
+    if (!editStudent) return;
+    setSavingStudentEdit(true);
+    try {
+      // Update student row
+      const { data: stu, error: stuErr } = await supabase
+        .from("students")
+        .update({
+          roll_number: editStudent.roll_number || null,
+          date_of_birth: editStudent.date_of_birth || null,
+          parent_phone: editStudent.parent_phone || null,
+        })
+        .eq("id", editStudent.id)
+        .select("profile_id")
+        .single();
+      if (stuErr) throw stuErr;
+      // Update profile name
+      if (stu?.profile_id && editStudent.full_name.trim()) {
+        const { error: profErr } = await supabase
+          .from("profiles")
+          .update({ full_name: editStudent.full_name.trim() })
+          .eq("id", stu.profile_id);
+        if (profErr) throw profErr;
+      }
+      toast({ title: "Student updated" });
+      setEditStudentOpen(false);
+      setEditStudent(null);
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingStudentEdit(false);
+    }
+  };
     setLoading(true);
     const [classesRes, studentsRes, teachersRes, csRes, ctRes, qaRes] = await Promise.all([
       supabase.from("classes").select("*").order("name"),
