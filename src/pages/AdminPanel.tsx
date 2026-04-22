@@ -270,6 +270,24 @@ const AdminPanel = () => {
   const selectedClassMembers = classStudents.filter((cs) => cs.class_id === selectedClassDetailsId);
   const selectedClassTeachers = classTeachers.filter((ct) => ct.class_id === selectedClassDetailsId);
 
+  // Sync edit form when opening a different class
+  useEffect(() => {
+    if (selectedClass) {
+      setEditClassName(selectedClass.name);
+      setEditClassSection(selectedClass.section);
+      setEditingClass(false);
+      setAddStudentSearch("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClassDetailsId]);
+
+  const assignedStudentIds = new Set(selectedClassMembers.map((m) => m.student_id));
+  const studentsAvailableToAdd = students.filter(
+    (s) =>
+      !assignedStudentIds.has(s.id) &&
+      (s.profiles?.full_name || "").toLowerCase().includes(addStudentSearch.toLowerCase())
+  );
+
   if (loading) {
     return (
       <AppLayout>
