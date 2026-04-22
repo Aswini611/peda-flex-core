@@ -230,6 +230,8 @@ const AdminPanel = () => {
       setSavingStudentEdit(false);
     }
   };
+
+  const fetchAll = async () => {
     setLoading(true);
     const [classesRes, studentsRes, teachersRes, csRes, ctRes, qaRes] = await Promise.all([
       supabase.from("classes").select("*").order("name"),
