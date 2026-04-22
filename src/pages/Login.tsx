@@ -21,6 +21,37 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (isStudentLogin) {
+      const { data, error } = await supabase.functions.invoke("student-login", {
+        body: { studentId: identifier, password },
+      });
+
+      if (error || !data?.session?.access_token || !data?.session?.refresh_token) {
+        toast({
+          title: "Login failed",
+          description: "Invalid login. Use your Student ID and your Date of Birth as password in DDMMYYYY format. Example: 8/7/2016 → 08072016.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+
+      if (setSessionError) {
+        toast({ title: "Login failed", description: setSessionError.message, variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      navigate("/dashboard");
+      setLoading(false);
+      return;
+    }
+
     const email = isStudentLogin
       ? `${identifier.trim().toLowerCase()}@student.apas.local`
       : identifier;
