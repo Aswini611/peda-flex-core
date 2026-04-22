@@ -123,6 +123,45 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     setValidations(results);
   };
 
+  const parseDOB = (val: any): string => {
+    if (val === null || val === undefined || val === "") return "";
+    // Excel date serial number (cellDates:false default) -> JS Date via XLSX helper
+    if (typeof val === "number") {
+      const d = XLSX.SSF.parse_date_code(val);
+      if (d) {
+        const yyyy = String(d.y).padStart(4, "0");
+        const mm = String(d.m).padStart(2, "0");
+        const dd = String(d.d).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    }
+    if (val instanceof Date) {
+      const yyyy = String(val.getFullYear()).padStart(4, "0");
+      const mm = String(val.getMonth() + 1).padStart(2, "0");
+      const dd = String(val.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    const s = String(val).trim();
+    // Try DD/MM/YYYY or DD-MM-YYYY
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (m) {
+      let [, d, mo, y] = m;
+      if (y.length === 2) y = (parseInt(y) > 50 ? "19" : "20") + y;
+      return `${y.padStart(4, "0")}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+    // Try YYYY-MM-DD passthrough
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    // ISO parse fallback
+    const dt = new Date(s);
+    if (!isNaN(dt.getTime())) {
+      const yyyy = String(dt.getFullYear()).padStart(4, "0");
+      const mm = String(dt.getMonth() + 1).padStart(2, "0");
+      const dd = String(dt.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return s;
+  };
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -130,16 +169,16 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     const reader = new FileReader();
     reader.onload = (evt) => {
       const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: "array" });
+      const wb = XLSX.read(data, { type: "array", cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
+      const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "", raw: true });
 
       const rows: ParsedRow[] = json.map((r, i) => ({
         rowNum: i + 2,
         student_name: String(r["Student Name"] || r["student_name"] || r["name"] || "").trim(),
         class: String(r["Class"] || r["class"] || r["grade"] || "").trim(),
         section: String(r["section"] || r["Section"] || "A").trim().toUpperCase(),
-        date_of_birth: String(r["Date OF birth"] || r["Date Of Birth"] || r["date_of_birth"] || r["DOB"] || "").trim(),
+        date_of_birth: parseDOB(r["Date OF birth"] ?? r["Date Of Birth"] ?? r["date_of_birth"] ?? r["DOB"] ?? ""),
         student_id: String(r["Student ID"] || r["student_id"] || r["roll_number"] || r["Roll Number"] || "").trim(),
         parent_phone: String(r["Parent Phone Number"] || r["parent_phone"] || r["Parent Phone"] || r["phone"] || "").trim(),
         teacher_name: String(r["Teacher Name"] || r["teacher_name"] || r["Teacher"] || "").trim(),
