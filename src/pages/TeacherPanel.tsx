@@ -59,8 +59,8 @@ const TeacherPanel = () => {
         .from("student_assessments")
         .select("id, student_name, student_age, age_group, responses, created_at, student_class, section");
 
-      // Admins see all assessments; teachers see only their own
-      if (profile?.role !== "admin") {
+      // Admins and School Admins/Principals see all assessments; teachers see only their own
+      if (profile?.role !== "admin" && profile?.role !== "school_admin") {
         query = query.eq("teacher_id", user!.id);
       }
 
