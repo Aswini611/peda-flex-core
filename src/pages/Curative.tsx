@@ -559,6 +559,10 @@ const Curative = () => {
 
   const chatHistorySessions = useMemo(() => loadHistory(), [loadHistory, historyVersion]);
 
+  // Refs used by selectedClass-change effect to distinguish user changes from history-restore
+  const prevClassRef = useRef(selectedClass);
+  const skipNextClassResetRef = useRef(false);
+
   const handleNewChat = useCallback(() => {
     setChatMessages([]);
     setHasGeneratedContent(false);
@@ -569,15 +573,18 @@ const Curative = () => {
     const sessions = loadHistory();
     const s = sessions.find((x) => x.id === id);
     if (!s) return;
-    setChatMessages(s.messages);
-    setCurrentSessionId(s.id);
-    setHasGeneratedContent(s.messages.some((m) => m.role === "assistant"));
-    // Restore class/section/subject so the user can continue chatting
+    // Prevent the selectedClass effect from wiping the messages we're about to restore
+    if (s.classValue && s.classValue !== selectedClass) {
+      skipNextClassResetRef.current = true;
+    }
     if (s.classValue) setSelectedClass(s.classValue);
     if (s.sectionValue) setSelectedSection(s.sectionValue);
     if (s.subjectValue !== undefined) setSelectedSubject(s.subjectValue);
+    setChatMessages(s.messages);
+    setCurrentSessionId(s.id);
+    setHasGeneratedContent(s.messages.some((m) => m.role === "assistant"));
     toast.success(`Loaded chat: ${s.title}`);
-  }, [loadHistory]);
+  }, [loadHistory, selectedClass]);
 
   const handleDeleteSession = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -707,7 +714,15 @@ const Curative = () => {
     }
   }, [chatMessages]);
 
+  // Track previous class so we only clear chat on a USER-initiated class change,
+  // not when restoring from history (which programmatically sets the class).
   useEffect(() => {
+    if (prevClassRef.current === selectedClass) return;
+    prevClassRef.current = selectedClass;
+    if (skipNextClassResetRef.current) {
+      skipNextClassResetRef.current = false;
+      return;
+    }
     setSelectedSection("");
     setSelectedSubject("");
     setSelectedChapter("");
