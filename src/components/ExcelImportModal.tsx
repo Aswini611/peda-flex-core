@@ -97,26 +97,25 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       if (!row.student_name) errors.push("Student name is required");
       if (!row.class) errors.push("Class is required");
       if (!row.section) errors.push("Section is required");
-      if (!row.roll_number) warnings.push("Roll number missing");
+      if (!row.student_id) warnings.push("Student ID missing");
+      if (!row.date_of_birth) warnings.push("Date of birth missing");
       if (row.parent_phone && !/^\+?[\d\s-]{7,15}$/.test(row.parent_phone))
         errors.push("Invalid phone format");
-      if (row.parent_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.parent_email))
-        errors.push("Invalid email format");
       return { row, errors, warnings };
     });
 
-    const rollMap = new Map<string, number[]>();
+    const idMap = new Map<string, number[]>();
     rows.forEach((r) => {
-      if (r.roll_number) {
-        const key = `${r.class}-${r.section}-${r.roll_number}`;
-        rollMap.set(key, [...(rollMap.get(key) || []), r.rowNum]);
+      if (r.student_id) {
+        const key = `${r.class}-${r.section}-${r.student_id}`;
+        idMap.set(key, [...(idMap.get(key) || []), r.rowNum]);
       }
     });
-    rollMap.forEach((rowNums) => {
+    idMap.forEach((rowNums) => {
       if (rowNums.length > 1) {
         rowNums.forEach((rn) => {
           const v = results.find((vr) => vr.row.rowNum === rn);
-          if (v) v.errors.push("Duplicate roll number in file");
+          if (v) v.errors.push("Duplicate Student ID in file");
         });
       }
     });
@@ -137,13 +136,13 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
       const rows: ParsedRow[] = json.map((r, i) => ({
         rowNum: i + 2,
-        student_name: String(r["student_name"] || r["Student Name"] || r["name"] || "").trim(),
+        student_name: String(r["Student Name"] || r["student_name"] || r["name"] || "").trim(),
         class: String(r["Class"] || r["class"] || r["grade"] || "").trim(),
         section: String(r["section"] || r["Section"] || "A").trim().toUpperCase(),
-        roll_number: String(r["roll_number"] || r["Roll Number"] || r["roll"] || "").trim(),
-        parent_phone: String(r["parent_phone"] || r["Parent Phone"] || r["phone"] || "").trim(),
-        parent_email: String(r["parent_email"] || r["Parent Email"] || r["email"] || "").trim(),
-        teacher_name: String(r["teacher_name"] || r["Teacher Name"] || r["Teacher"] || "").trim(),
+        date_of_birth: String(r["Date OF birth"] || r["Date Of Birth"] || r["date_of_birth"] || r["DOB"] || "").trim(),
+        student_id: String(r["Student ID"] || r["student_id"] || r["roll_number"] || r["Roll Number"] || "").trim(),
+        parent_phone: String(r["Parent Phone Number"] || r["parent_phone"] || r["Parent Phone"] || r["phone"] || "").trim(),
+        teacher_name: String(r["Teacher Name"] || r["teacher_name"] || r["Teacher"] || "").trim(),
       }));
 
       setParsed(rows);
@@ -162,7 +161,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ["student_name", "Class", "section", "roll_number", "parent_phone", "parent_email", "teacher_name"],
+      ["Student Name", "Class", "section", "Date OF birth", "Student ID", "Parent Phone Number", "Teacher Name"],
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
