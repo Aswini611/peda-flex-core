@@ -700,7 +700,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
                         <Select value={cls.teacherRole} onValueChange={(v) => updateClassSetup(idx, "teacherRole", v)}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="primary">Primary</SelectItem>
                             <SelectItem value="subject">Subject</SelectItem>
                           </SelectContent>
                         </Select>
