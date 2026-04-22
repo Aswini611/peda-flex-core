@@ -23,16 +23,42 @@ Deno.serve(async (req) => {
     if (mode === "import") {
       const results: any[] = [];
 
+      // Helper: convert YYYY-MM-DD -> DDMMYYYY for password
+      const dobToPassword = (dob: string | null | undefined): string | null => {
+        if (!dob) return null;
+        const m = String(dob).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!m) return null;
+        return `${m[3]}${m[2]}${m[1]}`;
+      };
+
       for (const s of students) {
-        // Generate a unique placeholder email for each student
-        const uniqueId = crypto.randomUUID().slice(0, 8);
-        const placeholderEmail = `student_${uniqueId}@import.local`;
-        const placeholderPassword = crypto.randomUUID();
+        // Login: Student ID becomes the username; DOB (DDMMYYYY) becomes the password.
+        // Email format must match Login.tsx: <studentid>@student.apas.local
+        const studentIdRaw = String(s.roll_number || "").trim().toLowerCase();
+        if (!studentIdRaw) {
+          results.push({
+            rowNum: s.rowNum,
+            success: false,
+            error: "Student ID is required to create a login",
+          });
+          continue;
+        }
+        const loginEmail = `${studentIdRaw}@student.apas.local`;
+
+        const dobPassword = dobToPassword(s.date_of_birth);
+        if (!dobPassword) {
+          results.push({
+            rowNum: s.rowNum,
+            success: false,
+            error: "Valid Date of Birth is required to generate a password",
+          });
+          continue;
+        }
 
         // Create auth user — the handle_new_user trigger will auto-create profile + student
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email: placeholderEmail,
-          password: placeholderPassword,
+          email: loginEmail,
+          password: dobPassword,
           email_confirm: true,
           user_metadata: {
             full_name: s.student_name,
