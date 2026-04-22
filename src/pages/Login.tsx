@@ -71,6 +71,15 @@ const Login = () => {
               <span className="text-sm font-medium text-foreground">I am a Student</span>
             </label>
 
+            {isStudentLogin ? (
+              <div className="rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">Student login</p>
+                <p className="mt-1">Use your Student ID as the login ID.</p>
+                <p className="mt-1">Use your Date of Birth as the password in <span className="font-medium text-foreground">DDMMYYYY</span> format.</p>
+                <p className="mt-1">Example: DOB 8/7/2016 → password <span className="font-medium text-foreground">08072016</span>.</p>
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <Label htmlFor="identifier" className="text-foreground font-medium">
                 {isStudentLogin ? "Student ID" : "Email"}
