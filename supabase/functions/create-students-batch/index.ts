@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
     if (mode === "import") {
       const results: any[] = [];
 
-      // Helper: convert YYYY-MM-DD -> DDMMYYYY for password
       const dobToPassword = (dob: string | null | undefined): string | null => {
         if (!dob) return null;
         const m = String(dob).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -31,10 +30,11 @@ Deno.serve(async (req) => {
         return `${m[3]}${m[2]}${m[1]}`;
       };
 
+      const normalizeStudentId = (value: string | null | undefined) =>
+        String(value || "").trim().toLowerCase();
+
       for (const s of students) {
-        // Login: Student ID becomes the username; DOB (DDMMYYYY) becomes the password.
-        // Email format must match Login.tsx: <studentid>@student.apas.local
-        const studentIdRaw = String(s.roll_number || "").trim().toLowerCase();
+        const studentIdRaw = normalizeStudentId(s.roll_number);
         if (!studentIdRaw) {
           results.push({
             rowNum: s.rowNum,
@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
           });
           continue;
         }
-        const loginEmail = `${studentIdRaw}@student.apas.local`;
 
+        const loginEmail = `${studentIdRaw}@student.apas.local`;
         const dobPassword = dobToPassword(s.date_of_birth);
         if (!dobPassword) {
           results.push({
@@ -55,55 +55,109 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Create auth user — the handle_new_user trigger will auto-create profile + student
-        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email: loginEmail,
-          password: dobPassword,
-          email_confirm: true,
-          user_metadata: {
-            full_name: s.student_name,
-            role: "student",
-            class: s.class || null,
-          },
-        });
+        const { data: existingStudent, error: existingStudentError } = await supabaseAdmin
+          .from("students")
+          .select("id, profile_id")
+          .ilike("roll_number", s.roll_number || "")
+          .maybeSingle();
 
-        if (authError) {
+        if (existingStudentError) {
           results.push({
             rowNum: s.rowNum,
             success: false,
-            error: authError.message,
+            error: existingStudentError.message,
           });
           continue;
         }
 
-        const userId = authData.user.id;
+        let userId = existingStudent?.profile_id;
+        let studentId = existingStudent?.id;
 
-        // Update the auto-created student record with additional fields
-        const { data: studentData, error: studentError } = await supabaseAdmin
-          .from("students")
-          .update({
-            roll_number: s.roll_number || null,
-            parent_phone: s.parent_phone || null,
-            parent_email: s.parent_email || null,
-            grade: s.class || null,
-            date_of_birth: s.date_of_birth || null,
-          })
-          .eq("profile_id", userId)
-          .select("id")
-          .single();
+        if (userId) {
+          const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            email: loginEmail,
+            password: dobPassword,
+            email_confirm: true,
+            user_metadata: {
+              full_name: s.student_name,
+              role: "student",
+              class: s.class || null,
+            },
+          });
 
-        if (studentError) {
-          // Student record may not exist yet if trigger didn't fire — create it
+          if (updateAuthError) {
+            results.push({
+              rowNum: s.rowNum,
+              success: false,
+              error: updateAuthError.message,
+            });
+            continue;
+          }
+        } else {
+          const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+            email: loginEmail,
+            password: dobPassword,
+            email_confirm: true,
+            user_metadata: {
+              full_name: s.student_name,
+              role: "student",
+              class: s.class || null,
+            },
+          });
+
+          if (authError) {
+            results.push({
+              rowNum: s.rowNum,
+              success: false,
+              error: authError.message,
+            });
+            continue;
+          }
+
+          userId = authData.user.id;
+        }
+
+        const { error: profileError } = await supabaseAdmin
+          .from("profiles")
+          .update({ full_name: s.student_name || null, role: "student" })
+          .eq("id", userId);
+
+        if (profileError) {
+          results.push({
+            rowNum: s.rowNum,
+            success: false,
+            error: profileError.message,
+          });
+          continue;
+        }
+
+        const studentPayload = {
+          roll_number: s.roll_number || null,
+          parent_phone: s.parent_phone || null,
+          parent_email: s.parent_email || null,
+          grade: s.class || null,
+          date_of_birth: s.date_of_birth || null,
+          profile_id: userId,
+        };
+
+        if (studentId) {
+          const { error: updateStudentError } = await supabaseAdmin
+            .from("students")
+            .update(studentPayload)
+            .eq("id", studentId);
+
+          if (updateStudentError) {
+            results.push({
+              rowNum: s.rowNum,
+              success: false,
+              error: updateStudentError.message,
+            });
+            continue;
+          }
+        } else {
           const { data: insertedStudent, error: insertError } = await supabaseAdmin
             .from("students")
-            .insert({
-              profile_id: userId,
-              grade: s.class || null,
-              roll_number: s.roll_number || null,
-              parent_phone: s.parent_phone || null,
-              parent_email: s.parent_email || null,
-              date_of_birth: s.date_of_birth || null,
-            })
+            .insert(studentPayload)
             .select("id")
             .single();
 
@@ -116,24 +170,17 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          results.push({
-            rowNum: s.rowNum,
-            success: true,
-            studentId: insertedStudent.id,
-            profileId: userId,
-            loginId: studentIdRaw,
-            password: dobPassword,
-          });
-        } else {
-          results.push({
-            rowNum: s.rowNum,
-            success: true,
-            studentId: studentData.id,
-            profileId: userId,
-            loginId: studentIdRaw,
-            password: dobPassword,
-          });
+          studentId = insertedStudent.id;
         }
+
+        results.push({
+          rowNum: s.rowNum,
+          success: true,
+          studentId,
+          profileId: userId,
+          loginId: studentIdRaw,
+          password: dobPassword,
+        });
       }
 
       return new Response(JSON.stringify({ results }), {
