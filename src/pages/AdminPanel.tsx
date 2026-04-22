@@ -592,37 +592,41 @@ const AdminPanel = () => {
                       </div>
                     </div>
 
-                    {/* Add Student */}
-                    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+                    {/* Add New Student */}
+                    <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
                       <Label className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" /> Add Existing Student to Class
+                        <Plus className="h-4 w-4" /> Add New Student to Class
                       </Label>
-                      <Input
-                        placeholder="Search student by name..."
-                        value={addStudentSearch}
-                        onChange={(e) => setAddStudentSearch(e.target.value)}
-                      />
-                      {addStudentSearch && (
-                        <div className="max-h-40 overflow-auto rounded-md border border-border bg-background">
-                          {studentsAvailableToAdd.length === 0 ? (
-                            <p className="p-3 text-xs text-muted-foreground">No matching students available.</p>
-                          ) : (
-                            studentsAvailableToAdd.slice(0, 20).map((s) => (
-                              <button
-                                key={s.id}
-                                type="button"
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between"
-                                onClick={() => handleAddStudentToSelectedClass(s.id)}
-                              >
-                                <span>{s.profiles?.full_name || "Unnamed"}</span>
-                                <span className="text-xs text-muted-foreground">{s.grade || ""}</span>
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      )}
+                      <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+                        <Input
+                          placeholder="Student Name *"
+                          value={newStudent.name}
+                          onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                        />
+                        <Input
+                          placeholder="Student ID"
+                          value={newStudent.student_id}
+                          onChange={(e) => setNewStudent({ ...newStudent, student_id: e.target.value })}
+                        />
+                        <Input
+                          type="date"
+                          placeholder="Date of Birth"
+                          value={newStudent.date_of_birth}
+                          onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
+                        />
+                        <Input
+                          placeholder="Parent Phone"
+                          value={newStudent.parent_phone}
+                          onChange={(e) => setNewStudent({ ...newStudent, parent_phone: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button size="sm" onClick={handleAddNewStudentToClass} disabled={addingNewStudent || !newStudent.name.trim()}>
+                          {addingNewStudent ? "Adding..." : "Add Student"}
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        To add brand-new students, use <strong>Import Excel</strong> on the main Classes screen.
+                        For bulk additions, use <strong>Import Excel</strong> on the main Classes screen.
                       </p>
                     </div>
 
@@ -637,7 +641,7 @@ const AdminPanel = () => {
                               <TableHead>Student ID</TableHead>
                               <TableHead>Date of Birth</TableHead>
                               <TableHead>Parent Phone</TableHead>
-                              <TableHead className="w-12"></TableHead>
+                              <TableHead className="w-24 text-right">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -648,11 +652,20 @@ const AdminPanel = () => {
                                 <TableCell>{member.students?.roll_number || "—"}</TableCell>
                                 <TableCell>{member.students?.date_of_birth ? new Date(member.students.date_of_birth).toLocaleDateString() : "—"}</TableCell>
                                 <TableCell>{member.students?.parent_phone || "—"}</TableCell>
-                                <TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openEditStudent(member)}
+                                    title="Edit student"
+                                  >
+                                    <Pencil className="h-4 w-4 text-primary" />
+                                  </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleRemoveStudent(member.id)}
+                                    title="Remove from class"
                                   >
                                     <Trash2 className="h-4 w-4 text-destructive" />
                                   </Button>
@@ -667,6 +680,41 @@ const AdminPanel = () => {
                           </TableBody>
                         </Table>
                       </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+
+            {/* Edit Student Dialog */}
+            <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Student</DialogTitle>
+                </DialogHeader>
+                {editStudent && (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label>Student Name</Label>
+                      <Input value={editStudent.full_name} onChange={(e) => setEditStudent({ ...editStudent, full_name: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Student ID</Label>
+                      <Input value={editStudent.roll_number} onChange={(e) => setEditStudent({ ...editStudent, roll_number: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Date of Birth</Label>
+                      <Input type="date" value={editStudent.date_of_birth} onChange={(e) => setEditStudent({ ...editStudent, date_of_birth: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Parent Phone</Label>
+                      <Input value={editStudent.parent_phone} onChange={(e) => setEditStudent({ ...editStudent, parent_phone: e.target.value })} />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" onClick={() => setEditStudentOpen(false)}>Cancel</Button>
+                      <Button onClick={handleSaveStudentEdit} disabled={savingStudentEdit || !editStudent.full_name.trim()}>
+                        {savingStudentEdit ? "Saving..." : "Save Changes"}
+                      </Button>
                     </div>
                   </div>
                 )}
