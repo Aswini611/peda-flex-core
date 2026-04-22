@@ -258,7 +258,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
         classId: "",
         studentCount: info.studentIds.length,
         teacherId: matchedTeacher?.id || "",
-        teacherRole: "primary",
+        teacherRole: "subject",
         teacherSubject: "",
         isEditing: false,
       });
