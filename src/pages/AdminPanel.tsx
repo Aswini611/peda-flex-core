@@ -50,6 +50,7 @@ interface ClassStudent {
     roll_number: string | null;
     parent_phone: string | null;
     parent_email: string | null;
+    date_of_birth: string | null;
   } | null;
 }
 
@@ -90,6 +91,48 @@ const AdminPanel = () => {
   const [createClassOpen, setCreateClassOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedClassDetailsId, setSelectedClassDetailsId] = useState<string | null>(null);
+  const [editingClass, setEditingClass] = useState(false);
+  const [editClassName, setEditClassName] = useState("");
+  const [editClassSection, setEditClassSection] = useState("");
+  const [addStudentSearch, setAddStudentSearch] = useState("");
+  const [savingClassEdit, setSavingClassEdit] = useState(false);
+
+  const handleSaveClassEdit = async () => {
+    if (!selectedClassDetailsId || !editClassName.trim()) return;
+    setSavingClassEdit(true);
+    const { error } = await supabase
+      .from("classes")
+      .update({ name: editClassName.trim(), section: (editClassSection.trim() || "A").toUpperCase() })
+      .eq("id", selectedClassDetailsId);
+    setSavingClassEdit(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Class updated" });
+      setEditingClass(false);
+      fetchAll();
+    }
+  };
+
+  const handleAddStudentToSelectedClass = async (studentId: string) => {
+    if (!selectedClassDetailsId || !studentId) return;
+    const { error } = await supabase.from("class_students").insert({
+      class_id: selectedClassDetailsId,
+      student_id: studentId,
+      assigned_by: user?.id,
+    });
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.code === "23505" ? "Student already in this class" : error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Student added" });
+      setAddStudentSearch("");
+      fetchAll();
+    }
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -97,7 +140,7 @@ const AdminPanel = () => {
       supabase.from("classes").select("*").order("name"),
       supabase.from("students").select("id, profile_id, grade, age, profiles!inner(full_name, role)").eq("profiles.role", "student"),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
-      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, age, roll_number, parent_phone, parent_email, profiles(full_name))"),
+      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, age, roll_number, parent_phone, parent_email, date_of_birth, profiles(full_name))"),
       supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
       supabase.from("teacher_question_assignments").select("*"),
     ]);
@@ -226,6 +269,24 @@ const AdminPanel = () => {
   const selectedClass = classes.find((c) => c.id === selectedClassDetailsId) || null;
   const selectedClassMembers = classStudents.filter((cs) => cs.class_id === selectedClassDetailsId);
   const selectedClassTeachers = classTeachers.filter((ct) => ct.class_id === selectedClassDetailsId);
+
+  // Sync edit form when opening a different class
+  useEffect(() => {
+    if (selectedClass) {
+      setEditClassName(selectedClass.name);
+      setEditClassSection(selectedClass.section);
+      setEditingClass(false);
+      setAddStudentSearch("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClassDetailsId]);
+
+  const assignedStudentIds = new Set(selectedClassMembers.map((m) => m.student_id));
+  const studentsAvailableToAdd = students.filter(
+    (s) =>
+      !assignedStudentIds.has(s.id) &&
+      (s.profiles?.full_name || "").toLowerCase().includes(addStudentSearch.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -364,15 +425,45 @@ const AdminPanel = () => {
             </Card>
 
             <Dialog open={Boolean(selectedClassDetailsId)} onOpenChange={(open) => !open && setSelectedClassDetailsId(null)}>
-              <DialogContent className="max-w-4xl">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>
-                    {selectedClass ? `${selectedClass.name} - ${selectedClass.section}` : "Class details"}
+                  <DialogTitle className="flex items-center justify-between gap-3">
+                    <span>
+                      {selectedClass ? `${selectedClass.name} - ${selectedClass.section}` : "Class details"}
+                    </span>
+                    {selectedClass && !editingClass && (
+                      <Button size="sm" variant="outline" onClick={() => setEditingClass(true)}>
+                        Edit Class
+                      </Button>
+                    )}
                   </DialogTitle>
                 </DialogHeader>
 
                 {selectedClass && (
                   <div className="space-y-5">
+                    {editingClass && (
+                      <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label>Class Name</Label>
+                            <Input value={editClassName} onChange={(e) => setEditClassName(e.target.value)} />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>Section</Label>
+                            <Input value={editClassSection} onChange={(e) => setEditClassSection(e.target.value)} />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => { setEditingClass(false); setEditClassName(selectedClass.name); setEditClassSection(selectedClass.section); }}>
+                            Cancel
+                          </Button>
+                          <Button size="sm" onClick={handleSaveClassEdit} disabled={savingClassEdit || !editClassName.trim()}>
+                            {savingClassEdit ? "Saving..." : "Save"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                       <div className="rounded-lg border border-border bg-card p-4">
                         <p className="text-xs text-muted-foreground">Students</p>
@@ -404,6 +495,40 @@ const AdminPanel = () => {
                       </div>
                     </div>
 
+                    {/* Add Student */}
+                    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+                      <Label className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" /> Add Existing Student to Class
+                      </Label>
+                      <Input
+                        placeholder="Search student by name..."
+                        value={addStudentSearch}
+                        onChange={(e) => setAddStudentSearch(e.target.value)}
+                      />
+                      {addStudentSearch && (
+                        <div className="max-h-40 overflow-auto rounded-md border border-border bg-background">
+                          {studentsAvailableToAdd.length === 0 ? (
+                            <p className="p-3 text-xs text-muted-foreground">No matching students available.</p>
+                          ) : (
+                            studentsAvailableToAdd.slice(0, 20).map((s) => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between"
+                                onClick={() => handleAddStudentToSelectedClass(s.id)}
+                              >
+                                <span>{s.profiles?.full_name || "Unnamed"}</span>
+                                <span className="text-xs text-muted-foreground">{s.grade || ""}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        To add brand-new students, use <strong>Import Excel</strong> on the main Classes screen.
+                      </p>
+                    </div>
+
                     <div className="space-y-2">
                       <Label>Class Members</Label>
                       <div className="max-h-[360px] overflow-auto rounded-lg border border-border">
@@ -411,10 +536,11 @@ const AdminPanel = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Student Name</TableHead>
-                              <TableHead>Grade</TableHead>
-                              <TableHead>Roll No.</TableHead>
+                              <TableHead>Class</TableHead>
+                              <TableHead>Student ID</TableHead>
+                              <TableHead>Date of Birth</TableHead>
                               <TableHead>Parent Phone</TableHead>
-                              <TableHead>Parent Email</TableHead>
+                              <TableHead className="w-12"></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -423,13 +549,22 @@ const AdminPanel = () => {
                                 <TableCell className="font-medium">{member.students?.profiles?.full_name || "Unnamed"}</TableCell>
                                 <TableCell>{member.students?.grade || "—"}</TableCell>
                                 <TableCell>{member.students?.roll_number || "—"}</TableCell>
+                                <TableCell>{member.students?.date_of_birth ? new Date(member.students.date_of_birth).toLocaleDateString() : "—"}</TableCell>
                                 <TableCell>{member.students?.parent_phone || "—"}</TableCell>
-                                <TableCell>{member.students?.parent_email || "—"}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleRemoveStudent(member.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </TableCell>
                               </TableRow>
                             ))}
                             {selectedClassMembers.length === 0 && (
                               <TableRow>
-                                <TableCell colSpan={5} className="text-center text-muted-foreground">No students assigned yet.</TableCell>
+                                <TableCell colSpan={6} className="text-center text-muted-foreground">No students assigned yet.</TableCell>
                               </TableRow>
                             )}
                           </TableBody>

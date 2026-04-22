@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
             parent_phone: s.parent_phone || null,
             parent_email: s.parent_email || null,
             grade: s.class || null,
+            date_of_birth: s.date_of_birth || null,
           })
           .eq("profile_id", userId)
           .select("id")
@@ -75,6 +76,7 @@ Deno.serve(async (req) => {
               roll_number: s.roll_number || null,
               parent_phone: s.parent_phone || null,
               parent_email: s.parent_email || null,
+              date_of_birth: s.date_of_birth || null,
             })
             .select("id")
             .single();
