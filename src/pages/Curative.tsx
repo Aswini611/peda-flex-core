@@ -739,6 +739,11 @@ const Curative = () => {
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: async () => {
           setIsStreaming(false);
+          // Persist conversation to history
+          try {
+            const finalMessages: ChatMessage[] = [...chatMessages, userMsg, { role: "assistant", content: assistantSoFar }];
+            persistCurrentSession(finalMessages);
+          } catch (err) { console.error("history persist failed", err); }
           if (mode === "generate") {
             setHasGeneratedContent(true);
             awardXp("generate_lesson", "Generated a lesson plan");
