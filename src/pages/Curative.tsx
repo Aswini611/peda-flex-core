@@ -716,8 +716,6 @@ const Curative = () => {
 
   // Track previous class so we only clear chat on a USER-initiated class change,
   // not when restoring from history (which programmatically sets the class).
-  const prevClassRef = useRef(selectedClass);
-  const skipNextClassResetRef = useRef(false);
   useEffect(() => {
     if (prevClassRef.current === selectedClass) return;
     prevClassRef.current = selectedClass;
