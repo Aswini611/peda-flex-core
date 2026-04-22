@@ -534,9 +534,16 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
                         </TableCell>
                         <TableCell>
                           {isEditing ? (
-                            <Input value={v.row.roll_number} onClick={(e) => e.stopPropagation()} onChange={(e) => updateRow(v.row.rowNum, "roll_number", e.target.value)} className="h-7 text-xs w-20" />
+                            <Input value={v.row.student_id} onClick={(e) => e.stopPropagation()} onChange={(e) => updateRow(v.row.rowNum, "student_id", e.target.value)} className="h-7 text-xs w-20" />
                           ) : (
-                            <span className="text-sm">{v.row.roll_number || "—"}</span>
+                            <span className="text-sm">{v.row.student_id || "—"}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input value={v.row.date_of_birth} onClick={(e) => e.stopPropagation()} onChange={(e) => updateRow(v.row.rowNum, "date_of_birth", e.target.value)} className="h-7 text-xs w-28" placeholder="YYYY-MM-DD" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{v.row.date_of_birth || "—"}</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -544,13 +551,6 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
                             <Input value={v.row.parent_phone} onClick={(e) => e.stopPropagation()} onChange={(e) => updateRow(v.row.rowNum, "parent_phone", e.target.value)} className="h-7 text-xs w-32" />
                           ) : (
                             <span className="text-xs text-muted-foreground">{v.row.parent_phone || "—"}</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {isEditing ? (
-                            <Input value={v.row.parent_email} onClick={(e) => e.stopPropagation()} onChange={(e) => updateRow(v.row.rowNum, "parent_email", e.target.value)} className="h-7 text-xs w-36" />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">{v.row.parent_email || "—"}</span>
                           )}
                         </TableCell>
                         <TableCell>
