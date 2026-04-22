@@ -22,11 +22,11 @@ const toGeminiContents = (messages: OpenAIMessage[]) =>
       parts: [{ text: message.content }],
     }));
 
+// Fallback: wrap a complete text response into our OpenAI-compatible SSE format.
 const buildSseStream = (text: string) =>
   new ReadableStream({
     start(controller) {
-      const chunkSize = 600;
-
+      const chunkSize = 80;
       for (let index = 0; index < text.length; index += chunkSize) {
         const chunk = text.slice(index, index + chunkSize);
         controller.enqueue(
@@ -35,11 +35,58 @@ const buildSseStream = (text: string) =>
           ),
         );
       }
-
       controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       controller.close();
     },
   });
+
+// Pipe Gemini's native SSE (streamGenerateContent?alt=sse) into OpenAI-style
+// SSE chunks so the client receives true token-by-token streaming.
+const pipeGeminiSseToOpenAi = (geminiBody: ReadableStream<Uint8Array>) => {
+  const decoder = new TextDecoder();
+  return new ReadableStream({
+    async start(controller) {
+      const reader = geminiBody.getReader();
+      let buffer = "";
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (!line.startsWith("data:")) continue;
+            const payload = line.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(payload);
+              const parts = parsed?.candidates?.[0]?.content?.parts ?? [];
+              const text = parts
+                .map((p: any) => (typeof p?.text === "string" ? p.text : ""))
+                .join("");
+              if (text) {
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`,
+                  ),
+                );
+              }
+            } catch {
+              // ignore malformed chunk
+            }
+          }
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      } catch (err) {
+        console.error("Gemini stream pipe error:", err);
+      } finally {
+        controller.close();
+      }
+    },
+  });
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
