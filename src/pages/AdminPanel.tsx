@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet, ClipboardCheck, Bell } from "lucide-react";
+import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet, ClipboardCheck, Bell, Pencil } from "lucide-react";
 import { ExcelImportModal } from "@/components/ExcelImportModal";
 import { DiagnosticApprovalPanel } from "@/components/DiagnosticApprovalPanel";
 
