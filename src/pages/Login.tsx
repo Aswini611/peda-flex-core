@@ -30,7 +30,9 @@ const Login = () => {
     if (error) {
       const msg = error.message === "Email not confirmed"
         ? "Please verify your email before signing in. Check your inbox for the verification link."
-        : error.message;
+        : isStudentLogin
+          ? "Invalid login. Use your Student ID and your Date of Birth as password in DDMMYYYY format. Example: 8/7/2016 → 08072016."
+          : error.message;
       toast({ title: "Login failed", description: msg, variant: "destructive" });
       setLoading(false);
       return;
@@ -100,7 +102,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder={isStudentLogin ? "e.g. 08072016" : "••••••••"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 pr-11 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
