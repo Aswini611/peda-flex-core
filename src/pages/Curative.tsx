@@ -1288,11 +1288,61 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                 <p className="text-white/70 text-xs mt-0.5">Your intelligent co-teacher — ask anything about your class</p>
               </div>
             </div>
-            {chatMessages.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => { setChatMessages([]); setHasGeneratedContent(false); }} className="text-white/70 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
-                <Trash2 className="h-3.5 w-3.5" /> Clear Chat
-              </Button>
-            )}
+            <div className="flex items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
+                    <History className="h-3.5 w-3.5" /> History
+                    {chatHistorySessions.length > 0 && (
+                      <span className="ml-1 text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">{chatHistorySessions.length}</span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+                  <DropdownMenuLabel className="flex items-center justify-between">
+                    <span>Chat history</span>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={handleNewChat}>
+                      <Plus className="h-3 w-3" /> New
+                    </Button>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {chatHistorySessions.length === 0 ? (
+                    <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                      No previous chats yet. Start a conversation and it will appear here.
+                    </div>
+                  ) : (
+                    chatHistorySessions.map((s) => (
+                      <DropdownMenuItem
+                        key={s.id}
+                        onClick={() => handleLoadSession(s.id)}
+                        className={`flex items-start justify-between gap-2 cursor-pointer py-2 ${currentSessionId === s.id ? "bg-accent/10" : ""}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-foreground truncate">{s.title}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                            <span>{s.classLabel} • Sec {s.section}</span>
+                            <span>·</span>
+                            <span>{new Date(s.updatedAt).toLocaleDateString()} {new Date(s.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => handleDeleteSession(s.id, e)}
+                          className="shrink-0 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          aria-label="Delete chat"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {chatMessages.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleNewChat} className="text-white/70 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
+                  <Plus className="h-3.5 w-3.5" /> New Chat
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
