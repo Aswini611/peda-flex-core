@@ -185,14 +185,14 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       .select("id, roll_number, grade, profiles(full_name)");
 
     // Separate existing vs new students
-    const newStudents: { rowNum: number; student_name: string; class: string; roll_number: string; parent_phone: string; parent_email: string; teacher_name: string; section: string }[] = [];
+    const newStudents: { rowNum: number; student_name: string; class: string; roll_number: string; parent_phone: string; parent_email: string; teacher_name: string; section: string; date_of_birth: string }[] = [];
 
     for (const v of validRows) {
       const classKey = `${v.row.class} - ${v.row.section}`;
       const existing = existingStudents?.find(
         (s) =>
           (s as any).profiles?.full_name?.toLowerCase() === v.row.student_name.toLowerCase() &&
-          s.roll_number === v.row.roll_number &&
+          s.roll_number === v.row.student_id &&
           s.grade === v.row.class
       );
 
@@ -208,10 +208,11 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
           student_name: v.row.student_name,
           class: v.row.class,
           section: v.row.section,
-          roll_number: v.row.roll_number,
+          roll_number: v.row.student_id,
           parent_phone: v.row.parent_phone,
-          parent_email: v.row.parent_email,
+          parent_email: "",
           teacher_name: v.row.teacher_name,
+          date_of_birth: v.row.date_of_birth,
         });
       }
     }
