@@ -494,9 +494,9 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
                     <TableHead>Student Name</TableHead>
                     <TableHead>Class</TableHead>
                     <TableHead>Section</TableHead>
-                    <TableHead>Roll No.</TableHead>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>DOB</TableHead>
                     <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
                     <TableHead>Teacher</TableHead>
                     <TableHead className="w-16">Status</TableHead>
                   </TableRow>
