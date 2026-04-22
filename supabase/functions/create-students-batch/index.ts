@@ -121,6 +121,8 @@ Deno.serve(async (req) => {
             success: true,
             studentId: insertedStudent.id,
             profileId: userId,
+            loginId: studentIdRaw,
+            password: dobPassword,
           });
         } else {
           results.push({
@@ -128,6 +130,8 @@ Deno.serve(async (req) => {
             success: true,
             studentId: studentData.id,
             profileId: userId,
+            loginId: studentIdRaw,
+            password: dobPassword,
           });
         }
       }
