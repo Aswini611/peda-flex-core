@@ -508,6 +508,9 @@ const Curative = () => {
     classLabel: string;
     section: string;
     subject: string;
+    classValue?: string;
+    sectionValue?: string;
+    subjectValue?: string;
     messages: ChatMessage[];
     updatedAt: number;
   };
@@ -543,6 +546,9 @@ const Curative = () => {
       classLabel,
       section: selectedSection || "—",
       subject: selectedSubject || "",
+      classValue: selectedClass,
+      sectionValue: selectedSection,
+      subjectValue: selectedSubject,
       messages,
       updatedAt: Date.now(),
     };
@@ -566,6 +572,10 @@ const Curative = () => {
     setChatMessages(s.messages);
     setCurrentSessionId(s.id);
     setHasGeneratedContent(s.messages.some((m) => m.role === "assistant"));
+    // Restore class/section/subject so the user can continue chatting
+    if (s.classValue) setSelectedClass(s.classValue);
+    if (s.sectionValue) setSelectedSection(s.sectionValue);
+    if (s.subjectValue !== undefined) setSelectedSubject(s.subjectValue);
     toast.success(`Loaded chat: ${s.title}`);
   }, [loadHistory]);
 
