@@ -24,9 +24,9 @@ interface ParsedRow {
   student_name: string;
   class: string;
   section: string;
-  roll_number: string;
+  date_of_birth: string;
+  student_id: string;
   parent_phone: string;
-  parent_email: string;
   teacher_name: string;
 }
 
