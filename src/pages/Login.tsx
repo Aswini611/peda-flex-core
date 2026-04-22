@@ -26,10 +26,10 @@ const Login = () => {
         body: { studentId: identifier, password },
       });
 
-      if (error || !data?.session?.access_token || !data?.session?.refresh_token) {
+      if (error || !data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
         toast({
           title: "Login failed",
-          description: "Invalid login. Use your Student ID and your Date of Birth as password in DDMMYYYY format. Example: 8/7/2016 → 08072016.",
+          description: data?.error || "Invalid login. Use your Student ID and your Date of Birth as password in DDMMYYYY format. Example: 8/7/2016 → 08072016.",
           variant: "destructive",
         });
         setLoading(false);

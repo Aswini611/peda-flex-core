@@ -15,6 +15,11 @@ const dobToPassword = (dob: string | null | undefined): string | null => {
   return `${match[3]}${match[2]}${match[1]}`;
 };
 
+const invalidLoginResponse = () =>
+  new Response(JSON.stringify({ success: false, error: "Invalid login credentials" }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -49,12 +54,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (studentError) throw studentError;
-    if (!student?.profile_id) {
-      return new Response(JSON.stringify({ error: "Invalid login credentials" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!student?.profile_id) return invalidLoginResponse();
 
     const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(student.profile_id);
     if (authUserError) throw authUserError;
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       });
 
       if (!existingLoginError && existingLogin.session) {
-        return new Response(JSON.stringify({ session: existingLogin.session, user: existingLogin.user }), {
+        return new Response(JSON.stringify({ success: true, session: existingLogin.session, user: existingLogin.user }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -91,16 +91,13 @@ Deno.serve(async (req) => {
       });
 
       if (!syncedLoginError && syncedLogin.session) {
-        return new Response(JSON.stringify({ session: syncedLogin.session, user: syncedLogin.user }), {
+        return new Response(JSON.stringify({ success: true, session: syncedLogin.session, user: syncedLogin.user }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
 
-    return new Response(JSON.stringify({ error: "Invalid login credentials" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return invalidLoginResponse();
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500,
