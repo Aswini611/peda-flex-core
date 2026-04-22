@@ -442,7 +442,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
               <div>
                 <p className="text-foreground font-medium">Upload Excel File (.xlsx, .xls)</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Columns: student_name, Class, section, roll_number, parent_phone, parent_email, teacher_name
+                  Columns: Student Name, Class, section, Date OF birth, Student ID, Parent Phone Number, Teacher Name
                 </p>
               </div>
               <div className="flex gap-3 justify-center">
