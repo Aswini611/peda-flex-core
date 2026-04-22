@@ -559,6 +559,10 @@ const Curative = () => {
 
   const chatHistorySessions = useMemo(() => loadHistory(), [loadHistory, historyVersion]);
 
+  // Refs used by selectedClass-change effect to distinguish user changes from history-restore
+  const prevClassRef = useRef(selectedClass);
+  const skipNextClassResetRef = useRef(false);
+
   const handleNewChat = useCallback(() => {
     setChatMessages([]);
     setHasGeneratedContent(false);
