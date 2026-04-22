@@ -508,6 +508,9 @@ const Curative = () => {
     classLabel: string;
     section: string;
     subject: string;
+    classValue?: string;
+    sectionValue?: string;
+    subjectValue?: string;
     messages: ChatMessage[];
     updatedAt: number;
   };
