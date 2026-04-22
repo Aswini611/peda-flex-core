@@ -163,13 +163,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
       ["student_name", "Class", "section", "roll_number", "parent_phone", "parent_email", "teacher_name"],
-      ["John Doe", "Class 3", "A", "101", "+919876543210", "parent@email.com", "Mrs. Sharma"],
-      ["Jane Smith", "Class 4", "B", "102", "+919876543211", "", "Mr. Verma"],
-      ["Bob Wilson", "Class 3", "A", "103", "", "", ""],
     ]);
-    ws["!cols"] = [
-      { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 18 }, { wch: 22 }, { wch: 18 },
-    ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
     XLSX.writeFile(wb, "student_import_template.xlsx");
