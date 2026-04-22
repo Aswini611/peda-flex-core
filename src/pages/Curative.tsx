@@ -546,6 +546,9 @@ const Curative = () => {
       classLabel,
       section: selectedSection || "—",
       subject: selectedSubject || "",
+      classValue: selectedClass,
+      sectionValue: selectedSection,
+      subjectValue: selectedSubject,
       messages,
       updatedAt: Date.now(),
     };
