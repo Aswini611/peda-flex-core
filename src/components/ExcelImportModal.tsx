@@ -165,7 +165,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
-    XLSX.writeFile(wb, "student_import_template.xlsx");
+    XLSX.writeFile(wb, "student_import_template_v2.xlsx");
   };
 
   // Step 3: Import students via edge function (bypasses RLS), then move to class setup
