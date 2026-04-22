@@ -91,6 +91,48 @@ const AdminPanel = () => {
   const [createClassOpen, setCreateClassOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedClassDetailsId, setSelectedClassDetailsId] = useState<string | null>(null);
+  const [editingClass, setEditingClass] = useState(false);
+  const [editClassName, setEditClassName] = useState("");
+  const [editClassSection, setEditClassSection] = useState("");
+  const [addStudentSearch, setAddStudentSearch] = useState("");
+  const [savingClassEdit, setSavingClassEdit] = useState(false);
+
+  const handleSaveClassEdit = async () => {
+    if (!selectedClassDetailsId || !editClassName.trim()) return;
+    setSavingClassEdit(true);
+    const { error } = await supabase
+      .from("classes")
+      .update({ name: editClassName.trim(), section: (editClassSection.trim() || "A").toUpperCase() })
+      .eq("id", selectedClassDetailsId);
+    setSavingClassEdit(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Class updated" });
+      setEditingClass(false);
+      fetchAll();
+    }
+  };
+
+  const handleAddStudentToSelectedClass = async (studentId: string) => {
+    if (!selectedClassDetailsId || !studentId) return;
+    const { error } = await supabase.from("class_students").insert({
+      class_id: selectedClassDetailsId,
+      student_id: studentId,
+      assigned_by: user?.id,
+    });
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.code === "23505" ? "Student already in this class" : error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Student added" });
+      setAddStudentSearch("");
+      fetchAll();
+    }
+  };
 
   const fetchAll = async () => {
     setLoading(true);
