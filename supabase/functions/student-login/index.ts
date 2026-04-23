@@ -93,25 +93,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Attempt 3: if provided password matches DOB (DDMMYYYY), sync credentials and sign in
-    if (expectedDobPassword && providedPassword === expectedDobPassword) {
-      const { error: syncError } = await supabaseAdmin.auth.admin.updateUserById(student.profile_id, {
-        email: desiredEmail,
-        password: expectedDobPassword,
-        email_confirm: true,
+    // Attempt 3: if provided password matches DOB (DDMMYYYY), create a passwordless session
+    // without overwriting the student's existing password.
+    if (expectedDobPassword && providedPassword === expectedDobPassword && currentEmail) {
+      const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: currentEmail,
       });
 
-      if (syncError) throw syncError;
+      if (magicLinkError) throw magicLinkError;
 
-      const { data: syncedLogin, error: syncedLoginError } = await supabaseAnon.auth.signInWithPassword({
-        email: desiredEmail,
-        password: expectedDobPassword,
-      });
-
-      if (!syncedLoginError && syncedLogin.session) {
-        return new Response(JSON.stringify({ success: true, session: syncedLogin.session, user: syncedLogin.user }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const tokenHash = magicLinkData.properties?.hashed_token;
+      if (tokenHash) {
+        const { data: otpLogin, error: otpLoginError } = await supabaseAnon.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "magiclink",
         });
+
+        if (!otpLoginError && otpLogin.session) {
+          return new Response(JSON.stringify({ success: true, session: otpLogin.session, user: otpLogin.user }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     }
 
