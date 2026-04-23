@@ -76,7 +76,6 @@ Deno.serve(async (req) => {
         if (userId) {
           const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
             email: loginEmail,
-            password: dobPassword,
             email_confirm: true,
             user_metadata: {
               full_name: s.student_name,

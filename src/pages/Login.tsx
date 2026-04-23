@@ -26,10 +26,10 @@ const Login = () => {
         body: { studentId: identifier, password },
       });
 
-      if (error || !data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
+        if (error || !data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
         toast({
           title: "Login failed",
-          description: data?.error || "Invalid login. Use your Student ID and your Date of Birth as password in DDMMYYYY format. Example: 8/7/2016 → 08072016.",
+            description: data?.error || "Invalid login. Use your Student ID and either your existing password or your Date of Birth in DDMMYYYY format. Example: 8/7/2016 → 08072016.",
           variant: "destructive",
         });
         setLoading(false);
@@ -62,7 +62,7 @@ const Login = () => {
       const msg = error.message === "Email not confirmed"
         ? "Please verify your email before signing in. Check your inbox for the verification link."
         : isStudentLogin
-          ? "Invalid login. Use your Student ID and your Date of Birth as password in DDMMYYYY format. Example: 8/7/2016 → 08072016."
+          ? "Invalid login. Use your Student ID and either your existing password or your Date of Birth in DDMMYYYY format. Example: 8/7/2016 → 08072016."
           : error.message;
       toast({ title: "Login failed", description: msg, variant: "destructive" });
       setLoading(false);
@@ -108,7 +108,7 @@ const Login = () => {
               <div className="rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-muted-foreground">
                 <p className="font-medium text-foreground">Student login</p>
                 <p className="mt-1">Use your Student ID as the login ID.</p>
-                <p className="mt-1">Use your Date of Birth as the password in <span className="font-medium text-foreground">DDMMYYYY</span> format.</p>
+                <p className="mt-1">Password can be either your existing password or your Date of Birth in <span className="font-medium text-foreground">DDMMYYYY</span> format.</p>
                 <p className="mt-1">Example: DOB 8/7/2016 → password <span className="font-medium text-foreground">08072016</span>.</p>
               </div>
             ) : null}
