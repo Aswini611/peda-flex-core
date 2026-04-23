@@ -35,8 +35,14 @@ serve(async (req) => {
     });
 
     if (error) {
+      const isDuplicate = /already.*registered|already exists|duplicate/i.test(error.message);
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({
+          error: isDuplicate
+            ? "This Student ID is already registered. Please sign in instead — use your existing password or your Date of Birth (DDMMYYYY) on the Login page."
+            : error.message,
+          code: isDuplicate ? "student_already_exists" : undefined,
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
