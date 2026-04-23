@@ -47,13 +47,38 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
     );
 
-    const { data: student, error: studentError } = await supabaseAdmin
+    let { data: student, error: studentError } = await supabaseAdmin
       .from("students")
       .select("profile_id, date_of_birth, roll_number")
       .ilike("roll_number", normalizedStudentId)
       .maybeSingle();
 
     if (studentError) throw studentError;
+
+    // Fallback: registered students may not have a roll_number row yet.
+    // Look them up by their canonical auth email (studentId@student.apas.local).
+    if (!student?.profile_id) {
+      const canonicalEmail = `${normalizedStudentId}@student.apas.local`;
+      const { data: usersList, error: listError } =
+        await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      if (listError) throw listError;
+      const matchedUser = usersList.users.find(
+        (u) => (u.email || "").toLowerCase() === canonicalEmail,
+      );
+      if (matchedUser) {
+        const { data: studentByProfile } = await supabaseAdmin
+          .from("students")
+          .select("profile_id, date_of_birth, roll_number")
+          .eq("profile_id", matchedUser.id)
+          .maybeSingle();
+        student = studentByProfile ?? {
+          profile_id: matchedUser.id,
+          date_of_birth: null,
+          roll_number: normalizedStudentId,
+        };
+      }
+    }
+
     if (!student?.profile_id) {
       return errorResponse(`Student ID "${studentId}" not found. Please check your Student ID.`);
     }
