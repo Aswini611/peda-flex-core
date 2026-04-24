@@ -812,7 +812,7 @@ const Curative = () => {
     return `${periods} periods (spread across ${periods} teaching sessions)`;
   };
 
-  const handleGeneratePlan = () => {
+  const handleGeneratePlan = async () => {
     const subjectLabel = selectedSubject ? selectedSubject : "";
     const chapterLabel = selectedChapter
       ? chapters.find((c) => c.value === selectedChapter)?.label
@@ -825,6 +825,39 @@ const Curative = () => {
     const periods = parseInt(selectedPeriods) || 1;
     const periodDesc = getPeriodBreakdown(periods);
     const periodDurationMin = parseInt(periodDuration) || 40;
+
+    // Duplicate check: prevent regenerating an identical lesson plan
+    try {
+      const subjectName = selectedSubject ? extractSubjectName(selectedSubject) : "General";
+      const topicTrimmed = topicValue.trim();
+
+      let dupQuery = supabase
+        .from("lessons")
+        .select("id, title")
+        .eq("class_level", selectedClass)
+        .eq("section", selectedSection)
+        .eq("subject", subjectName)
+        .eq("curriculum", selectedCurriculum || "")
+        .eq("periods_count", periods);
+
+      dupQuery = topicTrimmed
+        ? dupQuery.eq("topic", topicTrimmed)
+        : dupQuery.is("topic", null);
+
+      if (user?.id) dupQuery = dupQuery.eq("teacher_id", user.id);
+
+      const { data: existing, error: dupErr } = await dupQuery.limit(1);
+      if (!dupErr && existing && existing.length > 0) {
+        toast.error(
+          `Lesson plan already generated for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""} • ${curriculumLabel || "this curriculum"} • ${periods} period(s). Change topic, periods, or curriculum to generate a new one.`,
+          { duration: 6000 }
+        );
+        return;
+      }
+    } catch (err) {
+      console.error("Duplicate lesson check failed:", err);
+    }
+
     sendMessage(
       `Generate a COMPLETE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.
 
