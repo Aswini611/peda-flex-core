@@ -97,6 +97,7 @@ serve(async (req) => {
             content: r.chunk_text,
             metadata: { subject: r.subject, class_level: r.class_level, curriculum: r.curriculum, file_name: r.file_name },
             similarity: 0.5,
+            source_type: r.source_type ?? "curriculum",
           }));
         }
       } else {
