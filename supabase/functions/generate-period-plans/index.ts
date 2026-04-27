@@ -58,7 +58,7 @@ LESSON PLAN:
 ${lessonContent.substring(0, 6000)}
 
 Return ONLY a single JSON object (not wrapped in array):
-{"day": number, "period": number, "topic": "...", "objective": "...", "activity": "...", "materials": "...", "assessment": "...", "duration_minutes": ${periodDuration || 40}}`;
+{"day": number, "period": number, "topic": "...", "objective": "...", "activity": "...", "materials": "...", "assessment": "...", "duration_minutes": ${periodDuration || 40}, "youtube_videos": [{"title": "...", "url": "https://www.youtube.com/watch?v=...", "channel": "Khan Academy", "why": "..."}]}`;
     } else {
       systemPrompt = `You are an expert curriculum planner and instructional designer. Your task is to intelligently break down a complete lesson plan into daily, period-wise teaching plans.
 
@@ -67,6 +67,7 @@ Rules:
 - Balance workload evenly across periods
 - Ensure learning objectives align with activities
 - Each period must have a clear topic, objective, activity, materials, and assessment
+- Each period MUST include 1-3 relevant YouTube video references in a "youtube_videos" array. Use REAL videos from trusted educational channels (Khan Academy, CrashCourse, TED-Ed, NCERT Official, BYJU'S, Amoeba Sisters, SciShow Kids) appropriate to the class. If unsure of a specific video, use a channel search URL like https://www.youtube.com/@khanacademy/search?query=TOPIC. Never fabricate fake video IDs.
 - Return ONLY a valid JSON array, no markdown, no explanation`;
 
       userPrompt = `Break down this lesson plan into ${totalPeriods} period-wise daily plans.
@@ -91,7 +92,10 @@ Return a JSON array of objects. Each object represents one period:
     "activity": "Teacher-led discussion on ...",
     "materials": "Textbook, whiteboard, ...",
     "assessment": "Quick quiz on ...",
-    "duration_minutes": ${periodDuration || 40}
+    "duration_minutes": ${periodDuration || 40},
+    "youtube_videos": [
+      {"title": "Intro to ...", "url": "https://www.youtube.com/watch?v=VIDEO_ID", "channel": "Khan Academy", "why": "Visual walkthrough of the core concept"}
+    ]
   },
   ...
 ]
