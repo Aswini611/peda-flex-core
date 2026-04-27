@@ -48,7 +48,9 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { query, match_count = 5, match_threshold = 0.7, filters } = await req.json();
+    const { query, match_count = 5, match_threshold = 0.7, filters, source_types } = await req.json();
+    // source_types: optional array like ["curriculum","teacher_content","student_history"]
+    const sourceFilter: string[] | null = Array.isArray(source_types) && source_types.length > 0 ? source_types : null;
 
     if (!query) {
       return new Response(JSON.stringify({ error: "query is required" }), {
