@@ -46,7 +46,7 @@ serve(async (req) => {
     let userPrompt: string;
 
     if (regeneratePeriod !== undefined && regeneratePeriod !== null) {
-      systemPrompt = `You are an expert curriculum planner. Regenerate ONLY the plan for Period ${regeneratePeriod + 1}. Return valid JSON only — an object with: day, period, topic, objective, activity, materials, assessment, duration_minutes.`;
+      systemPrompt = `You are an expert curriculum planner. Regenerate ONLY the plan for Period ${regeneratePeriod + 1}. Return valid JSON only — an object with: day, period, topic, objective, activity, materials, assessment, duration_minutes, youtube_videos. The youtube_videos field MUST be an array of 1-3 objects: { title, url, channel, why } pointing to real, well-known educational YouTube videos (Khan Academy, CrashCourse, TED-Ed, NCERT Official, BYJU'S, etc.) relevant to the period's topic.`;
       userPrompt = `Regenerate Period ${regeneratePeriod + 1} for this lesson plan:
 
 Subject: ${subject || "General"}
