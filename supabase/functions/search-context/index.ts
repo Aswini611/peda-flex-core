@@ -69,6 +69,7 @@ serve(async (req) => {
         query_embedding: JSON.stringify(queryEmbedding),
         match_threshold: match_threshold,
         match_count: match_count,
+        source_filter: sourceFilter,
       });
 
       if (error) {
