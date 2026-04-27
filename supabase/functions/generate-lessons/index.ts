@@ -41,9 +41,14 @@ You MUST respond with ONLY valid JSON matching this exact structure (no markdown
   "assessment_checkpoints": [
     {"checkpoint": "...", "criteria": "...", "method": "..."}
   ],
+  "youtube_videos": [
+    {"title": "...", "url": "https://www.youtube.com/watch?v=VIDEO_ID", "channel": "Khan Academy", "why": "Why this helps the student", "when_to_use": "Hook | Main Teaching | Reinforcement | Homework"}
+  ],
   "framework_summary": "...",
   "estimated_duration_minutes": 40
-}`,
+}
+
+For "youtube_videos": include 2-4 REAL, age-appropriate videos from well-known educational channels (Khan Academy, CrashCourse, TED-Ed, NCERT Official, BYJU'S, Amoeba Sisters, SciShow Kids, National Geographic Kids). Never fabricate video IDs — if unsure of a specific video, use a channel search URL like https://www.youtube.com/@khanacademy/search?query=TOPIC.`,
           },
           {
             role: "user",
