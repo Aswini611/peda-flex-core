@@ -83,11 +83,13 @@ serve(async (req) => {
       if (embeddingError.message === "OPENAI_QUOTA_EXCEEDED") {
         console.warn("OpenAI quota exceeded, falling back to text search");
 
-        const { data: textResults, error: textError } = await supabase
+        let textQuery = supabase
           .from("knowledge_chunks")
-          .select("id, chunk_text, subject, class_level, curriculum, file_name")
+          .select("id, chunk_text, subject, class_level, curriculum, file_name, source_type")
           .ilike("chunk_text", `%${query.slice(0, 100)}%`)
           .limit(match_count);
+        if (sourceFilter) textQuery = textQuery.in("source_type", sourceFilter);
+        const { data: textResults, error: textError } = await textQuery;
 
         if (!textError && textResults) {
           results = textResults.map((r: any) => ({
