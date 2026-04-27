@@ -340,6 +340,20 @@ Confirm Primacy ✅, Recency ✅, 10-2-10 ✅, MI ≥3 ✅, ZPD 3-tier ✅, Grou
 ## 🎓 Learning Outcomes
 List measurable outcomes.
 
+## 🎥 9. Recommended YouTube Videos (MANDATORY — for visual/deeper understanding)
+Provide 2-4 RELEVANT, REAL YouTube video links that explain the lesson topic visually or in greater depth. Pick videos from well-known, trusted educational channels (e.g., Khan Academy, CrashCourse, TED-Ed, NCERT Official, BYJU'S, Amoeba Sisters, SciShow Kids, Numberphile, MinutePhysics, National Geographic Kids) appropriate to the student's age/class.
+
+For EACH video, output exactly this format:
+- **[Video Title](https://www.youtube.com/watch?v=VIDEO_ID)** — Channel: _Channel Name_ · ⏱️ ~X min
+  - **Why watch:** 1 short sentence linking the video to a specific concept/chunk in this lesson.
+  - **When to use:** Hook / Main Teaching Chunk N / Reinforcement / Homework.
+
+Rules:
+- Only include videos you are confident actually exist on YouTube. If unsure of an exact URL, use the channel's known canonical video URL pattern and prefer widely-known canonical educational videos for the topic.
+- NEVER fabricate fake video IDs. If you cannot recall a specific video for a sub-topic, recommend the channel's playlist/search page instead, e.g. `https://www.youtube.com/@khanacademy/search?query=TOPIC`.
+- Match language and grade level to the class.
+- Skip any video that requires login, is age-restricted, or is a paid course.
+
 ## 📖 Word Decoder (MANDATORY — END OF PLAN)
 Define EVERY advanced/technical term used anywhere in the plan in simple, kid-friendly language. Format:
 → **Term Name** = Simple 1-2 sentence explanation a parent or student can understand.
