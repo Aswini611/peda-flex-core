@@ -48,7 +48,9 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { query, match_count = 5, match_threshold = 0.7, filters } = await req.json();
+    const { query, match_count = 5, match_threshold = 0.7, filters, source_types } = await req.json();
+    // source_types: optional array like ["curriculum","teacher_content","student_history"]
+    const sourceFilter: string[] | null = Array.isArray(source_types) && source_types.length > 0 ? source_types : null;
 
     if (!query) {
       return new Response(JSON.stringify({ error: "query is required" }), {
@@ -67,6 +69,7 @@ serve(async (req) => {
         query_embedding: JSON.stringify(queryEmbedding),
         match_threshold: match_threshold,
         match_count: match_count,
+        source_filter: sourceFilter,
       });
 
       if (error) {
@@ -80,11 +83,13 @@ serve(async (req) => {
       if (embeddingError.message === "OPENAI_QUOTA_EXCEEDED") {
         console.warn("OpenAI quota exceeded, falling back to text search");
 
-        const { data: textResults, error: textError } = await supabase
+        let textQuery = supabase
           .from("knowledge_chunks")
-          .select("id, chunk_text, subject, class_level, curriculum, file_name")
+          .select("id, chunk_text, subject, class_level, curriculum, file_name, source_type")
           .ilike("chunk_text", `%${query.slice(0, 100)}%`)
           .limit(match_count);
+        if (sourceFilter) textQuery = textQuery.in("source_type", sourceFilter);
+        const { data: textResults, error: textError } = await textQuery;
 
         if (!textError && textResults) {
           results = textResults.map((r: any) => ({
@@ -92,6 +97,7 @@ serve(async (req) => {
             content: r.chunk_text,
             metadata: { subject: r.subject, class_level: r.class_level, curriculum: r.curriculum, file_name: r.file_name },
             similarity: 0.5,
+            source_type: r.source_type ?? "curriculum",
           }));
         }
       } else {
