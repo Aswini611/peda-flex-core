@@ -368,7 +368,7 @@ LANGUAGE & FORMATTING RULES
 - Decode every advanced/technical/subject word inline on FIRST use using: **Term** _(what this means: simple explanation with everyday comparison)_.
 - Use markdown tables for data, --- horizontal rules between sections, emoji indicators (🟢🔵🟡🔴 ⚠️ ✅ 📊).
 - Bold all labels. Cite specific scores/student counts.
-- Recommend named educational resources (Khan Academy, NCERT, etc.) — NOT YouTube search links.
+- Recommend named educational resources (Khan Academy, NCERT, etc.). YouTube links are ONLY allowed inside the dedicated "Recommended YouTube Videos" section (see structure above) — do not scatter raw YouTube search links elsewhere.
 
 You MUST complete the ENTIRE lesson plan. Do NOT truncate. End with the Word Decoder section.
 
