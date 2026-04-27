@@ -96,6 +96,7 @@ export type Database = {
           embedding: string
           id: string
           metadata: Json | null
+          source_type: string
         }
         Insert: {
           content: string
@@ -103,6 +104,7 @@ export type Database = {
           embedding: string
           id?: string
           metadata?: Json | null
+          source_type?: string
         }
         Update: {
           content?: string
@@ -110,6 +112,7 @@ export type Database = {
           embedding?: string
           id?: string
           metadata?: Json | null
+          source_type?: string
         }
         Relationships: []
       }
@@ -821,6 +824,7 @@ export type Database = {
           embedding_id: string | null
           file_name: string
           id: string
+          source_type: string
           subject: string | null
         }
         Insert: {
@@ -831,6 +835,7 @@ export type Database = {
           embedding_id?: string | null
           file_name: string
           id?: string
+          source_type?: string
           subject?: string | null
         }
         Update: {
@@ -841,6 +846,7 @@ export type Database = {
           embedding_id?: string | null
           file_name?: string
           id?: string
+          source_type?: string
           subject?: string | null
         }
         Relationships: [
@@ -1716,19 +1722,35 @@ export type Database = {
     }
     Functions: {
       get_user_role: { Args: { _user_id: string }; Returns: string }
-      match_embeddings: {
-        Args: {
-          match_count?: number
-          match_threshold?: number
-          query_embedding: string
-        }
-        Returns: {
-          content: string
-          id: string
-          metadata: Json
-          similarity: number
-        }[]
-      }
+      match_embeddings:
+        | {
+            Args: {
+              match_count?: number
+              match_threshold?: number
+              query_embedding: string
+            }
+            Returns: {
+              content: string
+              id: string
+              metadata: Json
+              similarity: number
+            }[]
+          }
+        | {
+            Args: {
+              match_count?: number
+              match_threshold?: number
+              query_embedding: string
+              source_filter?: string[]
+            }
+            Returns: {
+              content: string
+              id: string
+              metadata: Json
+              similarity: number
+              source_type: string
+            }[]
+          }
     }
     Enums: {
       [_ in never]: never
