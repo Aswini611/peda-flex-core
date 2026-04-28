@@ -116,6 +116,90 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_hook_violations: {
+        Row: {
+          action_taken: string
+          caller_id: string | null
+          created_at: string
+          details: Json
+          hook_key: string
+          id: string
+          severity: string
+          skill_key: string | null
+          stage: string
+        }
+        Insert: {
+          action_taken: string
+          caller_id?: string | null
+          created_at?: string
+          details?: Json
+          hook_key: string
+          id?: string
+          severity: string
+          skill_key?: string | null
+          stage: string
+        }
+        Update: {
+          action_taken?: string
+          caller_id?: string | null
+          created_at?: string
+          details?: Json
+          hook_key?: string
+          id?: string
+          severity?: string
+          skill_key?: string | null
+          stage?: string
+        }
+        Relationships: []
+      }
+      ai_hooks: {
+        Row: {
+          action_on_fail: string
+          applies_to: string[]
+          category: string
+          config: Json
+          created_at: string
+          description: string | null
+          hook_key: string
+          id: string
+          is_active: boolean
+          name: string
+          severity: string
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          action_on_fail?: string
+          applies_to?: string[]
+          category: string
+          config?: Json
+          created_at?: string
+          description?: string | null
+          hook_key: string
+          id?: string
+          is_active?: boolean
+          name: string
+          severity?: string
+          stage: string
+          updated_at?: string
+        }
+        Update: {
+          action_on_fail?: string
+          applies_to?: string[]
+          category?: string
+          config?: Json
+          created_at?: string
+          description?: string | null
+          hook_key?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          severity?: string
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_memory: {
         Row: {
           class_level: string | null

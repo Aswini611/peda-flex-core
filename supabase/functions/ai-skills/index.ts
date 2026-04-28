@@ -83,9 +83,46 @@ serve(async (req) => {
     const payload = { ...(input ?? {}) };
     if (skill.default_model && !payload.model) payload.model = skill.default_model;
 
-    const { data: result, error: invokeErr } = await supabase.functions.invoke(skill.target_function, {
+    let { data: result, error: invokeErr } = await supabase.functions.invoke(skill.target_function, {
       body: payload,
     });
+
+    // 🛡️ HOOKS / GUARDRAIL LAYER — validate output, regenerate once on failure
+    let guardrail: any = null;
+    if (!invokeErr && result) {
+      const ctx = input?.guardrail_context ?? {
+        subject: input?.subject,
+        class: input?.class_name ?? input?.grade,
+        topic: input?.topic ?? input?.lesson_topic,
+        keywords: input?.keywords,
+      };
+      const { data: hookRes } = await supabase.functions.invoke("ai-hooks", {
+        body: {
+          action: "validate",
+          output: result,
+          stage: "post",
+          skill_key: resolvedKey,
+          context: ctx,
+          expect_json: true,
+        },
+      });
+      guardrail = hookRes;
+
+      if (hookRes?.action === "regenerate") {
+        const retry = await supabase.functions.invoke(skill.target_function, {
+          body: { ...payload, _guardrail_retry: true, _guardrail_reasons: hookRes.violations },
+        });
+        if (!retry.error) {
+          result = retry.data;
+          const { data: recheck } = await supabase.functions.invoke("ai-hooks", {
+            body: { action: "validate", output: result, stage: "post", skill_key: resolvedKey, context: ctx, expect_json: true },
+          });
+          guardrail = { ...recheck, regenerated: true, original_violations: hookRes.violations };
+        }
+      } else if (hookRes?.action === "block") {
+        invokeErr = { message: `Output blocked by guardrails: ${hookRes.violations?.map((v: any) => v.hook_key).join(", ")}` } as any;
+      }
+    }
 
     const duration = Date.now() - started;
     const status = invokeErr ? "error" : "success";
@@ -107,7 +144,7 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ skill: resolvedKey, result, duration_ms: duration }), {
+    return new Response(JSON.stringify({ skill: resolvedKey, result, guardrail, duration_ms: duration }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
