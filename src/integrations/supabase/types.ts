@@ -167,6 +167,87 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_skill_invocations: {
+        Row: {
+          caller_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input_summary: Json
+          output_summary: Json
+          skill_key: string
+          status: string
+        }
+        Insert: {
+          caller_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_summary?: Json
+          output_summary?: Json
+          skill_key: string
+          status?: string
+        }
+        Update: {
+          caller_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_summary?: Json
+          output_summary?: Json
+          skill_key?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      ai_skills: {
+        Row: {
+          category: string
+          created_at: string
+          default_model: string | null
+          description: string | null
+          id: string
+          input_schema: Json
+          is_active: boolean
+          name: string
+          skill_key: string
+          target_function: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          default_model?: string | null
+          description?: string | null
+          id?: string
+          input_schema?: Json
+          is_active?: boolean
+          name: string
+          skill_key: string
+          target_function: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          default_model?: string | null
+          description?: string | null
+          id?: string
+          input_schema?: Json
+          is_active?: boolean
+          name?: string
+          skill_key?: string
+          target_function?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       alert_reads: {
         Row: {
           alert_id: string
