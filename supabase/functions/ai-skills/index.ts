@@ -144,7 +144,7 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ skill: resolvedKey, result, duration_ms: duration }), {
+    return new Response(JSON.stringify({ skill: resolvedKey, result, guardrail, duration_ms: duration }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
