@@ -116,6 +116,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_memory: {
+        Row: {
+          class_level: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          importance: number
+          key: string
+          memory_type: string
+          owner_id: string
+          scope: string
+          source: string | null
+          subject: string | null
+          summary: string | null
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          class_level?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          importance?: number
+          key: string
+          memory_type: string
+          owner_id: string
+          scope?: string
+          source?: string | null
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          class_level?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          importance?: number
+          key?: string
+          memory_type?: string
+          owner_id?: string
+          scope?: string
+          source?: string | null
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       alert_reads: {
         Row: {
           alert_id: string
